@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v1.7.2 | Arkham Kitchen | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v2.0.0 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="1.7.2">
+    <meta name="application-version" content="2.0.0">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -114,7 +114,7 @@
 
         @media print {
             body { background: white !important; color: black !important; height: auto !important; overflow: visible !important; }
-            header, #catalogPanel, #mobileBar, #drawerBackdrop, #customModal, #editCatModal, #kitchenTimerWidget, .print-hide { display: none !important; }
+            header, #catalogPanel, #mobileBar, #drawerBackdrop, #customModal, #editCatModal, #kitchenTimerWidget, #groceryDrawer, #cookModeModal, .print-hide { display: none !important; }
             main { display: block !important; height: auto !important; overflow: visible !important; }
             #recipeDrawer { position: static !important; display: block !important; transform: none !important; width: 100% !important; height: auto !important; background: white !important; border: 0 !important; }
             #recipeDrawer::before { content: "Ward Family Recipe Vault"; display: block; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid black; }
@@ -139,10 +139,17 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
+                <!-- Grocery List Trigger Button -->
+                <button type="button" onclick="toggleGroceryDrawer(true)" class="h-9 px-3 rounded-xl bg-cardDark border border-panelBorder text-neutral-200 text-xs sm:text-sm font-bold hover:border-jokerPurple hover:text-white transition-all flex items-center gap-1.5 shadow-sm relative">
+                    <span>🛒</span>
+                    <span class="hidden sm:inline">Pantry List</span>
+                    <span id="groceryCountBadge" class="hidden text-[10px] bg-harleyRed text-white px-1.5 py-0.2 rounded-full font-bold">0</span>
+                </button>
+
                 <!-- Header Timer Trigger Button -->
                 <button type="button" onclick="toggleTimerPanel()" class="h-9 px-3 rounded-xl bg-cardDark border border-jokerPurple/70 text-neutral-200 text-xs sm:text-sm font-bold hover:border-jokerGreen hover:text-jokerGreen transition-all flex items-center gap-1.5 shadow-sm">
                     <span>⏱</span>
-                    <span id="headerTimerDisplay" class="font-mono">Timer</span>
+                    <span id="headerTimerDisplay" class="font-mono">Timers (0)</span>
                 </button>
 
                 <!-- Install App Button -->
@@ -158,7 +165,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.7.2</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.0.0</div>
                 </div>
             </div>
         </div>
@@ -200,13 +207,19 @@
 
                 <div class="flex justify-between items-center text-xs text-textMuted">
                     <span id="resultCount" class="text-jokerGreen font-mono">Loading recipes...</span>
-                    <button id="favoritesFilterButton" type="button" class="border border-panelBorder rounded-full px-3 py-1.5 transition-colors hover:border-harleyRed text-white">
-                        ♥ Favorites Only
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <!-- Density Toggle (Cards vs Compact Tiles) -->
+                        <button type="button" onclick="toggleDensityView()" id="densityViewBtn" class="border border-panelBorder rounded-full px-3 py-1.5 transition-colors hover:border-jokerPurple text-neutral-300">
+                            Compact Tiles
+                        </button>
+                        <button id="favoritesFilterButton" type="button" class="border border-panelBorder rounded-full px-3 py-1.5 transition-colors hover:border-harleyRed text-white">
+                            ♥ Favorites Only
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Uncompressed Card Grid -->
+            <!-- Dynamic Recipe Cards Grid -->
             <div id="recipeGrid" class="flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-max pb-28 md:pb-6"></div>
         </section>
 
@@ -237,10 +250,32 @@
                 <img id="inspectPhoto" src="./icon-512x512.png" alt="Recipe" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-cardDark via-transparent to-transparent"></div>
                 <div class="absolute bottom-2.5 left-3 text-xs bg-harleyBlack/80 border border-panelBorder px-2.5 py-1 rounded text-white font-mono" id="inspectIdBadge">REC-000</div>
+                <!-- Launch Cook Mode Floating Button on Image -->
+                <button type="button" onclick="openCookMode()" class="absolute bottom-2.5 right-3 bg-gradient-to-r from-jokerPurple to-harleyRed border border-jokerGreen/60 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-1.5 hover:brightness-110">
+                    <span>👨‍🍳</span> Cook Mode
+                </button>
             </div>
 
             <!-- Ingredients & Directions Body -->
             <div class="p-4 space-y-5 text-sm flex-1">
+                <!-- BAKER'S HYDRATION TOOLBAR (Visible on breads/doughs) -->
+                <div id="bakersMathBlock" class="hidden p-3 bg-[#150f1d] border border-jokerPurple/50 rounded-xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-jokerGreen uppercase tracking-wider flex items-center gap-1">
+                            <span>🥖</span> Baker's Hydration Math
+                        </span>
+                        <span id="bakersHydrationDisplay" class="text-xs font-mono font-bold text-white bg-jokerPurple/40 px-2 py-0.5 rounded">75% Hydration</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px] text-textMuted font-mono">
+                            <span>Adjust Hydration Slider:</span>
+                            <span id="sliderPercentVal">75%</span>
+                        </div>
+                        <input id="hydrationSlider" type="range" min="50" max="90" value="75" oninput="handleHydrationSliderChange(this.value)" class="w-full accent-jokerGreen cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- INGREDIENTS SECTION WITH CONVERSION CONTROLS -->
                 <div>
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-harleyRed flex items-center gap-1.5">
@@ -257,7 +292,9 @@
 
                     <div class="flex items-center justify-between mb-2">
                         <span id="scaleMultiplierBadge" class="text-[10px] bg-jokerPurple/30 text-jokerGreen border border-jokerPurple px-2 py-0.5 rounded font-mono font-bold">1x Scale</span>
-                        <span id="activeUnitIndicator" class="text-[10px] text-textMuted font-mono">Viewing: Original Units</span>
+                        <button type="button" onclick="addAllActiveIngredientsToGrocery()" class="text-[11px] text-jokerGreen hover:underline font-bold font-mono">
+                            + Add All to Grocery List
+                        </button>
                     </div>
 
                     <ul id="inspectIngredientsList" class="space-y-1.5 text-xs text-neutral-300">
@@ -290,7 +327,7 @@
                 </div>
                 <div class="grid grid-cols-3 gap-2 mt-2">
                     <button type="button" onclick="openEditCategoryModal()" class="bg-cardDark border border-panelBorder text-neutral-300 hover:text-white hover:border-jokerPurple font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1">
-                        <span>✏️</span> Category
+                        <span>✏️️</span> Category
                     </button>
                     <button type="button" onclick="toggleTimerPanel(true)" class="bg-cardDark border border-jokerGreen/60 text-jokerGreen font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1">
                         <span>⏱</span> Timer
@@ -301,18 +338,86 @@
         </section>
     </main>
 
-    <!-- FLOATING KITCHEN TIMER DOCK -->
+    <!-- STEP-BY-STEP HANDS-FREE COOK MODE MODAL -->
+    <div id="cookModeModal" class="fixed inset-0 bg-harleyBlack z-50 hidden flex-col p-4 sm:p-8 overflow-y-auto">
+        <div class="flex justify-between items-center pb-3 border-b border-panelBorder shrink-0">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="text-2xl">👨‍🍳</span>
+                <div class="min-w-0">
+                    <h2 id="cookModeTitle" class="text-base sm:text-xl font-black text-white truncate">Recipe Name</h2>
+                    <p id="cookModeStepIndicator" class="text-xs text-jokerGreen font-mono font-bold">Step 1 of 6</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeCookMode()" class="px-4 py-2 bg-cardDark border border-panelBorder rounded-xl text-xs font-bold text-neutral-300 hover:text-white">
+                ✕ Exit Cook Mode
+            </button>
+        </div>
+
+        <!-- Big Progress Bar -->
+        <div class="w-full bg-panelBorder h-2 rounded-full my-4 overflow-hidden shrink-0">
+            <div id="cookModeProgressBar" class="bg-gradient-to-r from-jokerPurple to-jokerGreen h-full transition-all duration-300" style="width: 20%;"></div>
+        </div>
+
+        <!-- Giant Active Instruction Step Card -->
+        <div class="flex-1 flex flex-col justify-center items-center py-4 text-center max-w-3xl mx-auto w-full">
+            <div id="cookModeStepText" class="text-lg sm:text-2xl md:text-3xl font-medium text-neutral-100 leading-relaxed mb-6 select-none">
+                Step instructions will render here.
+            </div>
+
+            <!-- Optional Step Quick Timer Launcher -->
+            <div id="cookModeStepTimerTrigger" class="mb-6"></div>
+        </div>
+
+        <!-- Giant Bottom Navigation Controls -->
+        <div class="grid grid-cols-2 gap-4 max-w-2xl mx-auto w-full pt-4 border-t border-panelBorder shrink-0 safe-bottom">
+            <button type="button" id="cookModePrevBtn" onclick="navigateCookStep(-1)" class="py-4 bg-cardDark border border-panelBorder hover:border-jokerPurple rounded-2xl text-base font-bold text-white transition-all">
+                ← Previous Step
+            </button>
+            <button type="button" id="cookModeNextBtn" onclick="navigateCookStep(1)" class="py-4 bg-gradient-to-r from-jokerPurple to-harleyRed hover:brightness-110 rounded-2xl text-base font-black text-white shadow-lg transition-all">
+                Next Step →
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTRY / GROCERY LIST SLIDING DRAWER -->
+    <div id="groceryDrawer" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-[#110d17] border-l border-panelBorder z-50 translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+        <div class="p-4 border-b border-panelBorder flex justify-between items-center shrink-0 bg-[#0d0912]">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">🛒</span>
+                <h3 class="font-bold text-sm text-white">Grocery &amp; Pantry Cart</h3>
+            </div>
+            <button type="button" onclick="toggleGroceryDrawer(false)" class="w-8 h-8 rounded-full bg-cardDark text-white text-base">×</button>
+        </div>
+
+        <!-- Add Custom Grocery Item -->
+        <div class="p-3 border-b border-panelBorder/70 bg-cardDark flex gap-2 shrink-0">
+            <input id="customGroceryInput" type="text" placeholder="Add pantry item..." class="flex-1 bg-harleyBlack border border-panelBorder rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-jokerGreen">
+            <button type="button" onclick="addCustomGroceryItem()" class="px-3 py-1.5 bg-jokerPurple text-white rounded-xl text-xs font-bold hover:brightness-110 shrink-0">Add</button>
+        </div>
+
+        <!-- Active List Items -->
+        <ul id="groceryItemsList" class="flex-1 overflow-y-auto scroll-touch p-4 space-y-2 text-xs"></ul>
+
+        <!-- Bottom Actions -->
+        <div class="p-3 border-t border-panelBorder bg-harleyBlack grid grid-cols-2 gap-2 shrink-0 safe-bottom">
+            <button type="button" onclick="clearCheckedGroceryItems()" class="py-2.5 bg-cardDark border border-panelBorder text-neutral-300 text-xs font-bold rounded-xl hover:text-white">Clear Done</button>
+            <button type="button" onclick="clearAllGroceryItems()" class="py-2.5 bg-harleyRed/20 border border-harleyRed/50 text-harleyRed text-xs font-bold rounded-xl hover:bg-harleyRed/30">Clear All</button>
+        </div>
+    </div>
+
+    <!-- MULTI-TIMER COOKING DOCK -->
     <div id="kitchenTimerWidget" class="fixed right-3 bottom-20 md:bottom-5 z-50 transition-all duration-300 select-none">
         <div id="timerMiniBadge" onclick="toggleTimerPanel(true)" class="hidden cursor-pointer bg-cardDark border-2 border-jokerGreen text-white px-3.5 py-2 rounded-2xl shadow-[0_0_16px_rgba(0,230,118,0.35)] flex items-center gap-2.5 hover:scale-105 transition-all">
             <span class="animate-pulse text-base">⏱</span>
-            <span id="miniTimerTime" class="font-mono text-sm font-bold text-jokerGreen">00:00</span>
+            <span id="miniTimerTime" class="font-mono text-sm font-bold text-jokerGreen">0 Timers</span>
         </div>
 
-        <div id="timerExpandedConsole" class="hidden bg-[#120d18] border border-panelBorder w-80 sm:w-88 rounded-2xl p-4 shadow-2xl backdrop-blur-md">
-            <div class="flex items-center justify-between pb-2 border-b border-panelBorder">
+        <!-- Multi-Timer Console -->
+        <div id="timerExpandedConsole" class="hidden bg-[#120d18] border border-panelBorder w-80 sm:w-96 rounded-2xl p-4 shadow-2xl backdrop-blur-md max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between pb-2 border-b border-panelBorder shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="text-base text-jokerGreen">⏱</span>
-                    <h4 id="timerLabel" class="text-xs font-bold text-white uppercase tracking-wider">Kitchen Timer</h4>
+                    <h4 class="text-xs font-bold text-white uppercase tracking-wider">Kitchen Multi-Timers</h4>
                 </div>
                 <div class="flex items-center gap-1.5">
                     <button type="button" onclick="toggleTimerPanel(false, true)" class="text-neutral-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-panelBorder" title="Minimize">−</button>
@@ -320,39 +425,35 @@
                 </div>
             </div>
 
-            <div class="my-3 py-2 bg-harleyBlack border border-panelBorder/80 rounded-xl text-center">
-                <div id="mainTimerDisplay" class="font-mono text-4xl sm:text-5xl font-black text-jokerGreen tracking-wider drop-shadow-[0_0_10px_rgba(0,230,118,0.3)]">
-                    00:00
-                </div>
-            </div>
+            <!-- Active Timers Scroll List -->
+            <div id="activeTimersList" class="flex-1 overflow-y-auto my-3 space-y-2 pr-1 min-h-[60px] max-h-56"></div>
 
-            <div class="grid grid-cols-2 gap-2 mb-3">
-                <div class="flex items-center bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5">
-                    <span class="text-[10px] text-textMuted uppercase mr-2 font-mono">Min</span>
-                    <input id="timerInputMinutes" type="number" min="0" max="999" value="15" class="w-full bg-transparent text-sm font-bold text-white outline-none font-mono">
+            <!-- Add New Timer Section -->
+            <div class="pt-2 border-t border-panelBorder/70 shrink-0 space-y-2">
+                <input id="timerCustomLabelInput" type="text" placeholder="Timer name (e.g. Sourdough Bake)" class="w-full bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5 text-xs text-white outline-none focus:border-jokerGreen font-mono">
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="flex items-center bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5">
+                        <span class="text-[10px] text-textMuted uppercase mr-2 font-mono">Min</span>
+                        <input id="timerInputMinutes" type="number" min="0" max="999" value="15" class="w-full bg-transparent text-sm font-bold text-white outline-none font-mono">
+                    </div>
+                    <div class="flex items-center bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5">
+                        <span class="text-[10px] text-textMuted uppercase mr-2 font-mono">Sec</span>
+                        <input id="timerInputSeconds" type="number" min="0" max="59" value="00" class="w-full bg-transparent text-sm font-bold text-white outline-none font-mono">
+                    </div>
                 </div>
-                <div class="flex items-center bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5">
-                    <span class="text-[10px] text-textMuted uppercase mr-2 font-mono">Sec</span>
-                    <input id="timerInputSeconds" type="number" min="0" max="59" value="00" class="w-full bg-transparent text-sm font-bold text-white outline-none font-mono">
+
+                <div class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                    <button type="button" onclick="addQuickTimer(1, 'Quick 1m')" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">1m</button>
+                    <button type="button" onclick="addQuickTimer(5, 'Quick 5m')" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">5m</button>
+                    <button type="button" onclick="addQuickTimer(10, 'Quick 10m')" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">10m</button>
+                    <button type="button" onclick="addQuickTimer(20, 'Oven 20m')" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">20m</button>
+                    <button type="button" onclick="addQuickTimer(30, 'Bake 30m')" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">30m</button>
+                    <button type="button" onclick="addQuickTimer(45, 'Proof 45m')" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">45m</button>
                 </div>
-            </div>
 
-            <div class="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3">
-                <button type="button" onclick="setTimerPreset(1)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">1m</button>
-                <button type="button" onclick="setTimerPreset(5)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">5m</button>
-                <button type="button" onclick="setTimerPreset(10)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">10m</button>
-                <button type="button" onclick="setTimerPreset(15)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">15m</button>
-                <button type="button" onclick="setTimerPreset(20)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">20m</button>
-                <button type="button" onclick="setTimerPreset(30)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">30m</button>
-                <button type="button" onclick="setTimerPreset(45)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">45m</button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <button id="timerToggleBtn" type="button" onclick="toggleTimerCountdown()" class="bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-2 rounded-xl text-xs shadow-md border border-jokerGreen/40 hover:brightness-110">
-                    Start Timer
-                </button>
-                <button type="button" onclick="resetKitchenTimer()" class="bg-panelBorder hover:bg-neutral-800 text-neutral-300 font-bold py-2 rounded-xl text-xs transition-colors">
-                    Reset
+                <button type="button" onclick="addNewCustomTimer()" class="w-full bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-2.5 rounded-xl text-xs shadow-md border border-jokerGreen/40 hover:brightness-110">
+                    + Launch New Timer
                 </button>
             </div>
         </div>
@@ -549,6 +650,7 @@
         let recipes = [];
         let selectedCategory = 'All';
         let favoritesOnly = false;
+        let isCompactTiles = localStorage.getItem('wardRecipeCompactTiles') === 'true';
         let favoriteIds = new Set(JSON.parse(localStorage.getItem('wardRecipeFavorites') || '[]'));
         let activeRecipe = null;
         let currentScale = 1.0;
@@ -560,6 +662,206 @@
         const categoryButtons = document.getElementById('categoryButtons');
         const favoritesFilterButton = document.getElementById('favoritesFilterButton');
         const resultCount = document.getElementById('resultCount');
+
+        /* ── GROCERY & PANTRY CART SYSTEM ── */
+        let groceryList = JSON.parse(localStorage.getItem('wardGroceryList') || '[]');
+
+        function toggleGroceryDrawer(show) {
+            const drawer = document.getElementById('groceryDrawer');
+            drawer.classList.toggle('translate-x-full', !show);
+            if (show) renderGroceryList();
+        }
+
+        function renderGroceryList() {
+            const listEl = document.getElementById('groceryItemsList');
+            const badge = document.getElementById('groceryCountBadge');
+            
+            if (groceryList.length === 0) {
+                listEl.innerHTML = '<li class="text-center text-textMuted py-12 italic">Pantry cart is empty. Add ingredients from any recipe checklist!</li>';
+                badge.classList.add('hidden');
+                return;
+            }
+
+            badge.textContent = groceryList.length;
+            badge.classList.remove('hidden');
+
+            listEl.innerHTML = groceryList.map((item, idx) => `
+                <li class="flex items-center justify-between p-2 rounded-xl bg-cardDark border border-panelBorder/70">
+                    <label class="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleGroceryItem(${idx})" class="rounded text-jokerGreen focus:ring-0">
+                        <span class="truncate leading-tight ${item.checked ? 'line-through text-textMuted' : 'text-neutral-200'}">${escapeHtml(item.text)}</span>
+                    </label>
+                    <button type="button" onclick="deleteGroceryItem(${idx})" class="text-neutral-500 hover:text-harleyRed ml-2 px-1">×</button>
+                </li>
+            `).join('');
+        }
+
+        function addCustomGroceryItem() {
+            const input = document.getElementById('customGroceryInput');
+            const val = input.value.trim();
+            if (!val) return;
+            groceryList.unshift({ text: val, checked: false });
+            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
+            input.value = '';
+            renderGroceryList();
+        }
+
+        function toggleGroceryItem(idx) {
+            groceryList[idx].checked = !groceryList[idx].checked;
+            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
+            renderGroceryList();
+        }
+
+        function deleteGroceryItem(idx) {
+            groceryList.splice(idx, 1);
+            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
+            renderGroceryList();
+        }
+
+        function clearCheckedGroceryItems() {
+            groceryList = groceryList.filter(item => !item.checked);
+            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
+            renderGroceryList();
+        }
+
+        function clearAllGroceryItems() {
+            if (confirm('Clear entire pantry grocery list?')) {
+                groceryList = [];
+                localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
+                renderGroceryList();
+            }
+        }
+
+        function addAllActiveIngredientsToGrocery() {
+            if (!activeRecipe) return;
+            const ingLines = activeRecipe.ingredients.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            ingLines.forEach(line => {
+                const converted = convertIngredientLine(line, currentUnitMode, currentScale);
+                if (!groceryList.some(g => g.text.toLowerCase() === converted.toLowerCase())) {
+                    groceryList.push({ text: converted, checked: false });
+                }
+            });
+            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
+            renderGroceryList();
+            toggleGroceryDrawer(true);
+        }
+
+        /* ── DENSITY VIEW TOGGLE ── */
+        function toggleDensityView() {
+            isCompactTiles = !isCompactTiles;
+            localStorage.setItem('wardRecipeCompactTiles', isCompactTiles);
+            updateDensityButton();
+            renderCatalog();
+        }
+
+        function updateDensityButton() {
+            const btn = document.getElementById('densityViewBtn');
+            btn.textContent = isCompactTiles ? 'Card View' : 'Compact Tiles';
+        }
+
+        /* ── BAKER'S HYDRATION ENGINE ── */
+        let baseFlourWeight = 500;
+        let baseWaterWeight = 375;
+
+        function checkAndRenderBakersMath(recipe) {
+            const block = document.getElementById('bakersMathBlock');
+            const isBreadOrDough = recipe.category.toLowerCase().includes('bread') || recipe.category.toLowerCase().includes('dough') || recipe.name.toLowerCase().includes('sourdough') || recipe.name.toLowerCase().includes('roll');
+
+            if (!isBreadOrDough) {
+                block.classList.add('hidden');
+                return;
+            }
+
+            // Estimate flour and water in grams from text
+            const ingText = recipe.ingredients.toLowerCase();
+            const flourMatch = ingText.match(/(\d+)\s*g[^\n,]*flour/i);
+            const waterMatch = ingText.match(/(\d+)\s*g[^\n,]*water/i);
+
+            if (flourMatch && waterMatch) {
+                baseFlourWeight = parseInt(flourMatch[1], 10);
+                baseWaterWeight = parseInt(waterMatch[1], 10);
+                const currentHydration = Math.round((baseWaterWeight / baseFlourWeight) * 100);
+                document.getElementById('bakersHydrationDisplay').textContent = `${currentHydration}% Hydration`;
+                document.getElementById('hydrationSlider').value = currentHydration;
+                document.getElementById('sliderPercentVal').textContent = `${currentHydration}%`;
+                block.classList.remove('hidden');
+            } else {
+                block.classList.add('hidden');
+            }
+        }
+
+        function handleHydrationSliderChange(newHydration) {
+            document.getElementById('sliderPercentVal').textContent = `${newHydration}%`;
+            document.getElementById('bakersHydrationDisplay').textContent = `${newHydration}% Hydration`;
+            const newWaterGrams = Math.round(baseFlourWeight * (newHydration / 100) * currentScale);
+            renderScaledIngredients(newWaterGrams);
+        }
+
+        /* ── STEP-BY-STEP HANDS-FREE COOK MODE ── */
+        let cookModeSteps = [];
+        let currentCookStepIndex = 0;
+
+        function openCookMode() {
+            if (!activeRecipe) return;
+            cookModeSteps = activeRecipe.directions.split(/\n|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
+            if (cookModeSteps.length === 0) return;
+
+            currentCookStepIndex = 0;
+            document.getElementById('cookModeTitle').textContent = activeRecipe.name;
+            document.getElementById('cookModeModal').classList.remove('hidden');
+            document.getElementById('cookModeModal').classList.add('flex');
+            renderActiveCookStep();
+            requestScreenWakeLock();
+        }
+
+        function closeCookMode() {
+            document.getElementById('cookModeModal').classList.add('hidden');
+            document.getElementById('cookModeModal').classList.remove('flex');
+        }
+
+        function renderActiveCookStep() {
+            const stepText = cookModeSteps[currentCookStepIndex];
+            const total = cookModeSteps.length;
+            const progress = ((currentCookStepIndex + 1) / total) * 100;
+
+            document.getElementById('cookModeStepIndicator').textContent = `Step ${currentCookStepIndex + 1} of ${total}`;
+            document.getElementById('cookModeProgressBar').style.width = `${progress}%`;
+            document.getElementById('cookModeStepText').textContent = stepText;
+
+            // Check if step mentions a time to offer a 1-tap timer launcher
+            const timeMatch = stepText.match(/(\b\d+(?:[\.,]\d+)?\s*(?:-\s*\d+)?\s*(?:minutes|minute|mins|min|hours|hour|hrs|hr)\b)/i);
+            const timerTriggerEl = document.getElementById('cookModeStepTimerTrigger');
+            
+            if (timeMatch) {
+                let mins = 10;
+                const matchStr = timeMatch[0].toLowerCase();
+                if (matchStr.includes('hr') || matchStr.includes('hour')) mins = Math.round(parseFloat(matchStr) * 60) || 60;
+                else mins = parseInt(matchStr.replace(/[^\d]/g, ''), 10) || 10;
+
+                timerTriggerEl.innerHTML = `
+                    <button type="button" onclick="addQuickTimer(${mins}, 'Step ${currentCookStepIndex + 1}: ${mins}m')" class="px-5 py-2.5 rounded-2xl bg-jokerGreen text-black font-black text-sm flex items-center gap-2 shadow-[0_0_15px_rgba(0,230,118,0.4)] hover:scale-105 transition-all">
+                        <span>⏱ Start ${timeMatch[0]} Timer</span>
+                    </button>
+                `;
+            } else {
+                timerTriggerEl.innerHTML = '';
+            }
+
+            document.getElementById('cookModePrevBtn').disabled = currentCookStepIndex === 0;
+            document.getElementById('cookModePrevBtn').classList.toggle('opacity-40', currentCookStepIndex === 0);
+            document.getElementById('cookModeNextBtn').textContent = currentCookStepIndex === total - 1 ? 'Finish Recipe 🎉' : 'Next Step →';
+        }
+
+        function navigateCookStep(direction) {
+            currentCookStepIndex += direction;
+            if (currentCookStepIndex >= cookModeSteps.length) {
+                alert('Recipe Complete! Bon Appétit! 🃏');
+                closeCookMode();
+                return;
+            }
+            if (currentCookStepIndex < 0) currentCookStepIndex = 0;
+            renderActiveCookStep();
+        }
 
         /* ── INGREDIENT CONVERSION & SCALING ENGINE ── */
         function parseFractionString(str) {
@@ -616,8 +918,14 @@
             return 240;
         }
 
-        function convertIngredientLine(line, targetMode, scale) {
+        function convertIngredientLine(line, targetMode, scale, customWaterGrams = null) {
             let processedLine = line;
+
+            // Direct override for Baker's Hydration Slider on Water line
+            if (customWaterGrams !== null && processedLine.toLowerCase().includes('water') && processedLine.toLowerCase().includes('g')) {
+                return `${customWaterGrams}g Water (Adjusted Hydration)`;
+            }
+
             const match = processedLine.match(/^([\d\s\/\.\,\-]+)\s*(cups?|c|tablespoons?|tbsp?|tbs|teaspoons?|tsp|ounces?|oz|grams?|g|ml|milliliters?|pounds?|lbs?|sticks?)\b(.*)$/i);
 
             if (!match) {
@@ -757,17 +1065,9 @@
             }
         }
 
-        /* ── TIMER SYSTEM ── */
-        let timerSecondsRemaining = 900;
-        let timerInterval = null;
-        let timerIsRunning = false;
-        const mainTimerDisplay = document.getElementById('mainTimerDisplay');
-        const miniTimerTime = document.getElementById('miniTimerTime');
-        const headerTimerDisplay = document.getElementById('headerTimerDisplay');
-        const timerToggleBtn = document.getElementById('timerToggleBtn');
-        const timerMiniBadge = document.getElementById('timerMiniBadge');
-        const timerExpandedConsole = document.getElementById('timerExpandedConsole');
-        const timerLabel = document.getElementById('timerLabel');
+        /* ── MULTI-TIMER COOKING SYSTEM ── */
+        let activeTimers = [];
+        let timerTickerInterval = null;
 
         function formatTimerString(totalSecs) {
             const m = Math.floor(totalSecs / 60);
@@ -775,14 +1075,129 @@
             return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
-        function updateTimerDisplays() {
-            const formatted = formatTimerString(timerSecondsRemaining);
-            mainTimerDisplay.textContent = formatted;
-            miniTimerTime.textContent = formatted;
-            headerTimerDisplay.textContent = timerIsRunning ? formatted : 'Timer';
+        function ensureTimerTicker() {
+            if (timerTickerInterval) return;
+            timerTickerInterval = setInterval(() => {
+                let updated = false;
+                activeTimers.forEach(t => {
+                    if (t.isRunning && t.remaining > 0) {
+                        t.remaining--;
+                        updated = true;
+                        if (t.remaining === 0) {
+                            t.isRunning = false;
+                            playTimerChime(t.name);
+                        }
+                    }
+                });
+                if (updated || activeTimers.length > 0) {
+                    renderActiveTimersList();
+                    updateHeaderTimerDisplay();
+                }
+            }, 1000);
         }
 
-        function playTimerChime() {
+        function addQuickTimer(minutes, label) {
+            activeTimers.push({
+                id: Date.now() + Math.random(),
+                name: label,
+                duration: minutes * 60,
+                remaining: minutes * 60,
+                isRunning: true
+            });
+            ensureTimerTicker();
+            renderActiveTimersList();
+            updateHeaderTimerDisplay();
+            toggleTimerPanel(true);
+        }
+
+        function addNewCustomTimer() {
+            const labelInput = document.getElementById('timerCustomLabelInput');
+            const minInput = document.getElementById('timerInputMinutes');
+            const secInput = document.getElementById('timerInputSeconds');
+
+            const m = parseInt(minInput.value, 10) || 0;
+            const s = parseInt(secInput.value, 10) || 0;
+            const totalSecs = (m * 60) + s;
+
+            if (totalSecs <= 0) return;
+
+            const name = labelInput.value.trim() || `Timer ${activeTimers.length + 1}`;
+            activeTimers.push({
+                id: Date.now() + Math.random(),
+                name: name,
+                duration: totalSecs,
+                remaining: totalSecs,
+                isRunning: true
+            });
+
+            labelInput.value = '';
+            ensureTimerTicker();
+            renderActiveTimersList();
+            updateHeaderTimerDisplay();
+        }
+
+        function toggleTimerItem(id) {
+            const timer = activeTimers.find(t => t.id === id);
+            if (timer) {
+                timer.isRunning = !timer.isRunning;
+                renderActiveTimersList();
+                updateHeaderTimerDisplay();
+            }
+        }
+
+        function deleteTimerItem(id) {
+            activeTimers = activeTimers.filter(t => t.id !== id);
+            renderActiveTimersList();
+            updateHeaderTimerDisplay();
+        }
+
+        function renderActiveTimersList() {
+            const listEl = document.getElementById('activeTimersList');
+            if (activeTimers.length === 0) {
+                listEl.innerHTML = '<div class="text-center text-textMuted py-4 text-xs italic">No active kitchen timers. Launch one below!</div>';
+                return;
+            }
+
+            listEl.innerHTML = activeTimers.map(t => {
+                const percent = Math.round(((t.duration - t.remaining) / t.duration) * 100);
+                return `
+                    <div class="p-2.5 rounded-xl bg-harleyBlack border ${t.remaining === 0 ? 'border-harleyRed animate-pulse' : 'border-panelBorder'} flex flex-col gap-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-white truncate max-w-[150px]">${escapeHtml(t.name)}</span>
+                            <span class="font-mono text-sm font-bold ${t.remaining === 0 ? 'text-harleyRed' : 'text-jokerGreen'}">${formatTimerString(t.remaining)}</span>
+                        </div>
+                        <div class="w-full bg-panelBorder h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-gradient-to-r from-jokerPurple to-jokerGreen h-full transition-all duration-500" style="width: ${percent}%;"></div>
+                        </div>
+                        <div class="flex justify-end gap-1.5 pt-0.5">
+                            <button type="button" onclick="toggleTimerItem(${t.id})" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded ${t.isRunning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-jokerGreen/20 text-jokerGreen'}">
+                                ${t.isRunning ? 'Pause' : 'Resume'}
+                            </button>
+                            <button type="button" onclick="deleteTimerItem(${t.id})" class="text-[10px] font-mono text-neutral-400 hover:text-harleyRed px-1.5 py-0.5 rounded bg-panelBorder">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateHeaderTimerDisplay() {
+            const runningCount = activeTimers.filter(t => t.isRunning).length;
+            const headerDisplay = document.getElementById('headerTimerDisplay');
+            const miniDisplay = document.getElementById('miniTimerTime');
+
+            if (runningCount > 0) {
+                const shortest = [...activeTimers].filter(t => t.isRunning).sort((a,b) => a.remaining - b.remaining)[0];
+                headerDisplay.textContent = formatTimerString(shortest.remaining);
+                miniDisplay.textContent = `${formatTimerString(shortest.remaining)} (${runningCount})`;
+            } else {
+                headerDisplay.textContent = `Timers (${activeTimers.length})`;
+                miniDisplay.textContent = `${activeTimers.length} Timers`;
+            }
+        }
+
+        function playTimerChime(name) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const tones = [587.33, 880, 1174.66];
@@ -802,96 +1217,31 @@
 
             if ('Notification' in window && Notification.permission === 'granted') {
                 new Notification('Arkham Kitchen Timer Alert! 🃏', {
-                    body: `${timerLabel.textContent || 'Your cooking timer'} is done!`,
+                    body: `${name || 'Kitchen Timer'} is ready!`,
                     icon: './icon-192x192.png'
                 });
             }
         }
 
-        function toggleTimerCountdown() {
-            if (timerIsRunning) {
-                clearInterval(timerInterval);
-                timerIsRunning = false;
-                timerToggleBtn.textContent = 'Resume Timer';
-                timerToggleBtn.classList.remove('animate-pulse');
-                updateTimerDisplays();
-            } else {
-                if (timerSecondsRemaining <= 0) {
-                    const m = parseInt(document.getElementById('timerInputMinutes').value, 10) || 0;
-                    const s = parseInt(document.getElementById('timerInputSeconds').value, 10) || 0;
-                    timerSecondsRemaining = (m * 60) + s;
-                    if (timerSecondsRemaining <= 0) timerSecondsRemaining = 60;
-                }
-
-                if ('Notification' in window && Notification.permission === 'default') {
-                    Notification.requestPermission();
-                }
-
-                timerIsRunning = true;
-                timerToggleBtn.textContent = 'Pause Timer';
-                timerToggleBtn.classList.add('animate-pulse');
-                updateTimerDisplays();
-
-                timerInterval = setInterval(() => {
-                    if (timerSecondsRemaining > 0) {
-                        timerSecondsRemaining--;
-                        updateTimerDisplays();
-                    } else {
-                        clearInterval(timerInterval);
-                        timerIsRunning = false;
-                        timerToggleBtn.textContent = 'Start Timer';
-                        timerToggleBtn.classList.remove('animate-pulse');
-                        updateTimerDisplays();
-                        playTimerChime();
-                        toggleTimerPanel(true);
-                    }
-                }, 1000);
-            }
-        }
-
-        function resetKitchenTimer() {
-            clearInterval(timerInterval);
-            timerIsRunning = false;
-            timerToggleBtn.textContent = 'Start Timer';
-            timerToggleBtn.classList.remove('animate-pulse');
-            const m = parseInt(document.getElementById('timerInputMinutes').value, 10) || 15;
-            const s = parseInt(document.getElementById('timerInputSeconds').value, 10) || 0;
-            timerSecondsRemaining = (m * 60) + s;
-            updateTimerDisplays();
-        }
-
-        function setTimerPreset(minutes, customLabel = 'Kitchen Timer') {
-            clearInterval(timerInterval);
-            timerIsRunning = false;
-            timerToggleBtn.textContent = 'Start Timer';
-            timerToggleBtn.classList.remove('animate-pulse');
-            timerSecondsRemaining = minutes * 60;
-            document.getElementById('timerInputMinutes').value = minutes;
-            document.getElementById('timerInputSeconds').value = '00';
-            timerLabel.textContent = customLabel;
-            updateTimerDisplays();
-            toggleTimerPanel(true);
-        }
-
         function toggleTimerPanel(forceOpen = null, isMinimize = false) {
-            const isConsoleOpen = !timerExpandedConsole.classList.contains('hidden');
+            const consoleEl = document.getElementById('timerExpandedConsole');
+            const badgeEl = document.getElementById('timerMiniBadge');
+            const isConsoleOpen = !consoleEl.classList.contains('hidden');
+
             if (forceOpen === true) {
-                timerExpandedConsole.classList.remove('hidden');
-                timerMiniBadge.classList.add('hidden');
+                consoleEl.classList.remove('hidden');
+                badgeEl.classList.add('hidden');
             } else if (forceOpen === false) {
-                timerExpandedConsole.classList.add('hidden');
-                if (isMinimize && (timerIsRunning || timerSecondsRemaining > 0)) {
-                    timerMiniBadge.classList.remove('hidden');
-                } else {
-                    timerMiniBadge.classList.add('hidden');
-                }
+                consoleEl.classList.add('hidden');
+                if (isMinimize && activeTimers.length > 0) badgeEl.classList.remove('hidden');
+                else badgeEl.classList.add('hidden');
             } else {
                 if (isConsoleOpen) {
-                    timerExpandedConsole.classList.add('hidden');
-                    if (timerIsRunning) timerMiniBadge.classList.remove('hidden');
+                    consoleEl.classList.add('hidden');
+                    if (activeTimers.length > 0) badgeEl.classList.remove('hidden');
                 } else {
-                    timerExpandedConsole.classList.remove('hidden');
-                    timerMiniBadge.classList.add('hidden');
+                    consoleEl.classList.remove('hidden');
+                    badgeEl.classList.add('hidden');
                 }
             }
         }
@@ -904,13 +1254,9 @@
                 const enrichedStep = escapeHtml(step).replace(timeRegex, (match) => {
                     const cleanMatch = match.toLowerCase();
                     let minutes = 0;
-                    if (cleanMatch.includes('hr') || cleanMatch.includes('hour')) {
-                        const num = parseFloat(cleanMatch.replace(/[^\d.]/g, '')) || 1;
-                        minutes = Math.round(num * 60);
-                    } else {
-                        minutes = parseInt(cleanMatch.replace(/[^\d]/g, ''), 10) || 5;
-                    }
-                    return `<button type="button" onclick="setTimerPreset(${minutes}, 'Step Timer: ${minutes}m')" class="step-timer-badge" title="Start ${minutes}m timer"><span>⏱</span> ${match}</button>`;
+                    if (cleanMatch.includes('hr') || cleanMatch.includes('hour')) minutes = Math.round(parseFloat(cleanMatch) * 60) || 60;
+                    else minutes = parseInt(cleanMatch.replace(/[^\d]/g, ''), 10) || 5;
+                    return `<button type="button" onclick="addQuickTimer(${minutes}, 'Step Timer: ${minutes}m')" class="step-timer-badge" title="Start ${minutes}m timer"><span>⏱</span> ${match}</button>`;
                 });
                 return `<li class="pl-1">${enrichedStep}</li>`;
             }).join('');
@@ -1203,6 +1549,7 @@
                         recipes = parsed;
                         buildCategoryButtons();
                         populateCategorySelectors();
+                        updateDensityButton();
                         renderCatalog();
                         if (!activeRecipe) populateInspectionPane(recipes[0]);
                         return true;
@@ -1215,7 +1562,6 @@
         }
 
         async function loadCatalog(forceRefresh = false) {
-            // Step 1: Render immediately from cache on boot
             const hasLocal = loadLocalCachedData();
             if (!hasLocal || forceRefresh) {
                 resultCount.textContent = 'Syncing Arkham vault...';
@@ -1224,7 +1570,6 @@
                 }
             }
 
-            // Step 2: Fetch fresh data in the background with safe timestamp query
             try {
                 const syncUrl = `${SHEET_CSV_URL}&_ts=${Date.now()}`;
                 const response = await fetch(syncUrl);
@@ -1262,9 +1607,7 @@
                 }
             } catch (err) {
                 console.warn('Network sync paused, offline mode active:', err);
-                if (recipes.length === 0) {
-                    loadLocalCachedData();
-                }
+                if (recipes.length === 0) loadLocalCachedData();
                 document.getElementById('syncStatusBadge').textContent = 'Offline Active';
             }
         }
@@ -1317,36 +1660,62 @@
                 return;
             }
 
-            recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-max pb-28 md:pb-6';
-            visible.forEach(r => {
-                const isFav = favoriteIds.has(r.id);
-                const fallbackImg = getCategoryFallbackImage(r.category);
-                const imgUrl = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
+            if (isCompactTiles) {
+                // Compact Tile Grid (high-density layout)
+                recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 auto-rows-max pb-28 md:pb-6';
+                visible.forEach(r => {
+                    const isFav = favoriteIds.has(r.id);
+                    const fallbackImg = getCategoryFallbackImage(r.category);
+                    const imgUrl = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
 
-                const card = document.createElement('article');
-                card.className = 'w-full min-h-[260px] h-auto bg-cardDark border border-panelBorder rounded-2xl overflow-hidden custom-card-glow cursor-pointer transition-all flex flex-col justify-between select-none shadow-md';
-                card.onclick = () => inspectRecipe(r, true);
-                card.innerHTML = `
-                    <div class="flex flex-col">
-                        <div class="h-40 w-full bg-harleyBlack relative overflow-hidden shrink-0">
+                    const tile = document.createElement('article');
+                    tile.className = 'w-full bg-cardDark border border-panelBorder rounded-xl overflow-hidden custom-card-glow cursor-pointer transition-all flex flex-col justify-between select-none shadow-sm';
+                    tile.onclick = () => inspectRecipe(r, true);
+                    tile.innerHTML = `
+                        <div class="h-28 w-full bg-harleyBlack relative overflow-hidden shrink-0">
                             <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.src='${fallbackImg}'">
-                            <div class="absolute top-2 left-2 bg-harleyBlack/80 border border-panelBorder px-2 py-0.5 rounded text-[10px] font-bold text-jokerGreen uppercase font-mono">
-                                ${escapeHtml(r.category)}
+                            <button type="button" data-fav-id="${r.id}" class="fav-toggle absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-harleyBlack/80 border border-panelBorder flex items-center justify-center text-xs ${isFav ? 'text-harleyRed' : 'text-neutral-400'}">♥</button>
+                        </div>
+                        <div class="p-2 flex flex-col justify-between flex-1">
+                            <h3 class="font-bold text-xs text-white leading-tight line-clamp-2">${escapeHtml(r.name)}</h3>
+                            <span class="text-[9px] text-jokerGreen font-mono font-bold uppercase truncate mt-1">${escapeHtml(r.category)}</span>
+                        </div>
+                    `;
+                    recipeGrid.appendChild(tile);
+                });
+            } else {
+                // Full Detailed Card Grid
+                recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-max pb-28 md:pb-6';
+                visible.forEach(r => {
+                    const isFav = favoriteIds.has(r.id);
+                    const fallbackImg = getCategoryFallbackImage(r.category);
+                    const imgUrl = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
+
+                    const card = document.createElement('article');
+                    card.className = 'w-full min-h-[260px] h-auto bg-cardDark border border-panelBorder rounded-2xl overflow-hidden custom-card-glow cursor-pointer transition-all flex flex-col justify-between select-none shadow-md';
+                    card.onclick = () => inspectRecipe(r, true);
+                    card.innerHTML = `
+                        <div class="flex flex-col">
+                            <div class="h-40 w-full bg-harleyBlack relative overflow-hidden shrink-0">
+                                <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.src='${fallbackImg}'">
+                                <div class="absolute top-2 left-2 bg-harleyBlack/80 border border-panelBorder px-2 py-0.5 rounded text-[10px] font-bold text-jokerGreen uppercase font-mono">
+                                    ${escapeHtml(r.category)}
+                                </div>
+                                <button type="button" data-fav-id="${r.id}" class="fav-toggle absolute top-2 right-2 w-8 h-8 rounded-full bg-harleyBlack/80 border border-panelBorder flex items-center justify-center text-sm ${isFav ? 'text-harleyRed' : 'text-neutral-400'}">♥</button>
                             </div>
-                            <button type="button" data-fav-id="${r.id}" class="fav-toggle absolute top-2 right-2 w-8 h-8 rounded-full bg-harleyBlack/80 border border-panelBorder flex items-center justify-center text-sm ${isFav ? 'text-harleyRed' : 'text-neutral-400'}">♥</button>
+                            <div class="p-3.5 flex flex-col flex-grow">
+                                <h3 class="font-bold text-sm text-white mb-1.5 leading-snug line-clamp-2">${escapeHtml(r.name)}</h3>
+                                <p class="text-xs text-textMuted line-clamp-2 leading-relaxed">${escapeHtml(r.ingredients)}</p>
+                            </div>
                         </div>
-                        <div class="p-3.5 flex flex-col flex-grow">
-                            <h3 class="font-bold text-sm text-white mb-1.5 leading-snug line-clamp-2">${escapeHtml(r.name)}</h3>
-                            <p class="text-xs text-textMuted line-clamp-2 leading-relaxed">${escapeHtml(r.ingredients)}</p>
+                        <div class="px-3.5 py-2.5 border-t border-panelBorder/70 flex justify-between items-center text-[11px] text-textMuted font-mono shrink-0">
+                            <span class="text-harleyRed font-bold">Arkham Approved</span>
+                            <span class="text-jokerGreen">Select →</span>
                         </div>
-                    </div>
-                    <div class="px-3.5 py-2.5 border-t border-panelBorder/70 flex justify-between items-center text-[11px] text-textMuted font-mono shrink-0">
-                        <span class="text-harleyRed font-bold">Arkham Approved</span>
-                        <span class="text-jokerGreen">Select →</span>
-                    </div>
-                `;
-                recipeGrid.appendChild(card);
-            });
+                    `;
+                    recipeGrid.appendChild(card);
+                });
+            }
         }
 
         function populateInspectionPane(r) {
@@ -1366,6 +1735,7 @@
             detailPhoto.src = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
             detailPhoto.onerror = () => { detailPhoto.src = fallbackImg; };
 
+            checkAndRenderBakersMath(r);
             renderScaledIngredients();
             document.getElementById('inspectDirectionsList').innerHTML = formatDirectionsWithTimers(r.directions);
 
@@ -1391,16 +1761,16 @@
             renderScaledIngredients();
         }
 
-        function renderScaledIngredients() {
+        function renderScaledIngredients(customWaterGrams = null) {
             if (!activeRecipe) return;
             const ingLines = activeRecipe.ingredients.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
             
             document.getElementById('inspectIngredientsList').innerHTML = ingLines.map(line => {
-                const convertedLine = convertIngredientLine(line, currentUnitMode, currentScale);
+                const convertedLine = convertIngredientLine(line, currentUnitMode, currentScale, customWaterGrams);
                 return `
                     <li class="flex items-start gap-2 bg-harleyBlack/50 p-1.5 rounded border border-panelBorder/50">
                         <input type="checkbox" class="mt-0.5 rounded text-jokerGreen focus:ring-0">
-                        <span class="leading-tight">${escapeHtml(convertedLine)}</span>
+                        <span class="leading-tight flex-1">${escapeHtml(convertedLine)}</span>
                     </li>
                 `;
             }).join('');
@@ -1544,12 +1914,15 @@
                 toggleAddModal(false);
                 closeEditCategoryModal();
                 toggleDrawer(false);
+                closeCookMode();
+                toggleGroceryDrawer(false);
                 toggleTimerPanel(false, true);
             }
         });
 
-        // Initialize display and trigger instant local cache load
-        updateTimerDisplays();
+        // Initialize displays and immediate cache boot
+        renderGroceryList();
+        updateHeaderTimerDisplay();
         loadCatalog();
     </script>
 </body>
