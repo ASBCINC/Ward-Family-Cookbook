@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v1.2.0 | Arkham Kitchen | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v1.2.1 | Arkham Kitchen | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="1.2.0">
+    <meta name="application-version" content="1.2.1">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -45,8 +45,8 @@
     </script>
 
     <style>
-        html { -webkit-text-size-adjust: 100%; }
-        body { overscroll-behavior: none; }
+        html { -webkit-text-size-adjust: 100%; height: 100%; }
+        body { height: 100%; overscroll-behavior-y: contain; }
         button, input, select, textarea { touch-action: manipulation; }
 
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -77,6 +77,10 @@
             border-color: #00E676 !important;
             box-shadow: 0 0 0 1px rgba(0, 230, 118, 0.6);
             outline: none;
+        }
+
+        .scroll-touch {
+            -webkit-overflow-scrolling: touch;
         }
 
         .drawer-open { transform: translateY(0) !important; }
@@ -122,10 +126,10 @@
     </style>
 </head>
 
-<body class="bg-harleyBlack text-white h-screen overflow-hidden font-sans selection:bg-harleyRed selection:text-white">
+<body class="bg-harleyBlack text-white h-screen flex flex-col overflow-hidden font-sans selection:bg-harleyRed selection:text-white">
 
     <!-- Header Toolbar -->
-    <header class="h-28 bg-[#100c14] border-b border-panelBorder flex flex-col justify-between shadow-lg shrink-0">
+    <header class="bg-[#100c14] border-b border-panelBorder flex flex-col justify-between shadow-lg shrink-0 z-20">
         <div class="h-16 px-3 sm:px-5 flex items-center justify-between">
             <div class="flex items-center gap-3 sm:gap-4 min-w-0">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-jokerPurple to-harleyRed flex items-center justify-center text-xl shadow-[0_0_12px_rgba(233,30,99,0.4)] border border-jokerGreen/40 shrink-0">
@@ -141,7 +145,6 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                <!-- Install App Button (Visible only when installable and not already installed) -->
                 <button id="installAppButton" type="button" class="hidden print-hide h-9 px-3 rounded-xl bg-harleyBlack border border-jokerGreen/60 text-jokerGreen text-xs sm:text-sm font-bold hover:bg-jokerGreen hover:text-black transition-all flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,230,118,0.2)]">
                     <span id="installAppIcon" class="flex items-center"></span>
                     <span id="installAppText">Install App</span>
@@ -154,12 +157,12 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold">Cloud Sync</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.2.0</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.2.1</div>
                 </div>
             </div>
         </div>
 
-        <!-- Sub toolbar with real-time controls -->
+        <!-- Sub toolbar with filter controls -->
         <div id="quickControls" class="h-12 px-3 sm:px-5 flex items-center gap-2.5 border-t border-panelBorder/70 bg-[#0d0912] overflow-x-auto print-hide">
             <input id="chefFilter" type="text" placeholder="Cook / Contributor" class="h-9 w-36 sm:w-44 shrink-0 bg-cardDark border border-panelBorder rounded-lg px-3 text-xs text-white placeholder:text-textMuted">
             
@@ -178,10 +181,10 @@
     </header>
 
     <!-- Main Workspace -->
-    <main class="h-[calc(100vh-7rem)] flex overflow-hidden relative">
+    <main class="flex-1 flex overflow-hidden relative">
 
-        <!-- Recipe Catalog Side (Left 2/3) -->
-        <section id="catalogPanel" class="w-full md:w-2/3 flex flex-col border-r border-panelBorder pb-20 md:pb-0 bg-[#0c0a10] h-full min-h-0">
+        <!-- Recipe Catalog Side (Left 2/3 on desktop, full screen on mobile) -->
+        <section id="catalogPanel" class="w-full md:w-2/3 flex flex-col border-r border-panelBorder bg-[#0c0a10] h-full min-h-0">
             <div class="p-3 sm:p-4 bg-cardDark border-b border-panelBorder space-y-3 shrink-0">
                 <div class="flex gap-2">
                     <div class="w-5/12 sm:w-1/3 relative shrink-0">
@@ -213,12 +216,12 @@
                 </div>
             </div>
 
-            <!-- Dynamic Recipe Grid / List -->
-            <div id="recipeGrid" class="flex-1 overflow-y-auto min-h-0 p-3 sm:p-4 content-start"></div>
+            <!-- Scrollable Grid / List Content -->
+            <div id="recipeGrid" class="flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 pb-28 md:pb-6"></div>
         </section>
 
-        <!-- Active Recipe Inspection Side (Right 1/3) -->
-        <section id="recipeDrawer" class="fixed md:static inset-x-0 bottom-0 z-40 md:z-auto w-full md:w-1/3 h-[88vh] md:h-full bg-cardDark flex flex-col overflow-y-auto shadow-2xl md:shadow-none rounded-t-2xl md:rounded-none border-t md:border-t-0 border-panelBorder translate-y-full md:translate-y-0 transition-transform duration-300">
+        <!-- Recipe Drawer (Right 1/3 on desktop, overlay modal on mobile) -->
+        <section id="recipeDrawer" class="fixed md:static inset-x-0 bottom-0 z-40 md:z-auto w-full md:w-1/3 h-[90vh] md:h-full bg-cardDark flex flex-col overflow-y-auto scroll-touch shadow-2xl md:shadow-none rounded-t-2xl md:rounded-none border-t md:border-t-0 border-panelBorder translate-y-full md:translate-y-0 transition-transform duration-300">
             <div class="sticky top-0 z-20 p-4 border-b border-panelBorder flex justify-between items-center shrink-0 bg-cardDark">
                 <div>
                     <h2 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
@@ -227,7 +230,7 @@
                     </h2>
                     <p id="inspectCategory" class="text-xs text-jokerGreen font-mono">Select a recipe to view</p>
                 </div>
-                <button id="closeDrawerButton" type="button" onclick="toggleDrawer(false)" class="md:hidden w-10 h-10 bg-panelBorder rounded-full text-xl" aria-label="Close">×</button>
+                <button id="closeDrawerButton" type="button" onclick="toggleDrawer(false)" class="md:hidden w-10 h-10 bg-panelBorder rounded-full text-xl flex items-center justify-center font-bold" aria-label="Close">×</button>
             </div>
 
             <!-- Card Banner Image -->
@@ -264,7 +267,7 @@
                 </div>
             </div>
 
-            <!-- Sticky Bottom Kitchen Actions -->
+            <!-- Bottom Kitchen Actions -->
             <div class="sticky bottom-0 z-20 p-3 sm:p-4 bg-[#0a080f] border-t border-panelBorder shrink-0 safe-bottom">
                 <div class="grid grid-cols-3 gap-2">
                     <button type="button" onclick="scaleActiveRecipe(0.5)" class="bg-cardDark border border-panelBorder hover:border-jokerPurple font-bold py-2.5 rounded-xl text-xs text-white">0.5x</button>
@@ -279,15 +282,15 @@
         </section>
     </main>
 
-    <!-- Mobile Sticky Floating Button -->
+    <!-- Mobile Floating Bar (Opens active recipe) -->
     <button id="mobileBar" type="button" onclick="toggleDrawer(true)" class="md:hidden fixed z-30 left-3 right-3 bottom-3 bg-gradient-to-r from-jokerPurple to-harleyRed text-white rounded-2xl shadow-2xl px-4 py-3 flex items-center justify-between font-bold safe-bottom border border-jokerGreen/40">
-        <span class="flex items-center gap-2"><span>🃏</span> <span id="mobileRecipeName">View Current Recipe</span></span>
-        <span class="text-xs bg-black/40 px-2 py-1 rounded text-jokerGreen font-mono">Open</span>
+        <span class="flex items-center gap-2 truncate"><span>🃏</span> <span id="mobileRecipeName" class="truncate">Select a Recipe</span></span>
+        <span class="text-xs bg-black/40 px-2 py-1 rounded text-jokerGreen font-mono shrink-0">Open</span>
     </button>
 
     <div id="drawerBackdrop" onclick="toggleDrawer(false)" class="hidden md:hidden fixed inset-0 z-30 bg-black/80 backdrop-blur-sm"></div>
 
-    <!-- Add Recipe Modal (With Firebase Storage & Cloud Sync) -->
+    <!-- Add Recipe Modal -->
     <div id="customModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-3">
@@ -371,7 +374,8 @@
             }
         });
 
-        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1Wt_9oc_a8xe2Bz1i7Kq0y_FmxHeaxaLmhz8hpoASo4E/export?format=csv&gid=0";
+        // Robust public CORS-friendly CSV URL
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM4oWWlRktK-xVxLiHaeLL8qMsWdMBX_xYHxHPZBUFzXyrcmSQBzqrAtvjjv0WVCWxBNvLLgow2fbZ/pub?output=csv";
         const GOOGLE_APPS_SCRIPT_URL = "";
 
         let recipes = [];
@@ -441,14 +445,13 @@
             installAppButton.classList.add('hidden');
         });
 
-        // Ensure button remains completely hidden if launched inside standalone mode
         if (isAppAlreadyInstalled()) {
             installAppButton.classList.add('hidden');
         }
 
         async function loadCatalog() {
             resultCount.textContent = 'Syncing Arkham vault...';
-            recipeGrid.innerHTML = '<div class="col-span-full text-center text-textMuted py-16">Loading recipes from Google Drive database...</div>';
+            recipeGrid.innerHTML = '<div class="col-span-full text-center text-textMuted py-16">Loading recipes from database...</div>';
 
             try {
                 const response = await fetch(SHEET_CSV_URL, { cache: 'no-store' });
@@ -478,8 +481,9 @@
                 updateViewToggleLabel();
                 renderCatalog();
 
+                // On desktop, populate the inspection pane without auto-opening drawer on mobile
                 if (recipes.length > 0 && !activeRecipe) {
-                    inspectRecipe(recipes[0]);
+                    populateInspectionPane(recipes[0]);
                 }
             } catch (err) {
                 console.warn('Failed live sheet fetch, falling back to cache:', err);
@@ -489,7 +493,7 @@
                     buildCategoryButtons();
                     updateViewToggleLabel();
                     renderCatalog();
-                    if (recipes.length > 0 && !activeRecipe) inspectRecipe(recipes[0]);
+                    if (recipes.length > 0 && !activeRecipe) populateInspectionPane(recipes[0]);
                     resultCount.innerHTML = `<span class="text-jokerGreen">Offline Cache Active</span>`;
                 } else {
                     recipeGrid.innerHTML = '<div class="col-span-full text-center text-harleyRed py-16">Could not load recipes. Check your connection or sheet link.</div>';
@@ -552,7 +556,7 @@
             recipeGrid.innerHTML = '';
 
             if (visible.length === 0) {
-                recipeGrid.className = 'flex-1 overflow-y-auto min-h-0 p-8 text-center text-textMuted';
+                recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-8 text-center text-textMuted';
                 recipeGrid.innerHTML = '<div>No recipes found matching your search.</div>';
                 return;
             }
@@ -560,13 +564,14 @@
             const fallbackImage = "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=80";
 
             if (isListView) {
-                recipeGrid.className = 'flex-1 overflow-y-auto min-h-0 p-3 sm:p-4 flex flex-col gap-3';
+                // Fixed uncompressed list layout
+                recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 space-y-3 pb-28 md:pb-6 block';
                 visible.forEach(r => {
                     const isFav = favoriteIds.has(r.id);
                     const imgUrl = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImage;
                     const row = document.createElement('article');
-                    row.className = 'shrink-0 min-h-[96px] bg-cardDark border border-panelBorder rounded-2xl p-2.5 sm:p-3 flex items-center justify-between custom-card-glow cursor-pointer transition-all gap-3';
-                    row.onclick = () => inspectRecipe(r);
+                    row.className = 'w-full min-h-[96px] bg-cardDark border border-panelBorder rounded-2xl p-2.5 sm:p-3 flex items-center justify-between custom-card-glow cursor-pointer transition-all gap-3 select-none';
+                    row.onclick = () => inspectRecipe(r, true);
                     row.innerHTML = `
                         <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 bg-harleyBlack border border-panelBorder relative">
                             <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.src='${fallbackImage}'">
@@ -590,13 +595,13 @@
                     recipeGrid.appendChild(row);
                 });
             } else {
-                recipeGrid.className = 'flex-1 overflow-y-auto min-h-0 p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4';
+                recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pb-28 md:pb-6';
                 visible.forEach(r => {
                     const isFav = favoriteIds.has(r.id);
                     const imgUrl = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImage;
                     const card = document.createElement('article');
-                    card.className = 'bg-cardDark border border-panelBorder rounded-2xl overflow-hidden custom-card-glow cursor-pointer transition-all flex flex-col justify-between';
-                    card.onclick = () => inspectRecipe(r);
+                    card.className = 'bg-cardDark border border-panelBorder rounded-2xl overflow-hidden custom-card-glow cursor-pointer transition-all flex flex-col justify-between select-none';
+                    card.onclick = () => inspectRecipe(r, true);
                     card.innerHTML = `
                         <div>
                             <div class="h-36 bg-harleyBlack relative overflow-hidden">
@@ -621,7 +626,7 @@
             }
         }
 
-        function inspectRecipe(r) {
+        function populateInspectionPane(r) {
             activeRecipe = r;
             currentScale = 1.0;
             document.getElementById('scaleMultiplierBadge').textContent = '1x Scale';
@@ -651,8 +656,13 @@
             } else {
                 notesBlock.classList.add('hidden');
             }
+        }
 
-            toggleDrawer(true);
+        function inspectRecipe(r, shouldOpenDrawer = false) {
+            populateInspectionPane(r);
+            if (shouldOpenDrawer) {
+                toggleDrawer(true);
+            }
         }
 
         function scaleActiveRecipe(factor) {
@@ -759,7 +769,7 @@
                 recipes.unshift(newRecipe);
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
                 renderCatalog();
-                inspectRecipe(newRecipe);
+                inspectRecipe(newRecipe, true);
 
                 feedback.innerHTML = '<span class="text-jokerGreen font-bold">Saved! Cloud and sheet updated.</span>';
                 setTimeout(() => toggleAddModal(false), 1200);
