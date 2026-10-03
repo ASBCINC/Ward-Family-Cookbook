@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.1.3 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v2.1.4 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="2.1.3">
+    <meta name="application-version" content="2.1.4">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -165,7 +165,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.1.3</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.1.4</div>
                 </div>
             </div>
         </div>
@@ -218,7 +218,6 @@
                 </div>
             </div>
 
-            <!-- Dynamic Recipe Cards Grid -->
             <div id="recipeGrid" class="flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-max pb-28 md:pb-6"></div>
         </section>
 
@@ -397,7 +396,6 @@
 
         <ul id="groceryItemsList" class="flex-1 overflow-y-auto scroll-touch p-4 space-y-2 text-xs"></ul>
 
-        <!-- Bottom Actions -->
         <div class="p-3 border-t border-panelBorder bg-harleyBlack flex flex-col gap-2 shrink-0 safe-bottom">
             <button type="button" onclick="exportToGoogleKeep()" class="w-full py-2.5 bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md hover:brightness-110 border border-jokerGreen/40">
                 <span>📝</span> Copy / Share for Google Keep
@@ -499,7 +497,7 @@
         </div>
     </div>
 
-    <!-- Add Recipe Modal -->
+    <!-- Add Recipe Modal (With Resilient URL + Smart-Paste Parser) -->
     <div id="customModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-3">
@@ -510,21 +508,34 @@
                 <button type="button" onclick="toggleAddModal(false)" class="w-9 h-9 rounded-full bg-harleyBlack border border-panelBorder text-white text-lg flex items-center justify-center">×</button>
             </div>
 
-            <!-- URL Auto-Importer Box -->
-            <div class="mb-4 bg-[#140e1b] border border-jokerPurple/40 p-3 rounded-xl">
-                <div class="flex items-center justify-between mb-1.5">
+            <!-- ONE-CLICK URL + SMART-PASTE IMPORT ENGINE -->
+            <div class="mb-4 bg-[#140e1b] border border-jokerPurple/40 p-3 rounded-xl space-y-2">
+                <div class="flex items-center justify-between">
                     <span class="text-[11px] font-bold text-jokerGreen uppercase tracking-wider flex items-center gap-1">
-                        <span>🔗</span> Auto-Import via URL
+                        <span>🔗</span> Auto-Import Recipe
                     </span>
-                    <span class="text-[10px] text-textMuted">Works with most blogs</span>
+                    <button type="button" onclick="toggleSmartPasteBox()" id="smartPasteToggleBtn" class="text-[10px] text-neutral-400 hover:text-white underline">
+                        Direct Text / Smart-Paste
+                    </button>
                 </div>
-                <div class="flex gap-2">
-                    <input id="importUrlInput" type="url" placeholder="https://example.com/recipe..." class="flex-1 bg-harleyBlack border border-panelBorder rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-jokerGreen">
+
+                <!-- URL Box -->
+                <div id="urlInputContainer" class="flex gap-2">
+                    <input id="importUrlInput" type="url" placeholder="Paste recipe website URL (https://...)" class="flex-1 bg-harleyBlack border border-panelBorder rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-jokerGreen">
                     <button type="button" id="importUrlBtn" onclick="importFromWebUrl()" class="px-3 py-1.5 rounded-lg bg-jokerPurple hover:bg-jokerPurpleDark border border-jokerGreen/50 text-white text-xs font-bold transition-all shrink-0">
                         Fetch
                     </button>
                 </div>
-                <div id="importStatus" class="text-[11px] mt-1.5 min-h-[1rem]"></div>
+
+                <!-- Direct Smart-Paste Box (Bypasses all proxy/Cloudflare firewalls) -->
+                <div id="smartPasteContainer" class="hidden space-y-2">
+                    <textarea id="smartPasteTextarea" rows="3" placeholder="Copy recipe text from any website (or ingredients & steps) and paste here..." class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2.5 text-xs text-white leading-relaxed outline-none focus:border-jokerGreen"></textarea>
+                    <button type="button" onclick="parseSmartPasteText()" class="w-full py-1.5 rounded-lg bg-jokerGreen text-black text-xs font-bold hover:brightness-110">
+                        ⚡ Extract &amp; Auto-Fill Form
+                    </button>
+                </div>
+
+                <div id="importStatus" class="text-[11px] min-h-[1rem]"></div>
             </div>
 
             <form id="recipeAddForm" onsubmit="handleFormSubmit(event)" class="space-y-3 text-xs text-textMuted">
@@ -1328,52 +1339,111 @@
             }
         }
 
-        function formatDirectionsWithTimers(text) {
-            const rawSteps = (text || '').split(/\n|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
-            const timeRegex = /(\b\d+(?:[\.,]\d+)?\s*(?:-\s*\d+)?\s*(?:minutes|minute|mins|min|hours|hour|hrs|hr)\b)/gi;
-
-            return rawSteps.map(step => {
-                const enrichedStep = escapeHtml(step).replace(timeRegex, (match) => {
-                    const cleanMatch = match.toLowerCase();
-                    let minutes = 0;
-                    if (cleanMatch.includes('hr') || cleanMatch.includes('hour')) minutes = Math.round(parseFloat(cleanMatch) * 60) || 60;
-                    else minutes = parseInt(cleanMatch.replace(/[^\d]/g, ''), 10) || 5;
-                    return `<button type="button" onclick="addQuickTimer(${minutes}, 'Step Timer: ${minutes}m')" class="step-timer-badge" title="Start ${minutes}m timer"><span>⏱</span> ${match}</button>`;
-                });
-                return `<li class="pl-1">${enrichedStep}</li>`;
-            }).join('');
+        /* ── RESILIENT URL SCRAPER & SMART-PASTE PARSER ── */
+        function toggleSmartPasteBox() {
+            const box = document.getElementById('smartPasteContainer');
+            const urlBox = document.getElementById('urlInputContainer');
+            const btn = document.getElementById('smartPasteToggleBtn');
+            const isHidden = box.classList.contains('hidden');
+            
+            if (isHidden) {
+                box.classList.remove('hidden');
+                urlBox.classList.add('hidden');
+                btn.textContent = 'Use URL Link instead';
+            } else {
+                box.classList.add('hidden');
+                urlBox.classList.remove('hidden');
+                btn.textContent = 'Direct Text / Smart-Paste';
+            }
         }
 
-        /* ── MULTI-PROXY RESILIENT URL IMPORTER ── */
+        function parseSmartPasteText() {
+            const raw = document.getElementById('smartPasteTextarea').value.trim();
+            const statusEl = document.getElementById('importStatus');
+            if (!raw) {
+                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Please paste text first!</span>';
+                return;
+            }
+
+            // Heuristic extraction
+            const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+            let title = '';
+            let ingredients = [];
+            let directions = [];
+            let currentMode = 'detect';
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const lower = line.toLowerCase();
+
+                if (!title && i < 3 && line.length < 75 && !lower.includes('ingredient') && !lower.includes('direction')) {
+                    title = line;
+                    continue;
+                }
+
+                if (lower.includes('ingredient')) {
+                    currentMode = 'ing';
+                    continue;
+                }
+                if (lower.includes('instruction') || lower.includes('direction') || lower.includes('preparation') || lower.includes('method')) {
+                    currentMode = 'dir';
+                    continue;
+                }
+
+                if (currentMode === 'ing') {
+                    ingredients.push(line);
+                } else if (currentMode === 'dir') {
+                    directions.push(line);
+                } else {
+                    // Auto detect by pattern
+                    if (/^([\d\s\/\.\,\-]+)\s*(cup|tbsp|tsp|g|oz|gram|tablespoon|teaspoon|lb)/i.test(line)) {
+                        ingredients.push(line);
+                    } else if (directions.length > 0 || /^\d+\.\s+/.test(line)) {
+                        directions.push(line);
+                    }
+                }
+            }
+
+            if (title) document.getElementById('formName').value = title;
+            if (ingredients.length > 0) document.getElementById('formIngredients').value = ingredients.join('\n');
+            if (directions.length > 0) document.getElementById('formDirections').value = directions.join('\n\n');
+
+            statusEl.innerHTML = '<span class="text-jokerGreen font-bold">⚡ Recipe extracted and auto-filled below! Review and save.</span>';
+        }
+
         async function fetchHtmlWithProxies(targetUrl) {
-            const proxyBuilders = [
-                (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-                (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-                (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+            const endpoints = [
+                // AllOrigins JSON wrapper (safest cross-origin extractor)
+                async (u) => {
+                    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`);
+                    if (!r.ok) throw new Error('Proxy 1 failed');
+                    const d = await r.json();
+                    return d.contents;
+                },
+                // Direct Raw Edge Proxy
+                async (u) => {
+                    const r = await fetch(`https://cors.x2u.in/${u}`);
+                    if (!r.ok) throw new Error('Proxy 2 failed');
+                    return await r.text();
+                },
+                // CorsProxy IO fallback
+                async (u) => {
+                    const r = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(u)}`);
+                    if (!r.ok) throw new Error('Proxy 3 failed');
+                    return await r.text();
+                }
             ];
 
             let lastError = null;
-
-            for (let i = 0; i < proxyBuilders.length; i++) {
+            for (let i = 0; i < endpoints.length; i++) {
                 try {
-                    const proxyUrl = proxyBuilders[i](targetUrl);
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-                    const res = await fetch(proxyUrl, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-
-                    if (res.ok) {
-                        const text = await res.text();
-                        if (text && text.length > 300) {
-                            return text;
-                        }
-                    }
-                } catch (err) {
-                    lastError = err;
+                    const html = await endpoints[i](targetUrl);
+                    if (html && html.length > 250) return html;
+                } catch (e) {
+                    lastError = e;
                 }
             }
-            throw lastError || new Error('All CORS proxies were unreachable.');
+            throw lastError || new Error('Website firewall blocked automated fetching.');
         }
 
         async function importFromWebUrl() {
@@ -1389,7 +1459,7 @@
 
             fetchBtn.disabled = true;
             fetchBtn.textContent = 'Parsing...';
-            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Fetching webpage data via multi-proxy engine...</span>';
+            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Extracting recipe data...</span>';
 
             try {
                 const html = await fetchHtmlWithProxies(targetUrl);
@@ -1431,7 +1501,7 @@
                         document.getElementById('formName').value = ogTitle.split('|')[0].split('-')[0].trim();
                         if (ogImage) document.getElementById('formPhotoUrl').value = ogImage;
                         document.getElementById('formNotes').value = `Imported from: ${targetUrl}`;
-                        statusEl.innerHTML = '<span class="text-yellow-400 font-bold">Basic details found! Fill in the ingredients and steps below.</span>';
+                        statusEl.innerHTML = '<span class="text-yellow-400 font-bold">Basic details found! Fill in ingredients and steps below.</span>';
                         return;
                     }
                     throw new Error('No Schema.org recipe tags found on this page.');
@@ -1498,7 +1568,10 @@
 
             } catch (err) {
                 console.warn('URL Import error:', err);
-                statusEl.innerHTML = `<span class="text-harleyRed font-bold">Auto-import error: ${err.message || 'Page blocked cross-origin requests'}. You can still paste ingredients manually.</span>`;
+                statusEl.innerHTML = `
+                    <span class="text-harleyRed font-bold">This site blocked direct proxy scraping.</span>
+                    <button type="button" onclick="toggleSmartPasteBox()" class="text-xs text-jokerGreen underline ml-1 font-bold">Click here to Smart-Paste the text</button>
+                `;
             } finally {
                 fetchBtn.disabled = false;
                 fetchBtn.textContent = 'Fetch';
@@ -1941,6 +2014,7 @@
             if (show) {
                 document.getElementById('recipeAddForm').reset();
                 document.getElementById('importUrlInput').value = '';
+                document.getElementById('smartPasteTextarea').value = '';
                 document.getElementById('importStatus').textContent = '';
                 toggleNewCategoryMode(false);
                 populateCategorySelectors();
