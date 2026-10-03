@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v1.4.0 | Arkham Kitchen | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v1.5.0 | Arkham Kitchen | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="1.4.0">
+    <meta name="application-version" content="1.5.0">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -81,12 +81,30 @@
             outline: none;
         }
 
-        .scroll-touch {
-            -webkit-overflow-scrolling: touch;
-        }
-
+        .scroll-touch { -webkit-overflow-scrolling: touch; }
         .drawer-open { transform: translateY(0) !important; }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+        .step-timer-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            margin: 0 2px;
+            border-radius: 9999px;
+            background: rgba(0, 230, 118, 0.15);
+            border: 1px solid rgba(0, 230, 118, 0.5);
+            color: #00E676;
+            font-family: monospace;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .step-timer-badge:hover {
+            background: #00E676;
+            color: #000000;
+        }
 
         @media print {
             body {
@@ -95,7 +113,7 @@
                 height: auto !important;
                 overflow: visible !important;
             }
-            header, #catalogPanel, #mobileBar, #drawerBackdrop, #customModal, .print-hide {
+            header, #catalogPanel, #mobileBar, #drawerBackdrop, #customModal, #kitchenTimerWidget, .print-hide {
                 display: none !important;
             }
             main {
@@ -144,6 +162,12 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
+                <!-- Header Timer Trigger Button -->
+                <button type="button" onclick="toggleTimerPanel()" class="h-9 px-3 rounded-xl bg-cardDark border border-jokerPurple/70 text-neutral-200 text-xs sm:text-sm font-bold hover:border-jokerGreen hover:text-jokerGreen transition-all flex items-center gap-1.5 shadow-sm">
+                    <span>⏱</span>
+                    <span id="headerTimerDisplay" class="font-mono">Timer</span>
+                </button>
+
                 <!-- Install App Button -->
                 <button id="installAppButton" type="button" class="hidden print-hide h-9 px-3 rounded-xl bg-harleyBlack border border-jokerGreen/60 text-jokerGreen text-xs sm:text-sm font-bold hover:bg-jokerGreen hover:text-black transition-all flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,230,118,0.2)]">
                     <span id="installAppIcon" class="flex items-center"></span>
@@ -157,7 +181,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold">Cloud Sync</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.4.0</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.5.0</div>
                 </div>
             </div>
         </div>
@@ -251,9 +275,12 @@
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-jokerGreen flex items-center gap-1.5 mb-2">
-                        <span>♠</span> Preparation &amp; Directions
-                    </h3>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-jokerGreen flex items-center gap-1.5">
+                            <span>♠</span> Preparation &amp; Directions
+                        </h3>
+                        <span class="text-[10px] text-textMuted font-mono">Tap badges to time steps</span>
+                    </div>
                     <ol id="inspectDirectionsList" class="space-y-2 text-xs text-neutral-300 list-decimal list-inside leading-relaxed"></ol>
                 </div>
 
@@ -270,13 +297,79 @@
                     <button type="button" onclick="scaleActiveRecipe(1.0)" class="bg-cardDark border border-panelBorder hover:border-jokerGreen font-bold py-2.5 rounded-xl text-xs text-jokerGreen">Reset</button>
                     <button type="button" onclick="scaleActiveRecipe(2.0)" class="bg-cardDark border border-panelBorder hover:border-harleyRed font-bold py-2.5 rounded-xl text-xs text-harleyRed">2x Batch</button>
                 </div>
-                <div class="grid grid-cols-2 gap-2 mt-2">
-                    <button type="button" onclick="window.print()" class="bg-white text-black font-black py-2.5 rounded-xl text-xs">Print Recipe</button>
+                <div class="grid grid-cols-3 gap-2 mt-2">
+                    <button type="button" onclick="toggleTimerPanel(true)" class="bg-cardDark border border-jokerGreen/60 text-jokerGreen font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1">
+                        <span>⏱</span> Timer
+                    </button>
+                    <button type="button" onclick="window.print()" class="bg-white text-black font-black py-2.5 rounded-xl text-xs">Print</button>
                     <button type="button" onclick="shareRecipe()" class="bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-2.5 rounded-xl text-xs shadow-md">Share</button>
                 </div>
             </div>
         </section>
     </main>
+
+    <!-- FLOATING KITCHEN TIMER DOCK -->
+    <div id="kitchenTimerWidget" class="fixed right-3 bottom-20 md:bottom-5 z-50 transition-all duration-300 select-none">
+        <!-- Minimized Floating Bubble -->
+        <div id="timerMiniBadge" onclick="toggleTimerPanel(true)" class="hidden cursor-pointer bg-cardDark border-2 border-jokerGreen text-white px-3.5 py-2 rounded-2xl shadow-[0_0_16px_rgba(0,230,118,0.35)] flex items-center gap-2.5 hover:scale-105 transition-all">
+            <span class="animate-pulse text-base">⏱</span>
+            <span id="miniTimerTime" class="font-mono text-sm font-bold text-jokerGreen">00:00</span>
+        </div>
+
+        <!-- Expanded Timer Console -->
+        <div id="timerExpandedConsole" class="hidden bg-[#120d18] border border-panelBorder w-80 sm:w-88 rounded-2xl p-4 shadow-2xl backdrop-blur-md">
+            <div class="flex items-center justify-between pb-2 border-b border-panelBorder">
+                <div class="flex items-center gap-2">
+                    <span class="text-base text-jokerGreen">⏱</span>
+                    <h4 id="timerLabel" class="text-xs font-bold text-white uppercase tracking-wider">Kitchen Timer</h4>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="toggleTimerPanel(false, true)" class="text-neutral-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-panelBorder" title="Minimize">−</button>
+                    <button type="button" onclick="toggleTimerPanel(false, false)" class="text-neutral-400 hover:text-white text-sm px-1.5 py-0.5 rounded bg-panelBorder" title="Close">×</button>
+                </div>
+            </div>
+
+            <!-- Big Digital Countdown Display -->
+            <div class="my-3 py-2 bg-harleyBlack border border-panelBorder/80 rounded-xl text-center">
+                <div id="mainTimerDisplay" class="font-mono text-4xl sm:text-5xl font-black text-jokerGreen tracking-wider drop-shadow-[0_0_10px_rgba(0,230,118,0.3)]">
+                    00:00
+                </div>
+            </div>
+
+            <!-- Custom Minutes & Seconds Input -->
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <div class="flex items-center bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5">
+                    <span class="text-[10px] text-textMuted uppercase mr-2 font-mono">Min</span>
+                    <input id="timerInputMinutes" type="number" min="0" max="999" value="15" class="w-full bg-transparent text-sm font-bold text-white outline-none font-mono">
+                </div>
+                <div class="flex items-center bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5">
+                    <span class="text-[10px] text-textMuted uppercase mr-2 font-mono">Sec</span>
+                    <input id="timerInputSeconds" type="number" min="0" max="59" value="00" class="w-full bg-transparent text-sm font-bold text-white outline-none font-mono">
+                </div>
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3">
+                <button type="button" onclick="setTimerPreset(1)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">1m</button>
+                <button type="button" onclick="setTimerPreset(5)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">5m</button>
+                <button type="button" onclick="setTimerPreset(10)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">10m</button>
+                <button type="button" onclick="setTimerPreset(15)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">15m</button>
+                <button type="button" onclick="setTimerPreset(20)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">20m</button>
+                <button type="button" onclick="setTimerPreset(30)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">30m</button>
+                <button type="button" onclick="setTimerPreset(45)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">45m</button>
+            </div>
+
+            <!-- Timer Action Buttons -->
+            <div class="grid grid-cols-2 gap-2">
+                <button id="timerToggleBtn" type="button" onclick="toggleTimerCountdown()" class="bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-2 rounded-xl text-xs shadow-md border border-jokerGreen/40 hover:brightness-110">
+                    Start Timer
+                </button>
+                <button type="button" onclick="resetKitchenTimer()" class="bg-panelBorder hover:bg-neutral-800 text-neutral-300 font-bold py-2 rounded-xl text-xs transition-colors">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Mobile Floating Bar -->
     <button id="mobileBar" type="button" onclick="toggleDrawer(true)" class="md:hidden fixed z-30 left-3 right-3 bottom-3 bg-gradient-to-r from-jokerPurple to-harleyRed text-white rounded-2xl shadow-2xl px-4 py-3 flex items-center justify-between font-bold safe-bottom border border-jokerGreen/40">
@@ -286,7 +379,7 @@
 
     <div id="drawerBackdrop" onclick="toggleDrawer(false)" class="hidden md:hidden fixed inset-0 z-30 bg-black/80 backdrop-blur-sm"></div>
 
-    <!-- Add Recipe Modal (With Instant URL Auto-Importer) -->
+    <!-- Add Recipe Modal (With Dynamic Category Creator and URL Importer) -->
     <div id="customModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-3">
@@ -297,7 +390,7 @@
                 <button type="button" onclick="toggleAddModal(false)" class="w-9 h-9 rounded-full bg-harleyBlack border border-panelBorder text-white text-lg flex items-center justify-center">×</button>
             </div>
 
-            <!-- ONE-CLICK URL IMPORT TOOLBAR -->
+            <!-- URL Auto-Importer Box -->
             <div class="mb-4 bg-[#140e1b] border border-jokerPurple/40 p-3 rounded-xl">
                 <div class="flex items-center justify-between mb-1.5">
                     <span class="text-[11px] font-bold text-jokerGreen uppercase tracking-wider flex items-center gap-1">
@@ -321,7 +414,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <!-- Category Selection & Creator -->
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="uppercase font-bold tracking-wider text-white">Category *</label>
@@ -329,9 +421,7 @@
                                 + New
                             </button>
                         </div>
-                        
                         <select id="formCategorySelect" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-3 text-sm text-white"></select>
-
                         <div id="newCategoryWrapper" class="hidden mt-1.5 space-y-1">
                             <input id="formNewCategoryInput" type="text" placeholder="Type new category..." class="w-full bg-[#181320] border border-jokerGreen/60 rounded-xl p-2.5 text-xs text-white">
                             <button type="button" onclick="toggleNewCategoryMode(false)" class="text-[10px] text-harleyRed hover:underline">Cancel new category</button>
@@ -420,6 +510,174 @@
         const favoritesFilterButton = document.getElementById('favoritesFilterButton');
         const resultCount = document.getElementById('resultCount');
 
+        /* ── KITCHEN COOKING TIMER SYSTEM ── */
+        let timerSecondsRemaining = 900; // 15 mins default
+        let timerInterval = null;
+        let timerIsRunning = false;
+        const mainTimerDisplay = document.getElementById('mainTimerDisplay');
+        const miniTimerTime = document.getElementById('miniTimerTime');
+        const headerTimerDisplay = document.getElementById('headerTimerDisplay');
+        const timerToggleBtn = document.getElementById('timerToggleBtn');
+        const timerMiniBadge = document.getElementById('timerMiniBadge');
+        const timerExpandedConsole = document.getElementById('timerExpandedConsole');
+        const timerLabel = document.getElementById('timerLabel');
+
+        function formatTimerString(totalSecs) {
+            const m = Math.floor(totalSecs / 60);
+            const s = totalSecs % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function updateTimerDisplays() {
+            const formatted = formatTimerString(timerSecondsRemaining);
+            mainTimerDisplay.textContent = formatted;
+            miniTimerTime.textContent = formatted;
+            headerTimerDisplay.textContent = timerIsRunning ? formatted : 'Timer';
+        }
+
+        function playTimerChime() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const tones = [587.33, 880, 1174.66]; // D5, A5, D6 celebratory kitchen chord
+                tones.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.12);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.12 + 0.9);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + idx * 0.12);
+                    osc.stop(audioCtx.currentTime + idx * 0.12 + 0.95);
+                });
+            } catch (e) {
+                console.warn('Audio Context tone failed:', e);
+            }
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('Arkham Kitchen Timer Alert! 🃏', {
+                    body: `${timerLabel.textContent || 'Your cooking timer'} is done!`,
+                    icon: './icon-192x192.png'
+                });
+            }
+        }
+
+        function toggleTimerCountdown() {
+            if (timerIsRunning) {
+                // Pause
+                clearInterval(timerInterval);
+                timerIsRunning = false;
+                timerToggleBtn.textContent = 'Resume Timer';
+                timerToggleBtn.classList.remove('animate-pulse');
+                updateTimerDisplays();
+            } else {
+                // Start
+                if (timerSecondsRemaining <= 0) {
+                    const m = parseInt(document.getElementById('timerInputMinutes').value, 10) || 0;
+                    const s = parseInt(document.getElementById('timerInputSeconds').value, 10) || 0;
+                    timerSecondsRemaining = (m * 60) + s;
+                    if (timerSecondsRemaining <= 0) timerSecondsRemaining = 60;
+                }
+
+                if ('Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission();
+                }
+
+                timerIsRunning = true;
+                timerToggleBtn.textContent = 'Pause Timer';
+                timerToggleBtn.classList.add('animate-pulse');
+                updateTimerDisplays();
+
+                timerInterval = setInterval(() => {
+                    if (timerSecondsRemaining > 0) {
+                        timerSecondsRemaining--;
+                        updateTimerDisplays();
+                    } else {
+                        clearInterval(timerInterval);
+                        timerIsRunning = false;
+                        timerToggleBtn.textContent = 'Start Timer';
+                        timerToggleBtn.classList.remove('animate-pulse');
+                        updateTimerDisplays();
+                        playTimerChime();
+                        toggleTimerPanel(true); // Pop open console on alarm
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetKitchenTimer() {
+            clearInterval(timerInterval);
+            timerIsRunning = false;
+            timerToggleBtn.textContent = 'Start Timer';
+            timerToggleBtn.classList.remove('animate-pulse');
+            const m = parseInt(document.getElementById('timerInputMinutes').value, 10) || 15;
+            const s = parseInt(document.getElementById('timerInputSeconds').value, 10) || 0;
+            timerSecondsRemaining = (m * 60) + s;
+            updateTimerDisplays();
+        }
+
+        function setTimerPreset(minutes, customLabel = 'Kitchen Timer') {
+            clearInterval(timerInterval);
+            timerIsRunning = false;
+            timerToggleBtn.textContent = 'Start Timer';
+            timerToggleBtn.classList.remove('animate-pulse');
+            timerSecondsRemaining = minutes * 60;
+            document.getElementById('timerInputMinutes').value = minutes;
+            document.getElementById('timerInputSeconds').value = '00';
+            timerLabel.textContent = customLabel;
+            updateTimerDisplays();
+            toggleTimerPanel(true);
+        }
+
+        function toggleTimerPanel(forceOpen = null, isMinimize = false) {
+            const isConsoleOpen = !timerExpandedConsole.classList.contains('hidden');
+
+            if (forceOpen === true) {
+                timerExpandedConsole.classList.remove('hidden');
+                timerMiniBadge.classList.add('hidden');
+            } else if (forceOpen === false) {
+                timerExpandedConsole.classList.add('hidden');
+                if (isMinimize && (timerIsRunning || timerSecondsRemaining > 0)) {
+                    timerMiniBadge.classList.remove('hidden');
+                } else {
+                    timerMiniBadge.classList.add('hidden');
+                }
+            } else {
+                // Toggle clicked from header
+                if (isConsoleOpen) {
+                    timerExpandedConsole.classList.add('hidden');
+                    if (timerIsRunning) timerMiniBadge.classList.remove('hidden');
+                } else {
+                    timerExpandedConsole.classList.remove('hidden');
+                    timerMiniBadge.classList.add('hidden');
+                }
+            }
+        }
+
+        // Auto-detect minutes in directions and convert them into interactive one-tap timer buttons
+        function formatDirectionsWithTimers(text) {
+            const rawSteps = text.split(/\n|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
+            const timeRegex = /(\b\d+(?:[\.,]\d+)?\s*(?:-\s*\d+)?\s*(?:minutes|minute|mins|min|hours|hour|hrs|hr)\b)/gi;
+
+            return rawSteps.map(step => {
+                const enrichedStep = escapeHtml(step).replace(timeRegex, (match) => {
+                    const cleanMatch = match.toLowerCase();
+                    let minutes = 0;
+
+                    if (cleanMatch.includes('hr') || cleanMatch.includes('hour')) {
+                        const num = parseFloat(cleanMatch.replace(/[^\d.]/g, '')) || 1;
+                        minutes = Math.round(num * 60);
+                    } else {
+                        minutes = parseInt(cleanMatch.replace(/[^\d]/g, ''), 10) || 5;
+                    }
+
+                    return `<button type="button" onclick="setTimerPreset(${minutes}, 'Step Timer: ${minutes}m')" class="step-timer-badge" title="Start ${minutes}m timer"><span>⏱</span> ${match}</button>`;
+                });
+                return `<li class="pl-1">${enrichedStep}</li>`;
+            }).join('');
+        }
+
         /* ── ONE-CLICK RECIPE URL SCRAPER / IMPORTER ── */
         async function importFromWebUrl() {
             const urlInput = document.getElementById('importUrlInput');
@@ -434,10 +692,9 @@
 
             fetchBtn.disabled = true;
             fetchBtn.textContent = 'Parsing...';
-            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Extracting recipe recipe data...</span>';
+            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Extracting recipe data...</span>';
 
             try {
-                // Use public CORS bypass proxy
                 const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
                 const res = await fetch(proxyUrl);
                 if (!res.ok) throw new Error('Could not reach website through proxy.');
@@ -447,7 +704,6 @@
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
 
-                // Find Schema.org Recipe JSON-LD
                 const scripts = Array.from(doc.querySelectorAll('script[type="application/ld+json"]'));
                 let recipeJson = null;
 
@@ -477,24 +733,21 @@
                 }
 
                 if (!recipeJson) {
-                    // Fallback to OpenGraph / HTML metadata if no JSON-LD found
                     const ogTitle = doc.querySelector('meta[property="og:title"]')?.content || doc.title || '';
                     const ogImage = doc.querySelector('meta[property="og:image"]')?.content || '';
                     if (ogTitle) {
                         document.getElementById('formName').value = ogTitle.split('|')[0].split('-')[0].trim();
                         if (ogImage) document.getElementById('formPhotoUrl').value = ogImage;
                         document.getElementById('formNotes').value = `Imported from: ${targetUrl}`;
-                        statusEl.innerHTML = '<span class="text-yellow-400">Basic info found! Please fill in the ingredients and steps manually.</span>';
+                        statusEl.innerHTML = '<span class="text-yellow-400">Basic info found! Please fill in ingredients and steps manually.</span>';
                         return;
                     }
                     throw new Error('No structured recipe format detected on this page.');
                 }
 
-                // Title
                 const name = recipeJson.name || doc.title || '';
                 document.getElementById('formName').value = name;
 
-                // Photo
                 let photoUrl = '';
                 if (typeof recipeJson.image === 'string') {
                     photoUrl = recipeJson.image;
@@ -505,11 +758,9 @@
                 }
                 if (photoUrl) document.getElementById('formPhotoUrl').value = photoUrl;
 
-                // Ingredients
                 const rawIng = recipeJson.recipeIngredient || [];
                 document.getElementById('formIngredients').value = Array.isArray(rawIng) ? rawIng.join('\n') : String(rawIng);
 
-                // Directions
                 const rawInst = recipeJson.recipeInstructions || [];
                 let steps = [];
                 const extractSteps = (inst) => {
@@ -526,7 +777,6 @@
                 extractSteps(rawInst);
                 document.getElementById('formDirections').value = steps.map((s, idx) => `${idx + 1}. ${s.trim()}`).join('\n\n');
 
-                // Category Mapping
                 const rawCat = (recipeJson.recipeCategory || '').toLowerCase();
                 const tLower = name.toLowerCase();
                 let matchedCategory = 'Main Dishes';
@@ -544,7 +794,6 @@
                     catSelect.value = matchedCategory;
                 }
 
-                // Notes
                 const notesArr = [];
                 if (recipeJson.recipeYield) notesArr.push(`Yield: ${Array.isArray(recipeJson.recipeYield) ? recipeJson.recipeYield[0] : recipeJson.recipeYield}`);
                 if (recipeJson.totalTime) notesArr.push(`Time: ${recipeJson.totalTime.replace('PT','').toLowerCase()}`);
@@ -871,11 +1120,8 @@
 
             renderScaledIngredients();
 
-            // Directions
-            const dirLines = r.directions.split(/\n|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
-            document.getElementById('inspectDirectionsList').innerHTML = dirLines.map(step => `
-                <li class="pl-1">${escapeHtml(step)}</li>
-            `).join('');
+            // Enrich directions with one-click step timer badges
+            document.getElementById('inspectDirectionsList').innerHTML = formatDirectionsWithTimers(r.directions);
 
             // Notes
             const notesBlock = document.getElementById('inspectNotesBlock');
@@ -1066,9 +1312,12 @@
             if (e.key === 'Escape') {
                 toggleAddModal(false);
                 toggleDrawer(false);
+                toggleTimerPanel(false, true);
             }
         });
 
+        // Initialize displays
+        updateTimerDisplays();
         loadCatalog();
     </script>
 </body>
