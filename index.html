@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.0.1 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v2.1.0 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="2.0.1">
+    <meta name="application-version" content="2.1.0">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -139,7 +139,7 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                <!-- Grocery List Trigger Button -->
+                <!-- Shared Real-Time Pantry Drawer Button -->
                 <button type="button" onclick="toggleGroceryDrawer(true)" class="h-9 px-3 rounded-xl bg-cardDark border border-panelBorder text-neutral-200 text-xs sm:text-sm font-bold hover:border-jokerPurple hover:text-white transition-all flex items-center gap-1.5 shadow-sm relative">
                     <span>🛒</span>
                     <span class="hidden sm:inline">Pantry List</span>
@@ -165,7 +165,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.0.1</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.1.0</div>
                 </div>
             </div>
         </div>
@@ -208,7 +208,6 @@
                 <div class="flex justify-between items-center text-xs text-textMuted">
                     <span id="resultCount" class="text-jokerGreen font-mono">Loading recipes...</span>
                     <div class="flex items-center gap-2">
-                        <!-- Density Toggle -->
                         <button type="button" onclick="toggleDensityView()" id="densityViewBtn" class="border border-panelBorder rounded-full px-3 py-1.5 transition-colors hover:border-jokerPurple text-neutral-300">
                             Compact Tiles
                         </button>
@@ -291,7 +290,7 @@
                     <div class="flex items-center justify-between mb-2">
                         <span id="scaleMultiplierBadge" class="text-[10px] bg-jokerPurple/30 text-jokerGreen border border-jokerPurple px-2 py-0.5 rounded font-mono font-bold">1x Scale</span>
                         <button type="button" onclick="addAllActiveIngredientsToGrocery()" class="text-[11px] text-jokerGreen hover:underline font-bold font-mono">
-                            + Add All to Grocery List
+                            + Add All to Pantry List
                         </button>
                     </div>
 
@@ -372,12 +371,15 @@
         </div>
     </div>
 
-    <!-- PANTRY / GROCERY LIST SLIDING DRAWER -->
+    <!-- PANTRY / GROCERY LIST SLIDING DRAWER (REAL-TIME SHARED + GOOGLE KEEP EXPORT) -->
     <div id="groceryDrawer" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-[#110d17] border-l border-panelBorder z-50 translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
         <div class="p-4 border-b border-panelBorder flex justify-between items-center shrink-0 bg-[#0d0912]">
             <div class="flex items-center gap-2">
                 <span class="text-lg">🛒</span>
-                <h3 class="font-bold text-sm text-white">Grocery &amp; Pantry Cart</h3>
+                <div>
+                    <h3 class="font-bold text-sm text-white">Family Pantry List</h3>
+                    <span class="text-[10px] text-jokerGreen font-mono font-bold">Cloud Synced &amp; Shared</span>
+                </div>
             </div>
             <button type="button" onclick="toggleGroceryDrawer(false)" class="w-8 h-8 rounded-full bg-cardDark text-white text-base">×</button>
         </div>
@@ -389,9 +391,15 @@
 
         <ul id="groceryItemsList" class="flex-1 overflow-y-auto scroll-touch p-4 space-y-2 text-xs"></ul>
 
-        <div class="p-3 border-t border-panelBorder bg-harleyBlack grid grid-cols-2 gap-2 shrink-0 safe-bottom">
-            <button type="button" onclick="clearCheckedGroceryItems()" class="py-2.5 bg-cardDark border border-panelBorder text-neutral-300 text-xs font-bold rounded-xl hover:text-white">Clear Done</button>
-            <button type="button" onclick="clearAllGroceryItems()" class="py-2.5 bg-harleyRed/20 border border-harleyRed/50 text-harleyRed text-xs font-bold rounded-xl hover:bg-harleyRed/30">Clear All</button>
+        <!-- Bottom Actions (With Option 1: Copy / Share for Google Keep) -->
+        <div class="p-3 border-t border-panelBorder bg-harleyBlack flex flex-col gap-2 shrink-0 safe-bottom">
+            <button type="button" onclick="exportToGoogleKeep()" class="w-full py-2.5 bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md hover:brightness-110 border border-jokerGreen/40">
+                <span>📝</span> Copy / Share for Google Keep
+            </button>
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="clearCheckedGroceryItems()" class="py-2 bg-cardDark border border-panelBorder text-neutral-300 text-xs font-bold rounded-xl hover:text-white">Clear Done</button>
+                <button type="button" onclick="clearAllGroceryItems()" class="py-2 bg-harleyRed/20 border border-harleyRed/50 text-harleyRed text-xs font-bold rounded-xl hover:bg-harleyRed/30">Clear All</button>
+            </div>
         </div>
     </div>
 
@@ -650,8 +658,32 @@
         const favoritesFilterButton = document.getElementById('favoritesFilterButton');
         const resultCount = document.getElementById('resultCount');
 
-        /* ── GROCERY & PANTRY CART SYSTEM ── */
-        let groceryList = JSON.parse(localStorage.getItem('wardGroceryList') || '[]');
+        /* ── SHARED REAL-TIME CLOUD PANTRY LIST + GOOGLE KEEP EXPORT ── */
+        let groceryList = [];
+        const PANTRY_DOC_REF = db.collection("app_state").doc("shared_pantry_list");
+
+        PANTRY_DOC_REF.onSnapshot((doc) => {
+            if (doc.exists && Array.isArray(doc.data().items)) {
+                groceryList = doc.data().items;
+            } else {
+                groceryList = JSON.parse(localStorage.getItem('wardGroceryList') || '[]');
+            }
+            renderGroceryList();
+        }, (err) => {
+            console.warn("Using offline pantry list:", err);
+            groceryList = JSON.parse(localStorage.getItem('wardGroceryList') || '[]');
+            renderGroceryList();
+        });
+
+        async function saveSharedGroceryList() {
+            renderGroceryList();
+            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
+            try {
+                await PANTRY_DOC_REF.set({ items: groceryList, updatedAt: new Date().toISOString() });
+            } catch (e) {
+                console.warn("Could not sync to cloud, saved locally:", e);
+            }
+        }
 
         function toggleGroceryDrawer(show) {
             const drawer = document.getElementById('groceryDrawer');
@@ -664,7 +696,7 @@
             const badge = document.getElementById('groceryCountBadge');
             
             if (groceryList.length === 0) {
-                listEl.innerHTML = '<li class="text-center text-textMuted py-12 italic">Pantry cart is empty. Add ingredients from any recipe checklist!</li>';
+                listEl.innerHTML = '<li class="text-center text-textMuted py-12 italic">Pantry list is empty. Add ingredients from any recipe checklist!</li>';
                 badge.classList.add('hidden');
                 return;
             }
@@ -688,49 +720,69 @@
             const val = input.value.trim();
             if (!val) return;
             groceryList.unshift({ text: val, checked: false });
-            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
             input.value = '';
-            renderGroceryList();
+            saveSharedGroceryList();
         }
 
         function toggleGroceryItem(idx) {
             groceryList[idx].checked = !groceryList[idx].checked;
-            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
-            renderGroceryList();
+            saveSharedGroceryList();
         }
 
         function deleteGroceryItem(idx) {
             groceryList.splice(idx, 1);
-            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
-            renderGroceryList();
+            saveSharedGroceryList();
         }
 
         function clearCheckedGroceryItems() {
             groceryList = groceryList.filter(item => !item.checked);
-            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
-            renderGroceryList();
+            saveSharedGroceryList();
         }
 
         function clearAllGroceryItems() {
-            if (confirm('Clear entire pantry grocery list?')) {
+            if (confirm('Clear entire shared family pantry list?')) {
                 groceryList = [];
-                localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
-                renderGroceryList();
+                saveSharedGroceryList();
             }
         }
 
         function addAllActiveIngredientsToGrocery() {
             if (!activeRecipe) return;
-            const ingLines = activeRecipe.ingredients.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
             ingLines.forEach(line => {
                 const converted = convertIngredientLine(line, currentUnitMode, currentScale);
                 if (!groceryList.some(g => g.text.toLowerCase() === converted.toLowerCase())) {
                     groceryList.push({ text: converted, checked: false });
                 }
             });
-            localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
-            renderGroceryList();
+            saveSharedGroceryList();
             toggleGroceryDrawer(true);
+        }
+
+        /* ── OPTION 1: EXPORT / SHARE DIRECTLY TO GOOGLE KEEP ── */
+        function exportToGoogleKeep() {
+            if (groceryList.length === 0) {
+                alert('Your pantry list is empty! Add ingredients first.');
+                return;
+            }
+
+            // Format items with clean checklist box characters
+            const textLines = groceryList.map(item => `${item.checked ? '☑' : '☐'} ${item.text}`).join('\n');
+            const shareTitle = 'Arkham Kitchen Grocery List';
+            const shareText = `🛒 ${shareTitle}:\n\n${textLines}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: shareTitle,
+                    text: shareText
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('Checklist copied to clipboard! Paste directly into your shared Google Keep note. 📝');
+                }).catch(() => {
+                    alert(shareText);
+                });
+            }
         }
 
         /* ── DENSITY VIEW TOGGLE ── */
@@ -743,7 +795,7 @@
 
         function updateDensityButton() {
             const btn = document.getElementById('densityViewBtn');
-            btn.textContent = isCompactTiles ? 'Card View' : 'Compact Tiles';
+            if (btn) btn.textContent = isCompactTiles ? 'Card View' : 'Compact Tiles';
         }
 
         /* ── BAKER'S HYDRATION ENGINE ── */
@@ -752,14 +804,17 @@
 
         function checkAndRenderBakersMath(recipe) {
             const block = document.getElementById('bakersMathBlock');
-            const isBreadOrDough = recipe.category.toLowerCase().includes('bread') || recipe.category.toLowerCase().includes('dough') || recipe.name.toLowerCase().includes('sourdough') || recipe.name.toLowerCase().includes('roll');
+            if (!block) return;
+            const cat = (recipe.category || '').toLowerCase();
+            const nm = (recipe.name || '').toLowerCase();
+            const isBreadOrDough = cat.includes('bread') || cat.includes('dough') || nm.includes('sourdough') || nm.includes('roll');
 
             if (!isBreadOrDough) {
                 block.classList.add('hidden');
                 return;
             }
 
-            const ingText = recipe.ingredients.toLowerCase();
+            const ingText = (recipe.ingredients || '').toLowerCase();
             const flourMatch = ingText.match(/(\d+)\s*g[^\n,]*flour/i);
             const waterMatch = ingText.match(/(\d+)\s*g[^\n,]*water/i);
 
@@ -789,7 +844,7 @@
 
         function openCookMode() {
             if (!activeRecipe) return;
-            cookModeSteps = activeRecipe.directions.split(/\n|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
+            cookModeSteps = (activeRecipe.directions || '').split(/\n|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
             if (cookModeSteps.length === 0) return;
 
             currentCookStepIndex = 0;
@@ -892,7 +947,7 @@
         }
 
         function getIngredientDensity(ingredientName) {
-            const lower = ingredientName.toLowerCase();
+            const lower = (ingredientName || '').toLowerCase();
             if (lower.includes('flour')) return 120;
             if (lower.includes('sugar') && (lower.includes('brown') || lower.includes('granulated') || lower.includes('white'))) return 200;
             if (lower.includes('powdered sugar') || lower.includes('confectioners')) return 125;
@@ -1441,6 +1496,7 @@
         }
 
         function updateWakeLockUI(isActive) {
+            if (!wakeLockStatus) return;
             if (isActive) {
                 wakeLockStatus.innerHTML = `
                     <span class="w-1.5 h-1.5 rounded-full bg-jokerGreen animate-pulse"></span>
@@ -1696,6 +1752,7 @@
         }
 
         function populateInspectionPane(r) {
+            if (!r) return;
             activeRecipe = r;
             currentScale = 1.0;
             currentUnitMode = 'original';
@@ -1705,16 +1762,16 @@
             if (scaleBadge) scaleBadge.textContent = '1x Scale';
 
             const titleEl = document.getElementById('activeInspectTitle');
-            if (titleEl) titleEl.textContent = r.name;
+            if (titleEl) titleEl.textContent = r.name || 'Untitled Recipe';
             
             const catEl = document.getElementById('inspectCategory');
-            if (catEl) catEl.textContent = `${r.category} · ${r.id}`;
+            if (catEl) catEl.textContent = `${r.category || 'General'} · ${r.id || 'REC'}`;
             
             const idBadge = document.getElementById('inspectIdBadge');
-            if (idBadge) idBadge.textContent = r.id;
+            if (idBadge) idBadge.textContent = r.id || 'REC';
             
             const mobName = document.getElementById('mobileRecipeName');
-            if (mobName) mobName.textContent = r.name;
+            if (mobName) mobName.textContent = r.name || 'Selected Recipe';
 
             const fallbackImg = getCategoryFallbackImage(r.category);
             const detailPhoto = document.getElementById('inspectPhoto');
@@ -1727,7 +1784,7 @@
             renderScaledIngredients();
             
             const dirList = document.getElementById('inspectDirectionsList');
-            if (dirList) dirList.innerHTML = formatDirectionsWithTimers(r.directions);
+            if (dirList) dirList.innerHTML = formatDirectionsWithTimers(r.directions || '');
 
             const notesBlock = document.getElementById('inspectNotesBlock');
             const notesText = document.getElementById('inspectNotesText');
@@ -1886,7 +1943,7 @@
             text += `Category: ${activeRecipe.category}\n\n`;
             text += `Ingredients (${currentScale}x batch - ${currentUnitMode}):\n`;
             
-            const ingLines = activeRecipe.ingredients.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
             text += ingLines.map(line => `• ${convertIngredientLine(line, currentUnitMode, currentScale)}`).join('\n') + '\n\n';
             text += `Directions:\n${activeRecipe.directions}\n\n`;
             if (activeRecipe.notes) text += `Notes: ${activeRecipe.notes}\n`;
@@ -1918,7 +1975,7 @@
             }
         });
 
-        // Initialize displays and immediate cache boot
+        // Initialize display and immediate cache boot
         renderGroceryList();
         updateHeaderTimerDisplay();
         loadCatalog();
