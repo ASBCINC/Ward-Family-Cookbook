@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v1.7.1 | Arkham Kitchen | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v1.7.2 | Arkham Kitchen | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="1.7.1">
+    <meta name="application-version" content="1.7.2">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -157,8 +157,8 @@
                 </button>
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
-                    <div class="text-[10px] text-jokerGreen font-mono font-bold">Cloud Sync</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.7.1</div>
+                    <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.7.2</div>
                 </div>
             </div>
         </div>
@@ -176,7 +176,7 @@
                 <span class="text-[11px] font-bold text-jokerGreen uppercase tracking-wider mt-0.5">Baker's Hydration %</span>
             </label>
 
-            <button type="button" onclick="loadCatalog()" class="h-9 shrink-0 bg-cardDark border border-panelBorder text-jokerGreen font-medium rounded-lg px-3 text-xs hover:border-jokerGreen transition-colors">↻ Reload Sheet</button>
+            <button type="button" onclick="loadCatalog(true)" class="h-9 shrink-0 bg-cardDark border border-panelBorder text-jokerGreen font-medium rounded-lg px-3 text-xs hover:border-jokerGreen transition-colors">↻ Reload Sheet</button>
             <button type="button" onclick="scaleActiveRecipe(2.0)" class="h-9 shrink-0 bg-cardDark border border-harleyRed/50 text-harleyRed font-medium rounded-lg px-3 text-xs hover:border-harleyRed transition-colors">2x Yield</button>
         </div>
     </header>
@@ -199,7 +199,7 @@
                 <div id="categoryButtons" class="flex gap-2 overflow-x-auto pb-1 scrollbar-none"></div>
 
                 <div class="flex justify-between items-center text-xs text-textMuted">
-                    <span id="resultCount" class="text-jokerGreen font-mono">0 recipes loaded</span>
+                    <span id="resultCount" class="text-jokerGreen font-mono">Loading recipes...</span>
                     <button id="favoritesFilterButton" type="button" class="border border-panelBorder rounded-full px-3 py-1.5 transition-colors hover:border-harleyRed text-white">
                         ♥ Favorites Only
                     </button>
@@ -223,7 +223,6 @@
                             <span id="inspectCategory">Select a recipe</span>
                             <span class="text-[10px] text-textMuted">✏</span>
                         </button>
-                        <!-- Wake Lock Keep Alive Badge -->
                         <span id="wakeLockStatus" class="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700 text-textMuted shrink-0">
                             <span class="w-1.5 h-1.5 rounded-full bg-neutral-500"></span>
                             Screen Sleep Normal
@@ -301,6 +300,63 @@
             </div>
         </section>
     </main>
+
+    <!-- FLOATING KITCHEN TIMER DOCK -->
+    <div id="kitchenTimerWidget" class="fixed right-3 bottom-20 md:bottom-5 z-50 transition-all duration-300 select-none">
+        <div id="timerMiniBadge" onclick="toggleTimerPanel(true)" class="hidden cursor-pointer bg-cardDark border-2 border-jokerGreen text-white px-3.5 py-2 rounded-2xl shadow-[0_0_16px_rgba(0,230,118,0.35)] flex items-center gap-2.5 hover:scale-105 transition-all">
+            <span class="animate-pulse text-base">⏱</span>
+            <span id="miniTimerTime" class="font-mono text-sm font-bold text-jokerGreen">00:00</span>
+        </div>
+
+        <div id="timerExpandedConsole" class="hidden bg-[#120d18] border border-panelBorder w-80 sm:w-88 rounded-2xl p-4 shadow-2xl backdrop-blur-md">
+            <div class="flex items-center justify-between pb-2 border-b border-panelBorder">
+                <div class="flex items-center gap-2">
+                    <span class="text-base text-jokerGreen">⏱</span>
+                    <h4 id="timerLabel" class="text-xs font-bold text-white uppercase tracking-wider">Kitchen Timer</h4>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="toggleTimerPanel(false, true)" class="text-neutral-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-panelBorder" title="Minimize">−</button>
+                    <button type="button" onclick="toggleTimerPanel(false, false)" class="text-neutral-400 hover:text-white text-sm px-1.5 py-0.5 rounded bg-panelBorder" title="Close">×</button>
+                </div>
+            </div>
+
+            <div class="my-3 py-2 bg-harleyBlack border border-panelBorder/80 rounded-xl text-center">
+                <div id="mainTimerDisplay" class="font-mono text-4xl sm:text-5xl font-black text-jokerGreen tracking-wider drop-shadow-[0_0_10px_rgba(0,230,118,0.3)]">
+                    00:00
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <div class="flex items-center bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5">
+                    <span class="text-[10px] text-textMuted uppercase mr-2 font-mono">Min</span>
+                    <input id="timerInputMinutes" type="number" min="0" max="999" value="15" class="w-full bg-transparent text-sm font-bold text-white outline-none font-mono">
+                </div>
+                <div class="flex items-center bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5">
+                    <span class="text-[10px] text-textMuted uppercase mr-2 font-mono">Sec</span>
+                    <input id="timerInputSeconds" type="number" min="0" max="59" value="00" class="w-full bg-transparent text-sm font-bold text-white outline-none font-mono">
+                </div>
+            </div>
+
+            <div class="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3">
+                <button type="button" onclick="setTimerPreset(1)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">1m</button>
+                <button type="button" onclick="setTimerPreset(5)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">5m</button>
+                <button type="button" onclick="setTimerPreset(10)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">10m</button>
+                <button type="button" onclick="setTimerPreset(15)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">15m</button>
+                <button type="button" onclick="setTimerPreset(20)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">20m</button>
+                <button type="button" onclick="setTimerPreset(30)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">30m</button>
+                <button type="button" onclick="setTimerPreset(45)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">45m</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button id="timerToggleBtn" type="button" onclick="toggleTimerCountdown()" class="bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-2 rounded-xl text-xs shadow-md border border-jokerGreen/40 hover:brightness-110">
+                    Start Timer
+                </button>
+                <button type="button" onclick="resetKitchenTimer()" class="bg-panelBorder hover:bg-neutral-800 text-neutral-300 font-bold py-2 rounded-xl text-xs transition-colors">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Mobile Floating Bar -->
     <button id="mobileBar" type="button" onclick="toggleDrawer(true)" class="md:hidden fixed z-30 left-3 right-3 bottom-3 bg-gradient-to-r from-jokerPurple to-harleyRed text-white rounded-2xl shadow-2xl px-4 py-3 flex items-center justify-between font-bold safe-bottom border border-jokerGreen/40">
@@ -471,7 +527,6 @@
             'Desserts & Sweets'
         ];
 
-        // Tailored fallbacks per category so cards without photos match their dish type
         const CATEGORY_FALLBACK_IMAGES = {
             'beef': 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80',
             'poultry': 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=600&auto=format&fit=crop&q=80',
@@ -1138,13 +1193,41 @@
             installAppButton.classList.remove('hidden');
         }
 
-        /* ── CATALOG LOADING & RENDERING ── */
-        async function loadCatalog() {
-            resultCount.textContent = 'Syncing Arkham vault...';
-            recipeGrid.innerHTML = '<div class="col-span-full text-center text-textMuted py-16">Loading recipes from database...</div>';
-
+        /* ── RESILIENT CATALOG LOADER (STALE-WHILE-REVALIDATE) ── */
+        function loadLocalCachedData() {
             try {
-                const response = await fetch(SHEET_CSV_URL, { cache: 'no-store' });
+                const cached = localStorage.getItem('wardCachedRecipes');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        recipes = parsed;
+                        buildCategoryButtons();
+                        populateCategorySelectors();
+                        renderCatalog();
+                        if (!activeRecipe) populateInspectionPane(recipes[0]);
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn('Cache read error:', e);
+            }
+            return false;
+        }
+
+        async function loadCatalog(forceRefresh = false) {
+            // Step 1: Render immediately from cache on boot
+            const hasLocal = loadLocalCachedData();
+            if (!hasLocal || forceRefresh) {
+                resultCount.textContent = 'Syncing Arkham vault...';
+                if (!hasLocal) {
+                    recipeGrid.innerHTML = '<div class="col-span-full text-center text-textMuted py-16">Syncing recipes from database...</div>';
+                }
+            }
+
+            // Step 2: Fetch fresh data in the background with safe timestamp query
+            try {
+                const syncUrl = `${SHEET_CSV_URL}&_ts=${Date.now()}`;
+                const response = await fetch(syncUrl);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const csvText = await response.text();
@@ -1154,40 +1237,35 @@
                     transformHeader: h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
                 });
 
-                recipes = parsed.data.map((row, idx) => {
-                    const id = row.id || `REC-${idx + 1}`;
-                    const category = row.category || 'Dinners with Veggies';
-                    const name = row.recipename || row.name || 'Untitled Recipe';
-                    const photo = row.photoattachment || row.photourl || row.photo || '';
-                    const ingredients = row.ingredients || '';
-                    const directions = row.directions || '';
-                    const notes = row.notes || '';
+                if (parsed.data && parsed.data.length > 0) {
+                    recipes = parsed.data.map((row, idx) => {
+                        const id = row.id || `REC-${idx + 1}`;
+                        const category = row.category || 'Dinners with Veggies';
+                        const name = row.recipename || row.name || 'Untitled Recipe';
+                        const photo = row.photoattachment || row.photourl || row.photo || '';
+                        const ingredients = row.ingredients || '';
+                        const directions = row.directions || '';
+                        const notes = row.notes || '';
 
-                    return { id, category, name, photo, ingredients, directions, notes };
-                });
+                        return { id, category, name, photo, ingredients, directions, notes };
+                    });
 
-                localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
-                buildCategoryButtons();
-                populateCategorySelectors();
-                renderCatalog();
-
-                if (recipes.length > 0 && !activeRecipe) {
-                    populateInspectionPane(recipes[0]);
-                }
-            } catch (err) {
-                console.warn('Failed live sheet fetch, falling back to cache:', err);
-                const cached = localStorage.getItem('wardCachedRecipes');
-                if (cached) {
-                    recipes = JSON.parse(cached);
+                    localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
                     buildCategoryButtons();
                     populateCategorySelectors();
                     renderCatalog();
-                    if (recipes.length > 0 && !activeRecipe) populateInspectionPane(recipes[0]);
-                    resultCount.innerHTML = `<span class="text-jokerGreen">Offline Cache Active</span>`;
-                } else {
-                    recipeGrid.innerHTML = '<div class="col-span-full text-center text-harleyRed py-16">Could not load recipes. Check your connection or sheet link.</div>';
-                    resultCount.textContent = '0 recipes';
+
+                    if (!activeRecipe && recipes.length > 0) {
+                        populateInspectionPane(recipes[0]);
+                    }
+                    document.getElementById('syncStatusBadge').textContent = 'Cloud Synced';
                 }
+            } catch (err) {
+                console.warn('Network sync paused, offline mode active:', err);
+                if (recipes.length === 0) {
+                    loadLocalCachedData();
+                }
+                document.getElementById('syncStatusBadge').textContent = 'Offline Active';
             }
         }
 
@@ -1210,8 +1288,8 @@
         }
 
         function getVisibleRecipes() {
-            const search = searchInput.value.trim().toLowerCase();
-            const courseFilter = activeMealCourse.value.trim().toLowerCase();
+            const search = (searchInput.value || '').trim().toLowerCase();
+            const courseFilter = (activeMealCourse.value || '').trim().toLowerCase();
 
             return recipes.filter(r => {
                 const matchesCat = selectedCategory === 'All' || r.category === selectedCategory;
@@ -1470,6 +1548,7 @@
             }
         });
 
+        // Initialize display and trigger instant local cache load
         updateTimerDisplays();
         loadCatalog();
     </script>
