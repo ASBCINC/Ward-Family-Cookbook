@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v1.7.0 | Arkham Kitchen | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v1.7.1 | Arkham Kitchen | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="1.7.0">
+    <meta name="application-version" content="1.7.1">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -158,7 +158,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold">Cloud Sync</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.7.0</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.7.1</div>
                 </div>
             </div>
         </div>
@@ -221,7 +221,7 @@
                     <div class="flex items-center gap-2 mt-0.5">
                         <button type="button" onclick="openEditCategoryModal()" id="inspectCategoryBadge" class="text-xs text-jokerGreen font-mono truncate hover:underline flex items-center gap-1" title="Click to change category">
                             <span id="inspectCategory">Select a recipe</span>
-                            <span class="text-[10px] text-textMuted">✏️️</span>
+                            <span class="text-[10px] text-textMuted">✏</span>
                         </button>
                         <!-- Wake Lock Keep Alive Badge -->
                         <span id="wakeLockStatus" class="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700 text-textMuted shrink-0">
@@ -235,7 +235,7 @@
 
             <!-- Card Banner Image -->
             <div id="inspectPhotoContainer" class="h-48 bg-harleyBlack relative overflow-hidden shrink-0 border-b border-panelBorder">
-                <img id="inspectPhoto" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80" alt="Recipe" class="w-full h-full object-cover">
+                <img id="inspectPhoto" src="./icon-512x512.png" alt="Recipe" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-cardDark via-transparent to-transparent"></div>
                 <div class="absolute bottom-2.5 left-3 text-xs bg-harleyBlack/80 border border-panelBorder px-2.5 py-1 rounded text-white font-mono" id="inspectIdBadge">REC-000</div>
             </div>
@@ -301,63 +301,6 @@
             </div>
         </section>
     </main>
-
-    <!-- FLOATING KITCHEN TIMER DOCK -->
-    <div id="kitchenTimerWidget" class="fixed right-3 bottom-20 md:bottom-5 z-50 transition-all duration-300 select-none">
-        <div id="timerMiniBadge" onclick="toggleTimerPanel(true)" class="hidden cursor-pointer bg-cardDark border-2 border-jokerGreen text-white px-3.5 py-2 rounded-2xl shadow-[0_0_16px_rgba(0,230,118,0.35)] flex items-center gap-2.5 hover:scale-105 transition-all">
-            <span class="animate-pulse text-base">⏱</span>
-            <span id="miniTimerTime" class="font-mono text-sm font-bold text-jokerGreen">00:00</span>
-        </div>
-
-        <div id="timerExpandedConsole" class="hidden bg-[#120d18] border border-panelBorder w-80 sm:w-88 rounded-2xl p-4 shadow-2xl backdrop-blur-md">
-            <div class="flex items-center justify-between pb-2 border-b border-panelBorder">
-                <div class="flex items-center gap-2">
-                    <span class="text-base text-jokerGreen">⏱</span>
-                    <h4 id="timerLabel" class="text-xs font-bold text-white uppercase tracking-wider">Kitchen Timer</h4>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <button type="button" onclick="toggleTimerPanel(false, true)" class="text-neutral-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-panelBorder" title="Minimize">−</button>
-                    <button type="button" onclick="toggleTimerPanel(false, false)" class="text-neutral-400 hover:text-white text-sm px-1.5 py-0.5 rounded bg-panelBorder" title="Close">×</button>
-                </div>
-            </div>
-
-            <div class="my-3 py-2 bg-harleyBlack border border-panelBorder/80 rounded-xl text-center">
-                <div id="mainTimerDisplay" class="font-mono text-4xl sm:text-5xl font-black text-jokerGreen tracking-wider drop-shadow-[0_0_10px_rgba(0,230,118,0.3)]">
-                    00:00
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 mb-3">
-                <div class="flex items-center bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5">
-                    <span class="text-[10px] text-textMuted uppercase mr-2 font-mono">Min</span>
-                    <input id="timerInputMinutes" type="number" min="0" max="999" value="15" class="w-full bg-transparent text-sm font-bold text-white outline-none font-mono">
-                </div>
-                <div class="flex items-center bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5">
-                    <span class="text-[10px] text-textMuted uppercase mr-2 font-mono">Sec</span>
-                    <input id="timerInputSeconds" type="number" min="0" max="59" value="00" class="w-full bg-transparent text-sm font-bold text-white outline-none font-mono">
-                </div>
-            </div>
-
-            <div class="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3">
-                <button type="button" onclick="setTimerPreset(1)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">1m</button>
-                <button type="button" onclick="setTimerPreset(5)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">5m</button>
-                <button type="button" onclick="setTimerPreset(10)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">10m</button>
-                <button type="button" onclick="setTimerPreset(15)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">15m</button>
-                <button type="button" onclick="setTimerPreset(20)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">20m</button>
-                <button type="button" onclick="setTimerPreset(30)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">30m</button>
-                <button type="button" onclick="setTimerPreset(45)" class="shrink-0 text-[10px] font-mono px-2 py-1 rounded bg-panelBorder text-neutral-300 hover:text-white hover:border-jokerGreen border border-transparent">45m</button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <button id="timerToggleBtn" type="button" onclick="toggleTimerCountdown()" class="bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-2 rounded-xl text-xs shadow-md border border-jokerGreen/40 hover:brightness-110">
-                    Start Timer
-                </button>
-                <button type="button" onclick="resetKitchenTimer()" class="bg-panelBorder hover:bg-neutral-800 text-neutral-300 font-bold py-2 rounded-xl text-xs transition-colors">
-                    Reset
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- Mobile Floating Bar -->
     <button id="mobileBar" type="button" onclick="toggleDrawer(true)" class="md:hidden fixed z-30 left-3 right-3 bottom-3 bg-gradient-to-r from-jokerPurple to-harleyRed text-white rounded-2xl shadow-2xl px-4 py-3 flex items-center justify-between font-bold safe-bottom border border-jokerGreen/40">
@@ -527,6 +470,26 @@
             'Sauces, Seasonings & Marinades',
             'Desserts & Sweets'
         ];
+
+        // Tailored fallbacks per category so cards without photos match their dish type
+        const CATEGORY_FALLBACK_IMAGES = {
+            'beef': 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80',
+            'poultry': 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=600&auto=format&fit=crop&q=80',
+            'pork': 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80',
+            'seafood': 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&auto=format&fit=crop&q=80',
+            'sandwiches': 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=600&auto=format&fit=crop&q=80',
+            'breakfast': 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&auto=format&fit=crop&q=80',
+            'dinners with veggies': 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&auto=format&fit=crop&q=80',
+            'sauces, seasonings & marinades': 'https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=600&auto=format&fit=crop&q=80',
+            'sides & apps': 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=600&auto=format&fit=crop&q=80',
+            'breads & sourdough': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=80',
+            'desserts & sweets': 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&auto=format&fit=crop&q=80'
+        };
+
+        function getCategoryFallbackImage(categoryName) {
+            const key = String(categoryName || '').trim().toLowerCase();
+            return CATEGORY_FALLBACK_IMAGES[key] || './icon-512x512.png';
+        }
 
         let recipes = [];
         let selectedCategory = 'All';
@@ -716,17 +679,14 @@
             btn.textContent = 'Saving...';
 
             try {
-                // Update in memory
                 activeRecipe.category = newCategory;
                 const match = recipes.find(r => r.id === activeRecipe.id);
                 if (match) match.category = newCategory;
 
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
 
-                // Save to Firestore
                 await db.collection("recipes").doc(activeRecipe.id).set({ category: newCategory }, { merge: true });
 
-                // Update UI elements
                 document.getElementById('inspectCategory').textContent = `${newCategory} · ${activeRecipe.id}`;
                 buildCategoryButtons();
                 populateCategorySelectors();
@@ -1279,19 +1239,19 @@
                 return;
             }
 
-            const fallbackImage = "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=80";
-
             recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-max pb-28 md:pb-6';
             visible.forEach(r => {
                 const isFav = favoriteIds.has(r.id);
-                const imgUrl = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImage;
+                const fallbackImg = getCategoryFallbackImage(r.category);
+                const imgUrl = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
+
                 const card = document.createElement('article');
                 card.className = 'w-full min-h-[260px] h-auto bg-cardDark border border-panelBorder rounded-2xl overflow-hidden custom-card-glow cursor-pointer transition-all flex flex-col justify-between select-none shadow-md';
                 card.onclick = () => inspectRecipe(r, true);
                 card.innerHTML = `
                     <div class="flex flex-col">
                         <div class="h-40 w-full bg-harleyBlack relative overflow-hidden shrink-0">
-                            <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.src='${fallbackImage}'">
+                            <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.src='${fallbackImg}'">
                             <div class="absolute top-2 left-2 bg-harleyBlack/80 border border-panelBorder px-2 py-0.5 rounded text-[10px] font-bold text-jokerGreen uppercase font-mono">
                                 ${escapeHtml(r.category)}
                             </div>
@@ -1323,8 +1283,10 @@
             document.getElementById('inspectIdBadge').textContent = r.id;
             document.getElementById('mobileRecipeName').textContent = r.name;
 
-            const fallbackImage = "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80";
-            document.getElementById('inspectPhoto').src = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImage;
+            const fallbackImg = getCategoryFallbackImage(r.category);
+            const detailPhoto = document.getElementById('inspectPhoto');
+            detailPhoto.src = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
+            detailPhoto.onerror = () => { detailPhoto.src = fallbackImg; };
 
             renderScaledIngredients();
             document.getElementById('inspectDirectionsList').innerHTML = formatDirectionsWithTimers(r.directions);
