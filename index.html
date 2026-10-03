@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v1.3.3 | Arkham Kitchen | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v1.4.0 | Arkham Kitchen | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="1.3.3">
+    <meta name="application-version" content="1.4.0">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -157,7 +157,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold">Cloud Sync</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.3.3</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.4.0</div>
                 </div>
             </div>
         </div>
@@ -286,7 +286,7 @@
 
     <div id="drawerBackdrop" onclick="toggleDrawer(false)" class="hidden md:hidden fixed inset-0 z-30 bg-black/80 backdrop-blur-sm"></div>
 
-    <!-- Add Recipe Modal (With Dynamic Category Creator) -->
+    <!-- Add Recipe Modal (With Instant URL Auto-Importer) -->
     <div id="customModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-3">
@@ -294,7 +294,24 @@
                     <span class="text-lg">🃏</span>
                     <h3 class="text-lg font-bold text-jokerGreen">Add Family Recipe</h3>
                 </div>
-                <button type="button" onclick="toggleAddModal(false)" class="w-9 h-9 rounded-full bg-harleyBlack border border-panelBorder text-white text-lg">×</button>
+                <button type="button" onclick="toggleAddModal(false)" class="w-9 h-9 rounded-full bg-harleyBlack border border-panelBorder text-white text-lg flex items-center justify-center">×</button>
+            </div>
+
+            <!-- ONE-CLICK URL IMPORT TOOLBAR -->
+            <div class="mb-4 bg-[#140e1b] border border-jokerPurple/40 p-3 rounded-xl">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[11px] font-bold text-jokerGreen uppercase tracking-wider flex items-center gap-1">
+                        <span>🔗</span> Auto-Import via URL
+                    </span>
+                    <span class="text-[10px] text-textMuted">Works with most blogs</span>
+                </div>
+                <div class="flex gap-2">
+                    <input id="importUrlInput" type="url" placeholder="https://example.com/recipe..." class="flex-1 bg-harleyBlack border border-panelBorder rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-jokerGreen">
+                    <button type="button" id="importUrlBtn" onclick="importFromWebUrl()" class="px-3 py-1.5 rounded-lg bg-jokerPurple hover:bg-jokerPurpleDark border border-jokerGreen/50 text-white text-xs font-bold transition-all shrink-0">
+                        Fetch
+                    </button>
+                </div>
+                <div id="importStatus" class="text-[11px] mt-1.5 min-h-[1rem]"></div>
             </div>
 
             <form id="recipeAddForm" onsubmit="handleFormSubmit(event)" class="space-y-3 text-xs text-textMuted">
@@ -313,12 +330,8 @@
                             </button>
                         </div>
                         
-                        <!-- Existing Category Select Dropdown -->
-                        <select id="formCategorySelect" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-3 text-sm text-white">
-                            <!-- Populated dynamically via JS -->
-                        </select>
+                        <select id="formCategorySelect" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-3 text-sm text-white"></select>
 
-                        <!-- Custom Category Input (Hidden until + New is clicked) -->
                         <div id="newCategoryWrapper" class="hidden mt-1.5 space-y-1">
                             <input id="formNewCategoryInput" type="text" placeholder="Type new category..." class="w-full bg-[#181320] border border-jokerGreen/60 rounded-xl p-2.5 text-xs text-white">
                             <button type="button" onclick="toggleNewCategoryMode(false)" class="text-[10px] text-harleyRed hover:underline">Cancel new category</button>
@@ -326,8 +339,9 @@
                     </div>
 
                     <div>
-                        <label class="block uppercase font-bold tracking-wider mb-1 text-white">Photo Upload</label>
-                        <input id="formPhotoFile" type="file" accept="image/*" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2.5 text-xs text-neutral-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-jokerPurple file:text-white file:font-bold">
+                        <label class="block uppercase font-bold tracking-wider mb-1 text-white">Photo Link or Upload</label>
+                        <input id="formPhotoUrl" type="url" placeholder="Photo URL (auto-filled on import)" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2.5 text-xs text-white mb-1.5">
+                        <input id="formPhotoFile" type="file" accept="image/*" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2 text-xs text-neutral-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-jokerPurple file:text-white file:font-bold">
                     </div>
                 </div>
 
@@ -360,7 +374,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-storage-compat.js"></script>
 
     <script>
-        // Register Service Worker for PWA installation & offline functionality
+        // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -389,7 +403,6 @@
             }
         });
 
-        // Robust public CORS-friendly CSV URL
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM4oWWlRktK-xVxLiHaeLL8qMsWdMBX_xYHxHPZBUFzXyrcmSQBzqrAtvjjv0WVCWxBNvLLgow2fbZ/pub?output=csv";
         const GOOGLE_APPS_SCRIPT_URL = "";
 
@@ -406,6 +419,148 @@
         const categoryButtons = document.getElementById('categoryButtons');
         const favoritesFilterButton = document.getElementById('favoritesFilterButton');
         const resultCount = document.getElementById('resultCount');
+
+        /* ── ONE-CLICK RECIPE URL SCRAPER / IMPORTER ── */
+        async function importFromWebUrl() {
+            const urlInput = document.getElementById('importUrlInput');
+            const statusEl = document.getElementById('importStatus');
+            const fetchBtn = document.getElementById('importUrlBtn');
+            const targetUrl = urlInput.value.trim();
+
+            if (!targetUrl || !targetUrl.startsWith('http')) {
+                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Please enter a valid website link (https://...)</span>';
+                return;
+            }
+
+            fetchBtn.disabled = true;
+            fetchBtn.textContent = 'Parsing...';
+            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Extracting recipe recipe data...</span>';
+
+            try {
+                // Use public CORS bypass proxy
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+                const res = await fetch(proxyUrl);
+                if (!res.ok) throw new Error('Could not reach website through proxy.');
+                const data = await res.json();
+                const html = data.contents;
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Find Schema.org Recipe JSON-LD
+                const scripts = Array.from(doc.querySelectorAll('script[type="application/ld+json"]'));
+                let recipeJson = null;
+
+                for (const script of scripts) {
+                    try {
+                        const parsed = JSON.parse(script.textContent);
+                        const findRecipe = (obj) => {
+                            if (!obj) return null;
+                            if (obj['@type'] === 'Recipe' || (Array.isArray(obj['@type']) && obj['@type'].includes('Recipe'))) return obj;
+                            if (Array.isArray(obj)) {
+                                for (let item of obj) {
+                                    const match = findRecipe(item);
+                                    if (match) return match;
+                                }
+                            }
+                            if (obj['@graph'] && Array.isArray(obj['@graph'])) {
+                                for (let item of obj['@graph']) {
+                                    const match = findRecipe(item);
+                                    if (match) return match;
+                                }
+                            }
+                            return null;
+                        };
+                        recipeJson = findRecipe(parsed);
+                        if (recipeJson) break;
+                    } catch (e) {}
+                }
+
+                if (!recipeJson) {
+                    // Fallback to OpenGraph / HTML metadata if no JSON-LD found
+                    const ogTitle = doc.querySelector('meta[property="og:title"]')?.content || doc.title || '';
+                    const ogImage = doc.querySelector('meta[property="og:image"]')?.content || '';
+                    if (ogTitle) {
+                        document.getElementById('formName').value = ogTitle.split('|')[0].split('-')[0].trim();
+                        if (ogImage) document.getElementById('formPhotoUrl').value = ogImage;
+                        document.getElementById('formNotes').value = `Imported from: ${targetUrl}`;
+                        statusEl.innerHTML = '<span class="text-yellow-400">Basic info found! Please fill in the ingredients and steps manually.</span>';
+                        return;
+                    }
+                    throw new Error('No structured recipe format detected on this page.');
+                }
+
+                // Title
+                const name = recipeJson.name || doc.title || '';
+                document.getElementById('formName').value = name;
+
+                // Photo
+                let photoUrl = '';
+                if (typeof recipeJson.image === 'string') {
+                    photoUrl = recipeJson.image;
+                } else if (Array.isArray(recipeJson.image) && recipeJson.image.length > 0) {
+                    photoUrl = typeof recipeJson.image[0] === 'string' ? recipeJson.image[0] : (recipeJson.image[0].url || '');
+                } else if (recipeJson.image && recipeJson.image.url) {
+                    photoUrl = recipeJson.image.url;
+                }
+                if (photoUrl) document.getElementById('formPhotoUrl').value = photoUrl;
+
+                // Ingredients
+                const rawIng = recipeJson.recipeIngredient || [];
+                document.getElementById('formIngredients').value = Array.isArray(rawIng) ? rawIng.join('\n') : String(rawIng);
+
+                // Directions
+                const rawInst = recipeJson.recipeInstructions || [];
+                let steps = [];
+                const extractSteps = (inst) => {
+                    if (typeof inst === 'string') {
+                        steps.push(inst);
+                    } else if (Array.isArray(inst)) {
+                        inst.forEach(extractSteps);
+                    } else if (inst && inst.text) {
+                        steps.push(inst.text);
+                    } else if (inst && inst.itemListElement) {
+                        extractSteps(inst.itemListElement);
+                    }
+                };
+                extractSteps(rawInst);
+                document.getElementById('formDirections').value = steps.map((s, idx) => `${idx + 1}. ${s.trim()}`).join('\n\n');
+
+                // Category Mapping
+                const rawCat = (recipeJson.recipeCategory || '').toLowerCase();
+                const tLower = name.toLowerCase();
+                let matchedCategory = 'Main Dishes';
+
+                if (rawCat.includes('bread') || tLower.includes('bread') || tLower.includes('sourdough') || tLower.includes('roll') || tLower.includes('bagel') || tLower.includes('biscuit') || tLower.includes('naan')) {
+                    matchedCategory = 'Breads & Sourdough';
+                } else if (rawCat.includes('dessert') || tLower.includes('cake') || tLower.includes('cookie') || tLower.includes('brownie') || tLower.includes('sweet') || tLower.includes('pie')) {
+                    matchedCategory = 'Desserts & Sweets';
+                } else if (rawCat.includes('side') || tLower.includes('sauce') || tLower.includes('skillet')) {
+                    matchedCategory = 'Sides & Skillets';
+                }
+
+                const catSelect = document.getElementById('formCategorySelect');
+                if (Array.from(catSelect.options).some(o => o.value === matchedCategory)) {
+                    catSelect.value = matchedCategory;
+                }
+
+                // Notes
+                const notesArr = [];
+                if (recipeJson.recipeYield) notesArr.push(`Yield: ${Array.isArray(recipeJson.recipeYield) ? recipeJson.recipeYield[0] : recipeJson.recipeYield}`);
+                if (recipeJson.totalTime) notesArr.push(`Time: ${recipeJson.totalTime.replace('PT','').toLowerCase()}`);
+                notesArr.push(`Source: ${targetUrl}`);
+                document.getElementById('formNotes').value = notesArr.join(' | ');
+
+                statusEl.innerHTML = '<span class="text-jokerGreen font-bold">Imported successfully! Review details and click Save.</span>';
+
+            } catch (err) {
+                console.warn('URL Import failed:', err);
+                statusEl.innerHTML = `<span class="text-harleyRed font-bold">Could not auto-import: ${err.message}</span>`;
+            } finally {
+                fetchBtn.disabled = false;
+                fetchBtn.textContent = 'Fetch';
+            }
+        }
 
         /* ── Dynamic Category Form Management ── */
         let isCreatingNewCategory = false;
@@ -434,7 +589,6 @@
             const defaultSet = ['Breads & Sourdough', 'Main Dishes', 'Sides & Skillets', 'Desserts & Sweets'];
             const allCategories = [...new Set([...defaultSet, ...recipes.map(r => r.category).filter(Boolean)])].sort();
 
-            // Populate form category select
             const formSelect = document.getElementById('formCategorySelect');
             const currentSelected = formSelect.value;
             formSelect.innerHTML = allCategories.map(cat => `
@@ -444,14 +598,13 @@
                 formSelect.value = currentSelected;
             }
 
-            // Populate meal course datalist in the search bar
             const mealList = document.getElementById('mealTypes');
             mealList.innerHTML = `<option value="All Courses"></option>` + allCategories.map(cat => `
                 <option value="${escapeHtml(cat)}"></option>
             `).join('');
         }
 
-        /* ── Screen Wake Lock (Keep Screen On While Cooking) ── */
+        /* ── Screen Wake Lock ── */
         let wakeLockSentinel = null;
         const wakeLockStatus = document.getElementById('wakeLockStatus');
 
@@ -804,6 +957,8 @@
             modal.classList.toggle('flex', show);
             if (show) {
                 document.getElementById('recipeAddForm').reset();
+                document.getElementById('importUrlInput').value = '';
+                document.getElementById('importStatus').textContent = '';
                 toggleNewCategoryMode(false);
                 populateCategorySelectors();
                 document.getElementById('submitFeedback').textContent = '';
@@ -815,8 +970,8 @@
             const btn = document.getElementById('saveRecipeButton');
             const feedback = document.getElementById('submitFeedback');
             const fileInput = document.getElementById('formPhotoFile');
+            const urlInput = document.getElementById('formPhotoUrl');
 
-            // Determine whether using a newly typed category or selected dropdown category
             let finalCategory = '';
             const newCatVal = document.getElementById('formNewCategoryInput').value.trim();
             const selectCatVal = document.getElementById('formCategorySelect').value.trim();
@@ -832,7 +987,8 @@
             feedback.innerHTML = '<span class="text-jokerGreen">Uploading to Arkham Storage...</span>';
 
             try {
-                let photoUrl = '';
+                let photoUrl = urlInput.value.trim() || '';
+
                 if (fileInput.files.length > 0) {
                     const file = fileInput.files[0];
                     const storageRef = storage.ref(`recipe_photos/${Date.now()}_${file.name}`);
@@ -865,13 +1021,12 @@
                 recipes.unshift(newRecipe);
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
                 
-                // Immediately rebuild buttons and dropdowns with the new category included
                 buildCategoryButtons();
                 populateCategorySelectors();
                 renderCatalog();
                 inspectRecipe(newRecipe, true);
 
-                feedback.innerHTML = '<span class="text-jokerGreen font-bold">Saved! Cloud and category updated.</span>';
+                feedback.innerHTML = '<span class="text-jokerGreen font-bold">Saved! Cloud and catalog updated.</span>';
                 setTimeout(() => toggleAddModal(false), 1200);
 
             } catch (err) {
