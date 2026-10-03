@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.1.0 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v2.1.1 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="2.1.0">
+    <meta name="application-version" content="2.1.1">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -165,7 +165,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.1.0</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.1.1</div>
                 </div>
             </div>
         </div>
@@ -371,7 +371,7 @@
         </div>
     </div>
 
-    <!-- PANTRY / GROCERY LIST SLIDING DRAWER (REAL-TIME SHARED + GOOGLE KEEP EXPORT) -->
+    <!-- PANTRY / GROCERY LIST SLIDING DRAWER -->
     <div id="groceryDrawer" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-[#110d17] border-l border-panelBorder z-50 translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
         <div class="p-4 border-b border-panelBorder flex justify-between items-center shrink-0 bg-[#0d0912]">
             <div class="flex items-center gap-2">
@@ -391,7 +391,7 @@
 
         <ul id="groceryItemsList" class="flex-1 overflow-y-auto scroll-touch p-4 space-y-2 text-xs"></ul>
 
-        <!-- Bottom Actions (With Option 1: Copy / Share for Google Keep) -->
+        <!-- Bottom Actions -->
         <div class="p-3 border-t border-panelBorder bg-harleyBlack flex flex-col gap-2 shrink-0 safe-bottom">
             <button type="button" onclick="exportToGoogleKeep()" class="w-full py-2.5 bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md hover:brightness-110 border border-jokerGreen/40">
                 <span>📝</span> Copy / Share for Google Keep
@@ -766,7 +766,6 @@
                 return;
             }
 
-            // Format items with clean checklist box characters
             const textLines = groceryList.map(item => `${item.checked ? '☑' : '☐'} ${item.text}`).join('\n');
             const shareTitle = 'Arkham Kitchen Grocery List';
             const shareText = `🛒 ${shareTitle}:\n\n${textLines}`;
@@ -1280,23 +1279,39 @@
             }
         }
 
-        function formatDirectionsWithTimers(text) {
-            const rawSteps = (text || '').split(/\n|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
-            const timeRegex = /(\b\d+(?:[\.,]\d+)?\s*(?:-\s*\d+)?\s*(?:minutes|minute|mins|min|hours|hour|hrs|hr)\b)/gi;
+        /* ── MULTI-PROXY RESILIENT URL IMPORTER ── */
+        async function fetchHtmlWithProxies(targetUrl) {
+            // Waterfall proxy list to prevent "failed to fetch" when one is down
+            const proxyBuilders = [
+                (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+                (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+                (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+            ];
 
-            return rawSteps.map(step => {
-                const enrichedStep = escapeHtml(step).replace(timeRegex, (match) => {
-                    const cleanMatch = match.toLowerCase();
-                    let minutes = 0;
-                    if (cleanMatch.includes('hr') || cleanMatch.includes('hour')) minutes = Math.round(parseFloat(cleanMatch) * 60) || 60;
-                    else minutes = parseInt(cleanMatch.replace(/[^\d]/g, ''), 10) || 5;
-                    return `<button type="button" onclick="addQuickTimer(${minutes}, 'Step Timer: ${minutes}m')" class="step-timer-badge" title="Start ${minutes}m timer"><span>⏱</span> ${match}</button>`;
-                });
-                return `<li class="pl-1">${enrichedStep}</li>`;
-            }).join('');
+            let lastError = null;
+
+            for (let i = 0; i < proxyBuilders.length; i++) {
+                try {
+                    const proxyUrl = proxyBuilders[i](targetUrl);
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout per proxy
+
+                    const res = await fetch(proxyUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+
+                    if (res.ok) {
+                        const text = await res.text();
+                        if (text && text.length > 300) {
+                            return text; // Successfully extracted webpage HTML
+                        }
+                    }
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+            throw lastError || new Error('All CORS proxies were unreachable.');
         }
 
-        /* ── URL IMPORTER ── */
         async function importFromWebUrl() {
             const urlInput = document.getElementById('importUrlInput');
             const statusEl = document.getElementById('importStatus');
@@ -1304,21 +1319,16 @@
             const targetUrl = urlInput.value.trim();
 
             if (!targetUrl || !targetUrl.startsWith('http')) {
-                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Please enter a valid website link (https://...)</span>';
+                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Please enter a valid recipe link (https://...)</span>';
                 return;
             }
 
             fetchBtn.disabled = true;
             fetchBtn.textContent = 'Parsing...';
-            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Extracting recipe data...</span>';
+            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Fetching webpage data via multi-proxy engine...</span>';
 
             try {
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-                const res = await fetch(proxyUrl);
-                if (!res.ok) throw new Error('Could not reach website through proxy.');
-                const data = await res.json();
-                const html = data.contents;
-
+                const html = await fetchHtmlWithProxies(targetUrl);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
 
@@ -1357,10 +1367,10 @@
                         document.getElementById('formName').value = ogTitle.split('|')[0].split('-')[0].trim();
                         if (ogImage) document.getElementById('formPhotoUrl').value = ogImage;
                         document.getElementById('formNotes').value = `Imported from: ${targetUrl}`;
-                        statusEl.innerHTML = '<span class="text-yellow-400">Basic info found! Please fill in ingredients and steps manually.</span>';
+                        statusEl.innerHTML = '<span class="text-yellow-400 font-bold">Basic details found! Fill in the ingredients and steps below.</span>';
                         return;
                     }
-                    throw new Error('No structured recipe format detected on this page.');
+                    throw new Error('No Schema.org recipe tags found on this page.');
                 }
 
                 const name = recipeJson.name || doc.title || '';
@@ -1413,11 +1423,11 @@
                 notesArr.push(`Source: ${targetUrl}`);
                 document.getElementById('formNotes').value = notesArr.join(' | ');
 
-                statusEl.innerHTML = '<span class="text-jokerGreen font-bold">Imported successfully! Review and click Save.</span>';
+                statusEl.innerHTML = '<span class="text-jokerGreen font-bold">Successfully imported! Review and click Save below.</span>';
 
             } catch (err) {
-                console.warn('URL Import failed:', err);
-                statusEl.innerHTML = `<span class="text-harleyRed font-bold">Could not auto-import: ${err.message}</span>`;
+                console.warn('URL Import error:', err);
+                statusEl.innerHTML = `<span class="text-harleyRed font-bold">Auto-import error: ${err.message || 'Page blocked cross-origin requests'}. You can still paste ingredients manually.</span>`;
             } finally {
                 fetchBtn.disabled = false;
                 fetchBtn.textContent = 'Fetch';
@@ -1975,8 +1985,6 @@
             }
         });
 
-        // Initialize display and immediate cache boot
-        renderGroceryList();
         updateHeaderTimerDisplay();
         loadCatalog();
     </script>
