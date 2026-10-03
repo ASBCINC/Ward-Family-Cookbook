@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v1.3.2 | Arkham Kitchen | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v1.3.3 | Arkham Kitchen | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="1.3.2">
+    <meta name="application-version" content="1.3.3">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -157,7 +157,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold">Cloud Sync</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.3.2</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v1.3.3</div>
                 </div>
             </div>
         </div>
@@ -189,13 +189,7 @@
                 <div class="flex gap-2">
                     <div class="w-5/12 sm:w-1/3 relative shrink-0">
                         <input list="mealTypes" id="activeMealCourse" placeholder="Meal Course..." value="" class="w-full h-12 bg-harleyBlack border border-panelBorder rounded-xl px-3 text-xs sm:text-sm text-jokerGreen font-medium outline-none placeholder:text-textMuted truncate">
-                        <datalist id="mealTypes">
-                            <option value="All Courses"></option>
-                            <option value="Breads &amp; Sourdough"></option>
-                            <option value="Main Dishes"></option>
-                            <option value="Sides &amp; Skillets"></option>
-                            <option value="Desserts &amp; Sweets"></option>
-                        </datalist>
+                        <datalist id="mealTypes"></datalist>
                     </div>
 
                     <input id="searchInput" type="search" autocomplete="off" placeholder="Search by ingredient, name, or recipe notes..." class="flex-1 min-w-0 bg-harleyBlack border border-panelBorder rounded-xl px-4 h-12 text-sm sm:text-base outline-none focus:border-jokerGreen">
@@ -292,7 +286,7 @@
 
     <div id="drawerBackdrop" onclick="toggleDrawer(false)" class="hidden md:hidden fixed inset-0 z-30 bg-black/80 backdrop-blur-sm"></div>
 
-    <!-- Add Recipe Modal -->
+    <!-- Add Recipe Modal (With Dynamic Category Creator) -->
     <div id="customModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-3">
@@ -309,16 +303,26 @@
                     <input id="formName" type="text" required placeholder="e.g. Sourdough Deli Sub Rolls" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-3 text-sm text-white">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Category Selection & Creator -->
                     <div>
-                        <label class="block uppercase font-bold tracking-wider mb-1 text-white">Category *</label>
-                        <input id="formCategory" list="catList" required placeholder="Breads &amp; Sourdough" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-3 text-sm text-white">
-                        <datalist id="catList">
-                            <option value="Breads &amp; Sourdough"></option>
-                            <option value="Main Dishes"></option>
-                            <option value="Sides &amp; Skillets"></option>
-                            <option value="Desserts &amp; Sweets"></option>
-                        </datalist>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="uppercase font-bold tracking-wider text-white">Category *</label>
+                            <button type="button" id="toggleNewCatBtn" onclick="toggleNewCategoryMode()" class="text-[11px] text-jokerGreen hover:underline font-bold">
+                                + New
+                            </button>
+                        </div>
+                        
+                        <!-- Existing Category Select Dropdown -->
+                        <select id="formCategorySelect" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-3 text-sm text-white">
+                            <!-- Populated dynamically via JS -->
+                        </select>
+
+                        <!-- Custom Category Input (Hidden until + New is clicked) -->
+                        <div id="newCategoryWrapper" class="hidden mt-1.5 space-y-1">
+                            <input id="formNewCategoryInput" type="text" placeholder="Type new category..." class="w-full bg-[#181320] border border-jokerGreen/60 rounded-xl p-2.5 text-xs text-white">
+                            <button type="button" onclick="toggleNewCategoryMode(false)" class="text-[10px] text-harleyRed hover:underline">Cancel new category</button>
+                        </div>
                     </div>
 
                     <div>
@@ -385,6 +389,7 @@
             }
         });
 
+        // Robust public CORS-friendly CSV URL
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM4oWWlRktK-xVxLiHaeLL8qMsWdMBX_xYHxHPZBUFzXyrcmSQBzqrAtvjjv0WVCWxBNvLLgow2fbZ/pub?output=csv";
         const GOOGLE_APPS_SCRIPT_URL = "";
 
@@ -401,6 +406,50 @@
         const categoryButtons = document.getElementById('categoryButtons');
         const favoritesFilterButton = document.getElementById('favoritesFilterButton');
         const resultCount = document.getElementById('resultCount');
+
+        /* ── Dynamic Category Form Management ── */
+        let isCreatingNewCategory = false;
+
+        function toggleNewCategoryMode(forceState) {
+            isCreatingNewCategory = typeof forceState === 'boolean' ? forceState : !isCreatingNewCategory;
+            const selectEl = document.getElementById('formCategorySelect');
+            const wrapperEl = document.getElementById('newCategoryWrapper');
+            const toggleBtn = document.getElementById('toggleNewCatBtn');
+            const newCatInput = document.getElementById('formNewCategoryInput');
+
+            if (isCreatingNewCategory) {
+                selectEl.classList.add('opacity-50');
+                wrapperEl.classList.remove('hidden');
+                toggleBtn.textContent = 'Use Existing';
+                newCatInput.focus();
+            } else {
+                selectEl.classList.remove('opacity-50');
+                wrapperEl.classList.add('hidden');
+                toggleBtn.textContent = '+ New';
+                newCatInput.value = '';
+            }
+        }
+
+        function populateCategorySelectors() {
+            const defaultSet = ['Breads & Sourdough', 'Main Dishes', 'Sides & Skillets', 'Desserts & Sweets'];
+            const allCategories = [...new Set([...defaultSet, ...recipes.map(r => r.category).filter(Boolean)])].sort();
+
+            // Populate form category select
+            const formSelect = document.getElementById('formCategorySelect');
+            const currentSelected = formSelect.value;
+            formSelect.innerHTML = allCategories.map(cat => `
+                <option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>
+            `).join('');
+            if (currentSelected && allCategories.includes(currentSelected)) {
+                formSelect.value = currentSelected;
+            }
+
+            // Populate meal course datalist in the search bar
+            const mealList = document.getElementById('mealTypes');
+            mealList.innerHTML = `<option value="All Courses"></option>` + allCategories.map(cat => `
+                <option value="${escapeHtml(cat)}"></option>
+            `).join('');
+        }
 
         /* ── Screen Wake Lock (Keep Screen On While Cooking) ── */
         let wakeLockSentinel = null;
@@ -494,8 +543,8 @@
         });
 
         installAppButton.addEventListener('click', async () => {
-            const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
-            if (isIos) {
+            const isIosDevice = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+            if (isIosDevice) {
                 alert('To install on iPhone/iPad: Tap the Share button at the bottom of Safari, then choose "Add to Home Screen" 📲');
                 return;
             }
@@ -516,9 +565,8 @@
             installAppButton.classList.add('hidden');
         });
 
-        // Show install button for iOS users if not already running in standalone mode
-        const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
-        if (!isAppAlreadyInstalled() && isIos) {
+        const isIosDevice = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+        if (!isAppAlreadyInstalled() && isIosDevice) {
             setInstallIcon();
             installAppButton.classList.remove('hidden');
         }
@@ -552,6 +600,7 @@
 
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
                 buildCategoryButtons();
+                populateCategorySelectors();
                 renderCatalog();
 
                 if (recipes.length > 0 && !activeRecipe) {
@@ -563,6 +612,7 @@
                 if (cached) {
                     recipes = JSON.parse(cached);
                     buildCategoryButtons();
+                    populateCategorySelectors();
                     renderCatalog();
                     if (recipes.length > 0 && !activeRecipe) populateInspectionPane(recipes[0]);
                     resultCount.innerHTML = `<span class="text-jokerGreen">Offline Cache Active</span>`;
@@ -574,7 +624,7 @@
         }
 
         function buildCategoryButtons() {
-            const categories = ['All', ...new Set(recipes.map(r => r.category))];
+            const categories = ['All', ...new Set(recipes.map(r => r.category).filter(Boolean))];
             categoryButtons.innerHTML = '';
             categories.forEach(cat => {
                 const btn = document.createElement('button');
@@ -754,6 +804,8 @@
             modal.classList.toggle('flex', show);
             if (show) {
                 document.getElementById('recipeAddForm').reset();
+                toggleNewCategoryMode(false);
+                populateCategorySelectors();
                 document.getElementById('submitFeedback').textContent = '';
             }
         }
@@ -763,6 +815,17 @@
             const btn = document.getElementById('saveRecipeButton');
             const feedback = document.getElementById('submitFeedback');
             const fileInput = document.getElementById('formPhotoFile');
+
+            // Determine whether using a newly typed category or selected dropdown category
+            let finalCategory = '';
+            const newCatVal = document.getElementById('formNewCategoryInput').value.trim();
+            const selectCatVal = document.getElementById('formCategorySelect').value.trim();
+
+            if (isCreatingNewCategory && newCatVal) {
+                finalCategory = newCatVal;
+            } else {
+                finalCategory = selectCatVal || 'General';
+            }
 
             btn.disabled = true;
             btn.textContent = 'Saving Recipe...';
@@ -779,7 +842,7 @@
 
                 const newRecipe = {
                     id: `REC-${Date.now()}`,
-                    category: document.getElementById('formCategory').value.trim(),
+                    category: finalCategory,
                     name: document.getElementById('formName').value.trim(),
                     photo: photoUrl,
                     ingredients: document.getElementById('formIngredients').value.trim(),
@@ -801,10 +864,14 @@
 
                 recipes.unshift(newRecipe);
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
+                
+                // Immediately rebuild buttons and dropdowns with the new category included
+                buildCategoryButtons();
+                populateCategorySelectors();
                 renderCatalog();
                 inspectRecipe(newRecipe, true);
 
-                feedback.innerHTML = '<span class="text-jokerGreen font-bold">Saved! Cloud and sheet updated.</span>';
+                feedback.innerHTML = '<span class="text-jokerGreen font-bold">Saved! Cloud and category updated.</span>';
                 setTimeout(() => toggleAddModal(false), 1200);
 
             } catch (err) {
