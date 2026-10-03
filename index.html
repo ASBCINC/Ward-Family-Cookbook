@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.1.1 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v2.1.2 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="2.1.1">
+    <meta name="application-version" content="2.1.2">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -165,7 +165,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.1.1</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.1.2</div>
                 </div>
             </div>
         </div>
@@ -371,17 +371,23 @@
         </div>
     </div>
 
-    <!-- PANTRY / GROCERY LIST SLIDING DRAWER -->
+    <!-- PANTRY / GROCERY LIST SLIDING DRAWER (REAL-TIME SHARED + GOOGLE KEEP EXPORT) -->
     <div id="groceryDrawer" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-[#110d17] border-l border-panelBorder z-50 translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
         <div class="p-4 border-b border-panelBorder flex justify-between items-center shrink-0 bg-[#0d0912]">
             <div class="flex items-center gap-2">
                 <span class="text-lg">🛒</span>
                 <div>
                     <h3 class="font-bold text-sm text-white">Family Pantry List</h3>
-                    <span class="text-[10px] text-jokerGreen font-mono font-bold">Cloud Synced &amp; Shared</span>
+                    <div id="pantrySyncStatusIndicator" class="text-[10px] text-jokerGreen font-mono font-bold flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-jokerGreen animate-pulse"></span>
+                        <span>Connecting Cloud...</span>
+                    </div>
                 </div>
             </div>
-            <button type="button" onclick="toggleGroceryDrawer(false)" class="w-8 h-8 rounded-full bg-cardDark text-white text-base">×</button>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="forceSyncPantryCloud()" class="text-xs text-textMuted hover:text-white px-2 py-1 rounded bg-panelBorder font-mono" title="Sync live with cloud">↻ Sync</button>
+                <button type="button" onclick="toggleGroceryDrawer(false)" class="w-8 h-8 rounded-full bg-cardDark text-white text-base">×</button>
+            </div>
         </div>
 
         <div class="p-3 border-b border-panelBorder/70 bg-cardDark flex gap-2 shrink-0">
@@ -391,7 +397,7 @@
 
         <ul id="groceryItemsList" class="flex-1 overflow-y-auto scroll-touch p-4 space-y-2 text-xs"></ul>
 
-        <!-- Bottom Actions -->
+        <!-- Bottom Actions (With Option 1: Copy / Share for Google Keep) -->
         <div class="p-3 border-t border-panelBorder bg-harleyBlack flex flex-col gap-2 shrink-0 safe-bottom">
             <button type="button" onclick="exportToGoogleKeep()" class="w-full py-2.5 bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md hover:brightness-110 border border-jokerGreen/40">
                 <span>📝</span> Copy / Share for Google Keep
@@ -602,7 +608,7 @@
 
         db.enablePersistence().catch(err => {
             if (err.code !== 'failed-precondition') {
-                console.warn('Offline persistence issue:', err);
+                console.warn('Offline persistence notice:', err.code);
             }
         });
 
@@ -661,17 +667,38 @@
         /* ── SHARED REAL-TIME CLOUD PANTRY LIST + GOOGLE KEEP EXPORT ── */
         let groceryList = [];
         const PANTRY_DOC_REF = db.collection("app_state").doc("shared_pantry_list");
+        const pantryStatusEl = document.getElementById('pantrySyncStatusIndicator');
 
+        function setPantryStatus(type, msg) {
+            if (!pantryStatusEl) return;
+            if (type === 'synced') {
+                pantryStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-jokerGreen"></span><span class="text-jokerGreen font-bold">${msg}</span>`;
+            } else if (type === 'warning') {
+                pantryStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span><span class="text-yellow-400 font-bold">${msg}</span>`;
+            } else {
+                pantryStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-harleyRed"></span><span class="text-harleyRed font-bold">${msg}</span>`;
+            }
+        }
+
+        // Real-Time Shared Snapshot Listener
         PANTRY_DOC_REF.onSnapshot((doc) => {
             if (doc.exists && Array.isArray(doc.data().items)) {
                 groceryList = doc.data().items;
+                localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
+                setPantryStatus('synced', 'Live Cloud Synced');
             } else {
                 groceryList = JSON.parse(localStorage.getItem('wardGroceryList') || '[]');
+                setPantryStatus('warning', 'Pantry Ready (Local)');
             }
             renderGroceryList();
         }, (err) => {
-            console.warn("Using offline pantry list:", err);
+            console.error("Firestore Pantry Sync Error:", err);
             groceryList = JSON.parse(localStorage.getItem('wardGroceryList') || '[]');
+            if (err.code === 'permission-denied') {
+                setPantryStatus('error', 'Update Firebase Rules!');
+            } else {
+                setPantryStatus('warning', 'Offline Mode Active');
+            }
             renderGroceryList();
         });
 
@@ -680,8 +707,31 @@
             localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
             try {
                 await PANTRY_DOC_REF.set({ items: groceryList, updatedAt: new Date().toISOString() });
+                setPantryStatus('synced', 'Saved to Cloud');
             } catch (e) {
-                console.warn("Could not sync to cloud, saved locally:", e);
+                console.warn("Could not save to cloud, saved locally:", e);
+                if (e.code === 'permission-denied') {
+                    setPantryStatus('error', 'Denied: Check Rules');
+                } else {
+                    setPantryStatus('warning', 'Saved to Phone');
+                }
+            }
+        }
+
+        async function forceSyncPantryCloud() {
+            setPantryStatus('warning', 'Syncing...');
+            try {
+                const doc = await PANTRY_DOC_REF.get({ source: 'server' });
+                if (doc.exists && Array.isArray(doc.data().items)) {
+                    groceryList = doc.data().items;
+                    localStorage.setItem('wardGroceryList', JSON.stringify(groceryList));
+                    renderGroceryList();
+                    setPantryStatus('synced', 'Synced Fresh');
+                } else {
+                    await saveSharedGroceryList();
+                }
+            } catch (e) {
+                setPantryStatus('error', 'Sync Failed');
             }
         }
 
@@ -1281,7 +1331,6 @@
 
         /* ── MULTI-PROXY RESILIENT URL IMPORTER ── */
         async function fetchHtmlWithProxies(targetUrl) {
-            // Waterfall proxy list to prevent "failed to fetch" when one is down
             const proxyBuilders = [
                 (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
                 (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
@@ -1294,7 +1343,7 @@
                 try {
                     const proxyUrl = proxyBuilders[i](targetUrl);
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout per proxy
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
                     const res = await fetch(proxyUrl, { signal: controller.signal });
                     clearTimeout(timeoutId);
@@ -1302,7 +1351,7 @@
                     if (res.ok) {
                         const text = await res.text();
                         if (text && text.length > 300) {
-                            return text; // Successfully extracted webpage HTML
+                            return text;
                         }
                     }
                 } catch (err) {
