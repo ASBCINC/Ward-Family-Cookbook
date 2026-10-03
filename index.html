@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.0.0 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v2.0.1 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="2.0.0">
+    <meta name="application-version" content="2.0.1">
     <meta name="build-date" content="2026-10-03">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -165,7 +165,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.0.0</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.0.1</div>
                 </div>
             </div>
         </div>
@@ -208,7 +208,7 @@
                 <div class="flex justify-between items-center text-xs text-textMuted">
                     <span id="resultCount" class="text-jokerGreen font-mono">Loading recipes...</span>
                     <div class="flex items-center gap-2">
-                        <!-- Density Toggle (Cards vs Compact Tiles) -->
+                        <!-- Density Toggle -->
                         <button type="button" onclick="toggleDensityView()" id="densityViewBtn" class="border border-panelBorder rounded-full px-3 py-1.5 transition-colors hover:border-jokerPurple text-neutral-300">
                             Compact Tiles
                         </button>
@@ -250,7 +250,6 @@
                 <img id="inspectPhoto" src="./icon-512x512.png" alt="Recipe" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-cardDark via-transparent to-transparent"></div>
                 <div class="absolute bottom-2.5 left-3 text-xs bg-harleyBlack/80 border border-panelBorder px-2.5 py-1 rounded text-white font-mono" id="inspectIdBadge">REC-000</div>
-                <!-- Launch Cook Mode Floating Button on Image -->
                 <button type="button" onclick="openCookMode()" class="absolute bottom-2.5 right-3 bg-gradient-to-r from-jokerPurple to-harleyRed border border-jokerGreen/60 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-lg flex items-center gap-1.5 hover:brightness-110">
                     <span>👨‍🍳</span> Cook Mode
                 </button>
@@ -258,7 +257,7 @@
 
             <!-- Ingredients & Directions Body -->
             <div class="p-4 space-y-5 text-sm flex-1">
-                <!-- BAKER'S HYDRATION TOOLBAR (Visible on breads/doughs) -->
+                <!-- BAKER'S HYDRATION TOOLBAR -->
                 <div id="bakersMathBlock" class="hidden p-3 bg-[#150f1d] border border-jokerPurple/50 rounded-xl space-y-2">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-jokerGreen uppercase tracking-wider flex items-center gap-1">
@@ -282,7 +281,6 @@
                             <span>♦</span> Ingredients Checklist
                         </h3>
                         
-                        <!-- Unit Conversion Mode Switcher -->
                         <div class="inline-flex items-center bg-harleyBlack border border-panelBorder rounded-xl p-0.5 text-[10px] shrink-0 font-mono">
                             <button type="button" onclick="setMeasurementUnit('original')" id="unitBtnOriginal" class="px-2 py-0.5 rounded-lg unit-active transition-all">Original</button>
                             <button type="button" onclick="setMeasurementUnit('metric')" id="unitBtnMetric" class="px-2 py-0.5 rounded-lg text-neutral-300 hover:text-white transition-all">Metric (g/ml)</button>
@@ -327,7 +325,7 @@
                 </div>
                 <div class="grid grid-cols-3 gap-2 mt-2">
                     <button type="button" onclick="openEditCategoryModal()" class="bg-cardDark border border-panelBorder text-neutral-300 hover:text-white hover:border-jokerPurple font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1">
-                        <span>✏️️</span> Category
+                        <span>✏</span> Category
                     </button>
                     <button type="button" onclick="toggleTimerPanel(true)" class="bg-cardDark border border-jokerGreen/60 text-jokerGreen font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1">
                         <span>⏱</span> Timer
@@ -353,22 +351,17 @@
             </button>
         </div>
 
-        <!-- Big Progress Bar -->
         <div class="w-full bg-panelBorder h-2 rounded-full my-4 overflow-hidden shrink-0">
             <div id="cookModeProgressBar" class="bg-gradient-to-r from-jokerPurple to-jokerGreen h-full transition-all duration-300" style="width: 20%;"></div>
         </div>
 
-        <!-- Giant Active Instruction Step Card -->
         <div class="flex-1 flex flex-col justify-center items-center py-4 text-center max-w-3xl mx-auto w-full">
             <div id="cookModeStepText" class="text-lg sm:text-2xl md:text-3xl font-medium text-neutral-100 leading-relaxed mb-6 select-none">
                 Step instructions will render here.
             </div>
-
-            <!-- Optional Step Quick Timer Launcher -->
             <div id="cookModeStepTimerTrigger" class="mb-6"></div>
         </div>
 
-        <!-- Giant Bottom Navigation Controls -->
         <div class="grid grid-cols-2 gap-4 max-w-2xl mx-auto w-full pt-4 border-t border-panelBorder shrink-0 safe-bottom">
             <button type="button" id="cookModePrevBtn" onclick="navigateCookStep(-1)" class="py-4 bg-cardDark border border-panelBorder hover:border-jokerPurple rounded-2xl text-base font-bold text-white transition-all">
                 ← Previous Step
@@ -389,16 +382,13 @@
             <button type="button" onclick="toggleGroceryDrawer(false)" class="w-8 h-8 rounded-full bg-cardDark text-white text-base">×</button>
         </div>
 
-        <!-- Add Custom Grocery Item -->
         <div class="p-3 border-b border-panelBorder/70 bg-cardDark flex gap-2 shrink-0">
             <input id="customGroceryInput" type="text" placeholder="Add pantry item..." class="flex-1 bg-harleyBlack border border-panelBorder rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-jokerGreen">
             <button type="button" onclick="addCustomGroceryItem()" class="px-3 py-1.5 bg-jokerPurple text-white rounded-xl text-xs font-bold hover:brightness-110 shrink-0">Add</button>
         </div>
 
-        <!-- Active List Items -->
         <ul id="groceryItemsList" class="flex-1 overflow-y-auto scroll-touch p-4 space-y-2 text-xs"></ul>
 
-        <!-- Bottom Actions -->
         <div class="p-3 border-t border-panelBorder bg-harleyBlack grid grid-cols-2 gap-2 shrink-0 safe-bottom">
             <button type="button" onclick="clearCheckedGroceryItems()" class="py-2.5 bg-cardDark border border-panelBorder text-neutral-300 text-xs font-bold rounded-xl hover:text-white">Clear Done</button>
             <button type="button" onclick="clearAllGroceryItems()" class="py-2.5 bg-harleyRed/20 border border-harleyRed/50 text-harleyRed text-xs font-bold rounded-xl hover:bg-harleyRed/30">Clear All</button>
@@ -412,7 +402,6 @@
             <span id="miniTimerTime" class="font-mono text-sm font-bold text-jokerGreen">0 Timers</span>
         </div>
 
-        <!-- Multi-Timer Console -->
         <div id="timerExpandedConsole" class="hidden bg-[#120d18] border border-panelBorder w-80 sm:w-96 rounded-2xl p-4 shadow-2xl backdrop-blur-md max-h-[85vh] flex flex-col">
             <div class="flex items-center justify-between pb-2 border-b border-panelBorder shrink-0">
                 <div class="flex items-center gap-2">
@@ -425,10 +414,8 @@
                 </div>
             </div>
 
-            <!-- Active Timers Scroll List -->
             <div id="activeTimersList" class="flex-1 overflow-y-auto my-3 space-y-2 pr-1 min-h-[60px] max-h-56"></div>
 
-            <!-- Add New Timer Section -->
             <div class="pt-2 border-t border-panelBorder/70 shrink-0 space-y-2">
                 <input id="timerCustomLabelInput" type="text" placeholder="Timer name (e.g. Sourdough Bake)" class="w-full bg-harleyBlack border border-panelBorder rounded-xl px-2.5 py-1.5 text-xs text-white outline-none focus:border-jokerGreen font-mono">
                 
@@ -772,7 +759,6 @@
                 return;
             }
 
-            // Estimate flour and water in grams from text
             const ingText = recipe.ingredients.toLowerCase();
             const flourMatch = ingText.match(/(\d+)\s*g[^\n,]*flour/i);
             const waterMatch = ingText.match(/(\d+)\s*g[^\n,]*water/i);
@@ -828,7 +814,6 @@
             document.getElementById('cookModeProgressBar').style.width = `${progress}%`;
             document.getElementById('cookModeStepText').textContent = stepText;
 
-            // Check if step mentions a time to offer a 1-tap timer launcher
             const timeMatch = stepText.match(/(\b\d+(?:[\.,]\d+)?\s*(?:-\s*\d+)?\s*(?:minutes|minute|mins|min|hours|hour|hrs|hr)\b)/i);
             const timerTriggerEl = document.getElementById('cookModeStepTimerTrigger');
             
@@ -921,7 +906,6 @@
         function convertIngredientLine(line, targetMode, scale, customWaterGrams = null) {
             let processedLine = line;
 
-            // Direct override for Baker's Hydration Slider on Water line
             if (customWaterGrams !== null && processedLine.toLowerCase().includes('water') && processedLine.toLowerCase().includes('g')) {
                 return `${customWaterGrams}g Water (Adjusted Hydration)`;
             }
@@ -983,20 +967,15 @@
         function setMeasurementUnit(mode) {
             currentUnitMode = mode;
             ['unitBtnOriginal', 'unitBtnMetric', 'unitBtnUs'].forEach(id => {
-                document.getElementById(id).classList.remove('unit-active');
-                document.getElementById(id).classList.add('text-neutral-300');
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.remove('unit-active');
+                    el.classList.add('text-neutral-300');
+                }
             });
 
-            if (mode === 'original') {
-                document.getElementById('unitBtnOriginal').classList.add('unit-active');
-                document.getElementById('activeUnitIndicator').textContent = 'Viewing: Original Units';
-            } else if (mode === 'metric') {
-                document.getElementById('unitBtnMetric').classList.add('unit-active');
-                document.getElementById('activeUnitIndicator').textContent = 'Converted to Metric (Grams / mL)';
-            } else if (mode === 'us') {
-                document.getElementById('unitBtnUs').classList.add('unit-active');
-                document.getElementById('activeUnitIndicator').textContent = 'Converted to US (Cups / Tbsp / Oz)';
-            }
+            const activeBtn = document.getElementById(mode === 'original' ? 'unitBtnOriginal' : mode === 'metric' ? 'unitBtnMetric' : 'unitBtnUs');
+            if (activeBtn) activeBtn.classList.add('unit-active');
 
             renderScaledIngredients();
         }
@@ -1247,7 +1226,7 @@
         }
 
         function formatDirectionsWithTimers(text) {
-            const rawSteps = text.split(/\n|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
+            const rawSteps = (text || '').split(/\n|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
             const timeRegex = /(\b\d+(?:[\.,]\d+)?\s*(?:-\s*\d+)?\s*(?:minutes|minute|mins|min|hours|hour|hrs|hr)\b)/gi;
 
             return rawSteps.map(step => {
@@ -1661,7 +1640,6 @@
             }
 
             if (isCompactTiles) {
-                // Compact Tile Grid (high-density layout)
                 recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 auto-rows-max pb-28 md:pb-6';
                 visible.forEach(r => {
                     const isFav = favoriteIds.has(r.id);
@@ -1684,7 +1662,6 @@
                     recipeGrid.appendChild(tile);
                 });
             } else {
-                // Full Detailed Card Grid
                 recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-max pb-28 md:pb-6';
                 visible.forEach(r => {
                     const isFav = favoriteIds.has(r.id);
@@ -1723,49 +1700,67 @@
             currentScale = 1.0;
             currentUnitMode = 'original';
             setMeasurementUnit('original');
-            document.getElementById('scaleMultiplierBadge').textContent = '1x Scale';
+            
+            const scaleBadge = document.getElementById('scaleMultiplierBadge');
+            if (scaleBadge) scaleBadge.textContent = '1x Scale';
 
-            document.getElementById('activeInspectTitle').textContent = r.name;
-            document.getElementById('inspectCategory').textContent = `${r.category} · ${r.id}`;
-            document.getElementById('inspectIdBadge').textContent = r.id;
-            document.getElementById('mobileRecipeName').textContent = r.name;
+            const titleEl = document.getElementById('activeInspectTitle');
+            if (titleEl) titleEl.textContent = r.name;
+            
+            const catEl = document.getElementById('inspectCategory');
+            if (catEl) catEl.textContent = `${r.category} · ${r.id}`;
+            
+            const idBadge = document.getElementById('inspectIdBadge');
+            if (idBadge) idBadge.textContent = r.id;
+            
+            const mobName = document.getElementById('mobileRecipeName');
+            if (mobName) mobName.textContent = r.name;
 
             const fallbackImg = getCategoryFallbackImage(r.category);
             const detailPhoto = document.getElementById('inspectPhoto');
-            detailPhoto.src = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
-            detailPhoto.onerror = () => { detailPhoto.src = fallbackImg; };
+            if (detailPhoto) {
+                detailPhoto.src = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
+                detailPhoto.onerror = () => { detailPhoto.src = fallbackImg; };
+            }
 
             checkAndRenderBakersMath(r);
             renderScaledIngredients();
-            document.getElementById('inspectDirectionsList').innerHTML = formatDirectionsWithTimers(r.directions);
+            
+            const dirList = document.getElementById('inspectDirectionsList');
+            if (dirList) dirList.innerHTML = formatDirectionsWithTimers(r.directions);
 
             const notesBlock = document.getElementById('inspectNotesBlock');
             const notesText = document.getElementById('inspectNotesText');
-            if (r.notes && r.notes.trim()) {
-                notesText.textContent = r.notes;
-                notesBlock.classList.remove('hidden');
-            } else {
-                notesBlock.classList.add('hidden');
+            if (notesBlock && notesText) {
+                if (r.notes && r.notes.trim()) {
+                    notesText.textContent = r.notes;
+                    notesBlock.classList.remove('hidden');
+                } else {
+                    notesBlock.classList.add('hidden');
+                }
             }
         }
 
-        async function inspectRecipe(r, shouldOpenDrawer = false) {
+        function inspectRecipe(r, shouldOpenDrawer = false) {
             populateInspectionPane(r);
             if (shouldOpenDrawer) toggleDrawer(true);
-            await requestScreenWakeLock();
+            requestScreenWakeLock();
         }
 
         function scaleActiveRecipe(factor) {
             currentScale = factor;
-            document.getElementById('scaleMultiplierBadge').textContent = `${factor}x Scale`;
+            const badge = document.getElementById('scaleMultiplierBadge');
+            if (badge) badge.textContent = `${factor}x Scale`;
             renderScaledIngredients();
         }
 
         function renderScaledIngredients(customWaterGrams = null) {
             if (!activeRecipe) return;
-            const ingLines = activeRecipe.ingredients.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const listEl = document.getElementById('inspectIngredientsList');
+            if (!listEl) return;
             
-            document.getElementById('inspectIngredientsList').innerHTML = ingLines.map(line => {
+            listEl.innerHTML = ingLines.map(line => {
                 const convertedLine = convertIngredientLine(line, currentUnitMode, currentScale, customWaterGrams);
                 return `
                     <li class="flex items-start gap-2 bg-harleyBlack/50 p-1.5 rounded border border-panelBorder/50">
@@ -1791,15 +1786,18 @@
             }
         });
 
-        async function toggleDrawer(show) {
-            document.getElementById('recipeDrawer').classList.toggle('drawer-open', show);
-            document.getElementById('drawerBackdrop').classList.toggle('hidden', !show);
-            if (show) await requestScreenWakeLock();
-            else await releaseScreenWakeLock();
+        function toggleDrawer(show) {
+            const drawer = document.getElementById('recipeDrawer');
+            const backdrop = document.getElementById('drawerBackdrop');
+            if (drawer) drawer.classList.toggle('drawer-open', show);
+            if (backdrop) backdrop.classList.toggle('hidden', !show);
+            if (show) requestScreenWakeLock();
+            else releaseScreenWakeLock();
         }
 
         function toggleAddModal(show) {
             const modal = document.getElementById('customModal');
+            if (!modal) return;
             modal.classList.toggle('hidden', !show);
             modal.classList.toggle('flex', show);
             if (show) {
