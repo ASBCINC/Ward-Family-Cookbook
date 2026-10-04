@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.2.2 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
+<!-- Ward Family Recipe Vault v2.2.3 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.2.2">
+    <meta name="application-version" content="2.2.3">
     <meta name="build-date" content="2026-10-04">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -166,7 +166,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.2</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.3</div>
                 </div>
             </div>
         </div>
@@ -299,6 +299,7 @@
                     </ul>
                 </div>
 
+                <!-- DIRECT ON-PAGE PREPARATION & DIRECTIONS -->
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-jokerGreen flex items-center gap-1.5">
@@ -306,7 +307,7 @@
                         </h3>
                         <span class="text-[10px] text-textMuted font-mono">Tap badges to time steps</span>
                     </div>
-                    <ol id="inspectDirectionsList" class="space-y-2 text-xs text-neutral-300 list-decimal list-inside leading-relaxed"></ol>
+                    <ol id="inspectDirectionsList" class="space-y-2.5 text-xs text-neutral-200 list-decimal list-inside leading-relaxed"></ol>
                 </div>
 
                 <div id="inspectNotesBlock" class="p-3 bg-harleyBlack rounded-xl border border-panelBorder hidden">
@@ -677,6 +678,44 @@
             return clean;
         }
 
+        // Smart image URL extractor: checks every column in the sheet row for valid image URLs
+        function extractPhotoFromRow(row) {
+            for (let key in row) {
+                const k = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (k.includes('photo') || k.includes('image') || k.includes('picture') || k.includes('attachment') || k.includes('pic') || k.includes('img')) {
+                    const val = String(row[key] || '').trim();
+                    if (val.startsWith('http')) return normalizeImageUrl(val);
+                }
+            }
+            for (let key in row) {
+                const val = String(row[key] || '').trim();
+                if (val.startsWith('http') && (val.match(/\.(jpeg|jpg|png|webp|gif)/i) || val.includes('pinimg.com') || val.includes('googleusercontent.com') || val.includes('unsplash.com'))) {
+                    return normalizeImageUrl(val);
+                }
+            }
+            return '';
+        }
+
+        /* ── INSTRUCTION STEP FORMATTER WITH TIMERS ── */
+        function formatDirectionsWithTimers(text) {
+            if (!text || !text.trim()) {
+                return '<li class="italic text-textMuted list-none">No directions listed for this recipe.</li>';
+            }
+            const rawSteps = text.split(/\n+|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
+            const timeRegex = /(\b\d+(?:[\.,]\d+)?\s*(?:-\s*\d+)?\s*(?:minutes|minute|mins|min|hours|hour|hrs|hr)\b)/gi;
+
+            return rawSteps.map(step => {
+                const enrichedStep = escapeHtml(step).replace(timeRegex, (match) => {
+                    const cleanMatch = match.toLowerCase();
+                    let minutes = 0;
+                    if (cleanMatch.includes('hr') || cleanMatch.includes('hour')) minutes = Math.round(parseFloat(cleanMatch) * 60) || 60;
+                    else minutes = parseInt(cleanMatch.replace(/[^\d]/g, ''), 10) || 5;
+                    return `<button type="button" onclick="addQuickTimer(${minutes}, 'Step Timer: ${minutes}m')" class="step-timer-badge" title="Start ${minutes}m timer"><span>⏱</span> ${match}</button>`;
+                });
+                return `<li class="pl-1 mb-1 leading-relaxed">${enrichedStep}</li>`;
+            }).join('');
+        }
+
         let recipes = [];
         let selectedCategory = 'All';
         let favoritesOnly = false;
@@ -837,7 +876,6 @@
             toggleGroceryDrawer(true);
         }
 
-        /* ── OPTION 1: EXPORT / SHARE DIRECTLY TO GOOGLE KEEP ── */
         function exportToGoogleKeep() {
             if (groceryList.length === 0) {
                 alert('Your pantry list is empty! Add ingredients first.');
@@ -862,7 +900,6 @@
             }
         }
 
-        /* ── DENSITY VIEW TOGGLE ── */
         function toggleDensityView() {
             isCompactTiles = !isCompactTiles;
             localStorage.setItem('wardRecipeCompactTiles', isCompactTiles);
@@ -921,7 +958,7 @@
 
         function openCookMode() {
             if (!activeRecipe) return;
-            cookModeSteps = (activeRecipe.directions || '').split(/\n|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
+            cookModeSteps = (activeRecipe.directions || '').split(/\n+|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
             if (cookModeSteps.length === 0) return;
 
             currentCookStepIndex = 0;
@@ -1802,9 +1839,8 @@
                         const category = row.category || 'Dinners with Veggies';
                         const name = row.recipename || row.name || 'Untitled Recipe';
                         
-                        // Universal alias catcher for the photo column + Google Drive URL normalizer
-                        const rawPhoto = row.photoattachment || row.photourl || row.photo || row.image || row.imageurl || row.picture || row.photolink || row.imagelink || '';
-                        const photo = normalizeImageUrl(rawPhoto);
+                        // Universal smart extractor catches any column header with photos or valid image links
+                        const photo = extractPhotoFromRow(row);
 
                         const ingredients = row.ingredients || '';
                         const directions = row.directions || '';
@@ -1890,7 +1926,7 @@
                     tile.onclick = () => inspectRecipe(r, true);
                     tile.innerHTML = `
                         <div class="h-28 w-full bg-harleyBlack relative overflow-hidden shrink-0">
-                            <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.src='${fallbackImg}'">
+                            <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='${fallbackImg}';">
                             <button type="button" data-fav-id="${r.id}" class="fav-toggle absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-harleyBlack/80 border border-panelBorder flex items-center justify-center text-xs ${isFav ? 'text-harleyRed' : 'text-neutral-400'}">♥</button>
                         </div>
                         <div class="p-2 flex flex-col justify-between flex-1">
@@ -1913,7 +1949,7 @@
                     card.innerHTML = `
                         <div class="flex flex-col">
                             <div class="h-40 w-full bg-harleyBlack relative overflow-hidden shrink-0">
-                                <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.src='${fallbackImg}'">
+                                <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='${fallbackImg}';">
                                 <div class="absolute top-2 left-2 bg-harleyBlack/80 border border-panelBorder px-2 py-0.5 rounded text-[10px] font-bold text-jokerGreen uppercase font-mono">
                                     ${escapeHtml(r.category)}
                                 </div>
@@ -1959,15 +1995,22 @@
             const fallbackImg = getCategoryFallbackImage(r.category);
             const detailPhoto = document.getElementById('inspectPhoto');
             if (detailPhoto) {
-                detailPhoto.src = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
-                detailPhoto.onerror = () => { detailPhoto.src = fallbackImg; };
+                const finalImg = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
+                detailPhoto.src = finalImg;
+                detailPhoto.onerror = function() {
+                    this.onerror = null;
+                    this.src = fallbackImg;
+                };
             }
 
             checkAndRenderBakersMath(r);
             renderScaledIngredients();
             
+            // Populates instructions directly on the page with timer badges
             const dirList = document.getElementById('inspectDirectionsList');
-            if (dirList) dirList.innerHTML = formatDirectionsWithTimers(r.directions || '');
+            if (dirList) {
+                dirList.innerHTML = formatDirectionsWithTimers(r.directions || '');
+            }
 
             const notesBlock = document.getElementById('inspectNotesBlock');
             const notesText = document.getElementById('inspectNotesText');
