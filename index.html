@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.1.4 | Arkham Kitchen Master Suite | Build 2026-10-03 -->
+<!-- Ward Family Recipe Vault v2.2.1 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="2.1.4">
-    <meta name="build-date" content="2026-10-03">
+    <meta name="application-version" content="2.2.1">
+    <meta name="build-date" content="2026-10-04">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
     <!-- PWA & Favicon Metadata -->
@@ -165,7 +165,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.1.4</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.1</div>
                 </div>
             </div>
         </div>
@@ -471,7 +471,7 @@
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-sm">
             <div class="flex justify-between items-center mb-3">
                 <h3 class="text-base font-bold text-jokerGreen flex items-center gap-2">
-                    <span>✏️</span> Edit Recipe Category
+                    <span>✏️️</span> Edit Recipe Category
                 </h3>
                 <button type="button" onclick="closeEditCategoryModal()" class="w-8 h-8 rounded-full bg-harleyBlack border border-panelBorder text-white text-base">×</button>
             </div>
@@ -657,6 +657,28 @@
         function getCategoryFallbackImage(categoryName) {
             const key = String(categoryName || '').trim().toLowerCase();
             return CATEGORY_FALLBACK_IMAGES[key] || './icon-512x512.png';
+        }
+
+        // Smart image URL converter: automatically resolves Pinterest HTML pins and Google Drive share URLs into direct raw images
+        function normalizeImageUrl(url) {
+            if (!url) return '';
+            let clean = String(url).trim();
+            if (!clean.startsWith('http')) return '';
+
+            // Convert Google Drive view/share link to direct image stream
+            if (clean.includes('drive.google.com')) {
+                const idMatch = clean.match(/\/d\/([a-zA-Z0-9_-]+)/) || clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                if (idMatch && idMatch[1]) {
+                    return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
+                }
+            }
+
+            // Detect Pinterest pin HTML pages (warn in console that it's a webpage, not an image)
+            if (clean.includes('pinterest.com/pin/') && !clean.includes('pinimg.com')) {
+                console.warn('Pinterest pin URL detected instead of direct image URL:', clean);
+            }
+
+            return clean;
         }
 
         let recipes = [];
@@ -1365,7 +1387,6 @@
                 return;
             }
 
-            // Heuristic extraction
             const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
             let title = '';
             let ingredients = [];
@@ -1395,7 +1416,6 @@
                 } else if (currentMode === 'dir') {
                     directions.push(line);
                 } else {
-                    // Auto detect by pattern
                     if (/^([\d\s\/\.\,\-]+)\s*(cup|tbsp|tsp|g|oz|gram|tablespoon|teaspoon|lb)/i.test(line)) {
                         ingredients.push(line);
                     } else if (directions.length > 0 || /^\d+\.\s+/.test(line)) {
@@ -1412,21 +1432,32 @@
         }
 
         async function fetchHtmlWithProxies(targetUrl) {
+            // Priority: If Apps Script relay is deployed, use it directly (trusted Google server IP)
+            if (GOOGLE_APPS_SCRIPT_URL) {
+                try {
+                    const relayUrl = `${GOOGLE_APPS_SCRIPT_URL}?scrapeUrl=${encodeURIComponent(targetUrl)}`;
+                    const res = await fetch(relayUrl);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.contents) return data.contents;
+                    }
+                } catch (e) {
+                    console.warn("Apps Script relay failed, falling back to edge proxies:", e);
+                }
+            }
+
             const endpoints = [
-                // AllOrigins JSON wrapper (safest cross-origin extractor)
                 async (u) => {
                     const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`);
                     if (!r.ok) throw new Error('Proxy 1 failed');
                     const d = await r.json();
                     return d.contents;
                 },
-                // Direct Raw Edge Proxy
                 async (u) => {
                     const r = await fetch(`https://cors.x2u.in/${u}`);
                     if (!r.ok) throw new Error('Proxy 2 failed');
                     return await r.text();
                 },
-                // CorsProxy IO fallback
                 async (u) => {
                     const r = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(u)}`);
                     if (!r.ok) throw new Error('Proxy 3 failed');
@@ -1499,7 +1530,7 @@
                     const ogImage = doc.querySelector('meta[property="og:image"]')?.content || '';
                     if (ogTitle) {
                         document.getElementById('formName').value = ogTitle.split('|')[0].split('-')[0].trim();
-                        if (ogImage) document.getElementById('formPhotoUrl').value = ogImage;
+                        if (ogImage) document.getElementById('formPhotoUrl').value = normalizeImageUrl(ogImage);
                         document.getElementById('formNotes').value = `Imported from: ${targetUrl}`;
                         statusEl.innerHTML = '<span class="text-yellow-400 font-bold">Basic details found! Fill in ingredients and steps below.</span>';
                         return;
@@ -1517,7 +1548,7 @@
                 } else if (recipeJson.image && recipeJson.image.url) {
                     photoUrl = recipeJson.image.url;
                 }
-                if (photoUrl) document.getElementById('formPhotoUrl').value = photoUrl;
+                if (photoUrl) document.getElementById('formPhotoUrl').value = normalizeImageUrl(photoUrl);
 
                 const rawIng = recipeJson.recipeIngredient || [];
                 document.getElementById('formIngredients').value = Array.isArray(rawIng) ? rawIng.join('\n') : String(rawIng);
@@ -1533,7 +1564,6 @@
                 extractSteps(rawInst);
                 document.getElementById('formDirections').value = steps.map((s, idx) => `${idx + 1}. ${s.trim()}`).join('\n\n');
 
-                // SAFE ROBUST NORMALIZATION: handles arrays, strings, or missing category tags
                 let rawCat = '';
                 if (Array.isArray(recipeJson.recipeCategory)) {
                     rawCat = recipeJson.recipeCategory.join(' ').toLowerCase();
@@ -1776,7 +1806,11 @@
                         const id = row.id || `REC-${idx + 1}`;
                         const category = row.category || 'Dinners with Veggies';
                         const name = row.recipename || row.name || 'Untitled Recipe';
-                        const photo = row.photoattachment || row.photourl || row.photo || '';
+                        
+                        // Robust multi-alias image key catcher + normalizer for Pinterest & Google Drive URLs
+                        const rawPhoto = row.photoattachment || row.photourl || row.photo || row.image || row.imageurl || row.picture || row.photolink || row.imagelink || '';
+                        const photo = normalizeImageUrl(rawPhoto);
+
                         const ingredients = row.ingredients || '';
                         const directions = row.directions || '';
                         const notes = row.notes || '';
@@ -2041,7 +2075,7 @@
             feedback.innerHTML = '<span class="text-jokerGreen">Uploading to Arkham Storage...</span>';
 
             try {
-                let photoUrl = urlInput.value.trim() || '';
+                let photoUrl = normalizeImageUrl(urlInput.value.trim());
 
                 if (fileInput.files.length > 0) {
                     const file = fileInput.files[0];
