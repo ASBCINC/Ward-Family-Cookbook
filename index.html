@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.2.1 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
+<!-- Ward Family Recipe Vault v2.2.2 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="application-version" content="2.2.1">
+    <meta name="referrer" content="no-referrer">
+    <meta name="application-version" content="2.2.2">
     <meta name="build-date" content="2026-10-04">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -165,7 +166,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.1</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.2</div>
                 </div>
             </div>
         </div>
@@ -471,7 +472,7 @@
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-sm">
             <div class="flex justify-between items-center mb-3">
                 <h3 class="text-base font-bold text-jokerGreen flex items-center gap-2">
-                    <span>✏️️</span> Edit Recipe Category
+                    <span>✏</span> Edit Recipe Category
                 </h3>
                 <button type="button" onclick="closeEditCategoryModal()" class="w-8 h-8 rounded-full bg-harleyBlack border border-panelBorder text-white text-base">×</button>
             </div>
@@ -659,23 +660,18 @@
             return CATEGORY_FALLBACK_IMAGES[key] || './icon-512x512.png';
         }
 
-        // Smart image URL converter: automatically resolves Pinterest HTML pins and Google Drive share URLs into direct raw images
+        // Automatic Google Drive & Pinterest image converter
         function normalizeImageUrl(url) {
             if (!url) return '';
             let clean = String(url).trim();
             if (!clean.startsWith('http')) return '';
 
-            // Convert Google Drive view/share link to direct image stream
+            // Convert Google Drive view/open link to streamable image asset
             if (clean.includes('drive.google.com')) {
                 const idMatch = clean.match(/\/d\/([a-zA-Z0-9_-]+)/) || clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
                 if (idMatch && idMatch[1]) {
                     return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
                 }
-            }
-
-            // Detect Pinterest pin HTML pages (warn in console that it's a webpage, not an image)
-            if (clean.includes('pinterest.com/pin/') && !clean.includes('pinimg.com')) {
-                console.warn('Pinterest pin URL detected instead of direct image URL:', clean);
             }
 
             return clean;
@@ -1432,7 +1428,6 @@
         }
 
         async function fetchHtmlWithProxies(targetUrl) {
-            // Priority: If Apps Script relay is deployed, use it directly (trusted Google server IP)
             if (GOOGLE_APPS_SCRIPT_URL) {
                 try {
                     const relayUrl = `${GOOGLE_APPS_SCRIPT_URL}?scrapeUrl=${encodeURIComponent(targetUrl)}`;
@@ -1807,7 +1802,7 @@
                         const category = row.category || 'Dinners with Veggies';
                         const name = row.recipename || row.name || 'Untitled Recipe';
                         
-                        // Robust multi-alias image key catcher + normalizer for Pinterest & Google Drive URLs
+                        // Universal alias catcher for the photo column + Google Drive URL normalizer
                         const rawPhoto = row.photoattachment || row.photourl || row.photo || row.image || row.imageurl || row.picture || row.photolink || row.imagelink || '';
                         const photo = normalizeImageUrl(rawPhoto);
 
