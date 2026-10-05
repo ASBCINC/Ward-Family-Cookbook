@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.2.3 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
+<!-- Ward Family Recipe Vault v2.2.5 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.2.3">
+    <meta name="application-version" content="2.2.5">
     <meta name="build-date" content="2026-10-04">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -129,11 +129,11 @@
     <!-- Header Toolbar -->
     <header class="bg-[#100c14] border-b border-panelBorder flex flex-col justify-between shadow-lg shrink-0 z-20">
         <div class="h-16 px-3 sm:px-5 flex items-center justify-between">
-            <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-jokerPurple to-harleyRed flex items-center justify-center text-xl shadow-[0_0_12px_rgba(233,30,99,0.4)] border border-jokerGreen/40 shrink-0">
+            <div class="flex items-center gap-3 sm:gap-4 min-w-0" id="appBrandingTrigger">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-jokerPurple to-harleyRed flex items-center justify-center text-xl shadow-[0_0_12px_rgba(233,30,99,0.4)] border border-jokerGreen/40 shrink-0 select-none cursor-pointer">
                     🃏
                 </div>
-                <div class="min-w-0">
+                <div class="min-w-0 select-none cursor-pointer">
                     <span class="text-xs uppercase tracking-[0.25em] text-jokerGreen font-black block">Arkham Kitchen</span>
                     <div class="text-base sm:text-lg font-black tracking-wide text-white truncate">Ward Family Recipes</div>
                 </div>
@@ -166,7 +166,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.3</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.5</div>
                 </div>
             </div>
         </div>
@@ -195,14 +195,7 @@
         <!-- Recipe Catalog Side -->
         <section id="catalogPanel" class="w-full md:w-2/3 flex flex-col border-r border-panelBorder bg-[#0c0a10] h-full min-h-0">
             <div class="p-3 sm:p-4 bg-cardDark border-b border-panelBorder space-y-3 shrink-0">
-                <div class="flex gap-2">
-                    <div class="w-5/12 sm:w-1/3 relative shrink-0">
-                        <input list="mealTypes" id="activeMealCourse" placeholder="Meal Course..." value="" class="w-full h-12 bg-harleyBlack border border-panelBorder rounded-xl px-3 text-xs sm:text-sm text-jokerGreen font-medium outline-none placeholder:text-textMuted truncate">
-                        <datalist id="mealTypes"></datalist>
-                    </div>
-
-                    <input id="searchInput" type="search" autocomplete="off" placeholder="Search by ingredient, name, or recipe notes..." class="flex-1 min-w-0 bg-harleyBlack border border-panelBorder rounded-xl px-4 h-12 text-sm sm:text-base outline-none focus:border-jokerGreen">
-                </div>
+                <input id="searchInput" type="search" autocomplete="off" placeholder="Search by ingredient, name, or recipe notes..." class="w-full bg-harleyBlack border border-panelBorder rounded-xl px-4 h-12 text-sm sm:text-base outline-none focus:border-jokerGreen">
 
                 <div id="categoryButtons" class="flex gap-2 overflow-x-auto pb-1 scrollbar-none"></div>
 
@@ -241,7 +234,10 @@
                         </span>
                     </div>
                 </div>
-                <button id="closeDrawerButton" type="button" onclick="toggleDrawer(false)" class="md:hidden w-10 h-10 bg-panelBorder rounded-full text-xl flex items-center justify-center font-bold shrink-0" aria-label="Close">×</button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="deleteActiveRecipe()" class="w-9 h-9 bg-harleyRed/20 hover:bg-harleyRed/40 border border-harleyRed/50 rounded-xl text-harleyRed flex items-center justify-center font-bold shrink-0 transition-all" aria-label="Delete Recipe" title="Delete Recipe">🗑</button>
+                    <button id="closeDrawerButton" type="button" onclick="toggleDrawer(false)" class="md:hidden w-10 h-10 bg-panelBorder rounded-full text-xl flex items-center justify-center font-bold shrink-0" aria-label="Close">×</button>
+                </div>
             </div>
 
             <!-- Card Banner Image -->
@@ -661,13 +657,11 @@
             return CATEGORY_FALLBACK_IMAGES[key] || './icon-512x512.png';
         }
 
-        // Automatic Google Drive & Pinterest image converter
         function normalizeImageUrl(url) {
             if (!url) return '';
             let clean = String(url).trim();
             if (!clean.startsWith('http')) return '';
 
-            // Convert Google Drive view/open link to streamable image asset
             if (clean.includes('drive.google.com')) {
                 const idMatch = clean.match(/\/d\/([a-zA-Z0-9_-]+)/) || clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
                 if (idMatch && idMatch[1]) {
@@ -678,7 +672,6 @@
             return clean;
         }
 
-        // Smart image URL extractor: checks every column in the sheet row for valid image URLs
         function extractPhotoFromRow(row) {
             for (let key in row) {
                 const k = key.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -696,7 +689,6 @@
             return '';
         }
 
-        /* ── INSTRUCTION STEP FORMATTER WITH TIMERS ── */
         function formatDirectionsWithTimers(text) {
             if (!text || !text.trim()) {
                 return '<li class="italic text-textMuted list-none">No directions listed for this recipe.</li>';
@@ -726,13 +718,11 @@
         let currentUnitMode = 'original';
 
         const searchInput = document.getElementById('searchInput');
-        const activeMealCourse = document.getElementById('activeMealCourse');
         const recipeGrid = document.getElementById('recipeGrid');
         const categoryButtons = document.getElementById('categoryButtons');
         const favoritesFilterButton = document.getElementById('favoritesFilterButton');
         const resultCount = document.getElementById('resultCount');
 
-        /* ── SHARED REAL-TIME CLOUD PANTRY LIST + GOOGLE KEEP EXPORT ── */
         let groceryList = [];
         const PANTRY_DOC_REF = db.collection("app_state").doc("shared_pantry_list");
         const pantryStatusEl = document.getElementById('pantrySyncStatusIndicator');
@@ -912,7 +902,6 @@
             if (btn) btn.textContent = isCompactTiles ? 'Card View' : 'Compact Tiles';
         }
 
-        /* ── BAKER'S HYDRATION ENGINE ── */
         let baseFlourWeight = 500;
         let baseWaterWeight = 375;
 
@@ -952,7 +941,6 @@
             renderScaledIngredients(newWaterGrams);
         }
 
-        /* ── STEP-BY-STEP HANDS-FREE COOK MODE ── */
         let cookModeSteps = [];
         let currentCookStepIndex = 0;
 
@@ -1017,7 +1005,6 @@
             renderActiveCookStep();
         }
 
-        /* ── INGREDIENT CONVERSION & SCALING ENGINE ── */
         function parseFractionString(str) {
             const parts = str.trim().split(/\s+/);
             let total = 0;
@@ -1149,7 +1136,6 @@
             renderScaledIngredients();
         }
 
-        /* ── IN-APP RECIPE CATEGORY EDITING ── */
         function openEditCategoryModal(recipe = null) {
             const target = recipe || activeRecipe;
             if (!target) return;
@@ -1200,7 +1186,6 @@
 
                 document.getElementById('inspectCategory').textContent = `${newCategory} · ${activeRecipe.id}`;
                 buildCategoryButtons();
-                populateCategorySelectors();
                 renderCatalog();
                 closeEditCategoryModal();
 
@@ -1394,7 +1379,6 @@
             }
         }
 
-        /* ── RESILIENT URL SCRAPER & SMART-PASTE PARSER ── */
         function toggleSmartPasteBox() {
             const box = document.getElementById('smartPasteContainer');
             const urlBox = document.getElementById('urlInputContainer');
@@ -1640,7 +1624,6 @@
             }
         }
 
-        /* ── DYNAMIC CATEGORY CREATOR IN ADD FORM ── */
         let isCreatingNewCategory = false;
 
         function toggleNewCategoryMode(forceState) {
@@ -1678,14 +1661,8 @@
             if (currentSelected && allCategories.includes(currentSelected)) {
                 formSelect.value = currentSelected;
             }
-
-            const mealList = document.getElementById('mealTypes');
-            mealList.innerHTML = `<option value="All Courses"></option>` + allCategories.map(cat => `
-                <option value="${escapeHtml(cat)}"></option>
-            `).join('');
         }
 
-        /* ── SCREEN WAKE LOCK ── */
         let wakeLockSentinel = null;
         const wakeLockStatus = document.getElementById('wakeLockStatus');
 
@@ -1734,7 +1711,6 @@
             }
         });
 
-        /* ── PWA SUPPORT ── */
         let deferredInstallPrompt = null;
         const installAppButton = document.getElementById('installAppButton');
         const installAppIcon = document.getElementById('installAppIcon');
@@ -1790,7 +1766,6 @@
             installAppButton.classList.remove('hidden');
         }
 
-        /* ── RESILIENT CATALOG LOADER (STALE-WHILE-REVALIDATE) ── */
         function loadLocalCachedData() {
             try {
                 const cached = localStorage.getItem('wardCachedRecipes');
@@ -1838,10 +1813,7 @@
                         const id = row.id || `REC-${idx + 1}`;
                         const category = row.category || 'Dinners with Veggies';
                         const name = row.recipename || row.name || 'Untitled Recipe';
-                        
-                        // Universal smart extractor catches any column header with photos or valid image links
                         const photo = extractPhotoFromRow(row);
-
                         const ingredients = row.ingredients || '';
                         const directions = row.directions || '';
                         const notes = row.notes || '';
@@ -1886,14 +1858,12 @@
 
         function getVisibleRecipes() {
             const search = (searchInput.value || '').trim().toLowerCase();
-            const courseFilter = (activeMealCourse.value || '').trim().toLowerCase();
 
             return recipes.filter(r => {
                 const matchesCat = selectedCategory === 'All' || r.category === selectedCategory;
-                const matchesCourse = !courseFilter || courseFilter === 'all courses' || r.category.toLowerCase().includes(courseFilter);
                 const matchesSearch = !search || `${r.name} ${r.category} ${r.ingredients} ${r.notes}`.toLowerCase().includes(search);
                 const matchesFav = !favoritesOnly || favoriteIds.has(r.id);
-                return matchesCat && matchesCourse && matchesSearch && matchesFav;
+                return matchesCat && matchesSearch && matchesFav;
             });
         }
 
@@ -2006,7 +1976,6 @@
             checkAndRenderBakersMath(r);
             renderScaledIngredients();
             
-            // Populates instructions directly on the page with timer badges
             const dirList = document.getElementById('inspectDirectionsList');
             if (dirList) {
                 dirList.innerHTML = formatDirectionsWithTimers(r.directions || '');
@@ -2164,6 +2133,40 @@
             }
         }
 
+        async function deleteActiveRecipe() {
+            if (!activeRecipe) return;
+            const confirmDelete = confirm(`Are you sure you want to permanently delete "${activeRecipe.name}"?`);
+            if (!confirmDelete) return;
+
+            try {
+                // Delete from Firebase
+                await db.collection("recipes").doc(activeRecipe.id).delete();
+
+                // Remove from local cache array
+                recipes = recipes.filter(r => r.id !== activeRecipe.id);
+                localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
+
+                // Optional: Delete from Google Sheet via Apps Script (if configured to handle DELETE requests)
+                if (GOOGLE_APPS_SCRIPT_URL) {
+                     fetch(`${GOOGLE_APPS_SCRIPT_URL}?deleteId=${activeRecipe.id}`, {
+                         method: 'GET',
+                         mode: 'no-cors'
+                     }).catch(err => console.log('Sheet delete sync silent failure', err));
+                }
+
+                // Cleanup UI
+                activeRecipe = null;
+                toggleDrawer(false);
+                buildCategoryButtons();
+                renderCatalog();
+                alert('Recipe deleted successfully.');
+
+            } catch (error) {
+                console.error("Error deleting recipe: ", error);
+                alert("Failed to delete recipe from the cloud database.");
+            }
+        }
+
         function shareRecipe() {
             if (!activeRecipe) return;
             let text = `🃏 ${activeRecipe.name} (Arkham Kitchen)\n\n`;
@@ -2188,8 +2191,24 @@
             }[c]));
         }
 
+        // Easter Egg: Triple Click Header to check version/force reload
+        let headerClickCount = 0;
+        let headerClickTimer = null;
+        document.getElementById('appBrandingTrigger').addEventListener('click', () => {
+            headerClickCount++;
+            clearTimeout(headerClickTimer);
+            
+            if (headerClickCount >= 3) {
+                alert(`Arkham Kitchen v2.2.5 \nBuild: 2026-10-04\n\nForcing hard reload of data...`);
+                headerClickCount = 0;
+                localStorage.removeItem('wardCachedRecipes');
+                loadCatalog(true);
+            } else {
+                headerClickTimer = setTimeout(() => { headerClickCount = 0; }, 500);
+            }
+        });
+
         searchInput.addEventListener('input', renderCatalog);
-        activeMealCourse.addEventListener('input', renderCatalog);
 
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
