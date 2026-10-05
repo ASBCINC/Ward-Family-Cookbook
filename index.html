@@ -236,7 +236,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <!-- Edit Button -->
-                    <button type="button" onclick="editActiveRecipe()" class="w-9 h-9 bg-[#1c142b] hover:bg-[#2b1f40] border border-jokerPurple/60 rounded-xl text-jokerPurple flex items-center justify-center text-sm shrink-0 transition-all" aria-label="Edit Recipe" title="Edit Recipe">✏️</button>
+                    <button type="button" onclick="editActiveRecipe()" class="w-9 h-9 bg-[#1c142b] hover:bg-[#2b1f40] border border-jokerPurple/60 rounded-xl text-jokerPurple flex items-center justify-center text-sm shrink-0 transition-all" aria-label="Edit Recipe" title="Edit Recipe">✏️️</button>
                     <!-- Delete Button -->
                     <button type="button" onclick="deleteActiveRecipe()" class="w-9 h-9 bg-harleyRed/20 hover:bg-harleyRed/40 border border-harleyRed/50 rounded-xl text-harleyRed flex items-center justify-center font-bold shrink-0 transition-all" aria-label="Delete Recipe" title="Delete Recipe">🗑</button>
                     <button id="closeDrawerButton" type="button" onclick="toggleDrawer(false)" class="md:hidden w-10 h-10 bg-panelBorder rounded-full text-xl flex items-center justify-center font-bold shrink-0" aria-label="Close">×</button>
@@ -1400,134 +1400,6 @@
             }
         }
 
-        function parseSmartPasteText() {
-            const raw = document.getElementById('smartPasteTextarea').value.trim();
-            const statusEl = document.getElementById('importStatus');
-            if (!raw) {
-                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Please paste text first!</span>';
-                return;
-            }
-
-            const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-            
-            // Keep existing title if one is already typed
-            let title = document.getElementById('formName').value.trim(); 
-            let ingredients = [];
-            let directions = [];
-            let currentMode = 'detect';
-
-            let startIndex = 0;
-            // If no title exists, try to guess if the first line is a title (short, no numbers, no recipe keywords)
-            if (!title && lines.length > 0 && lines[0].length < 60 && !/^[0-9¼½¾⅛⅜⅝⅞]/.test(lines[0]) && !lines[0].toLowerCase().includes('ingredient')) {
-                title = lines[0];
-                startIndex = 1;
-            }
-
-            for (let i = startIndex; i < lines.length; i++) {
-                const line = lines[i];
-                const lower = line.toLowerCase();
-
-                // Explicit Headers
-                if (lower === 'ingredients' || lower === 'ingredients:' || lower.includes('what you need')) {
-                    currentMode = 'ing';
-                    continue;
-                }
-                if (lower === 'instructions' || lower === 'directions' || lower === 'instructions:' || lower === 'directions:' || lower === 'method' || lower === 'steps') {
-                    currentMode = 'dir';
-                    continue;
-                }
-
-                if (currentMode === 'ing') {
-                    ingredients.push(line);
-                } else if (currentMode === 'dir') {
-                    directions.push(line);
-                } else {
-                    // AUTO-DETECT MODE
-                    // Look for numbers, fractions, or common measurement words
-                    if (/^[0-9¼½¾⅛⅜⅝⅞]/.test(line) || /^(a|an|pinch|dash|bunch|clove|can|package|box)\b/i.test(line) || lower.includes(' cup') || lower.includes(' tsp') || lower.includes(' tbsp') || lower.includes(' oz')) {
-                        ingredients.push(line);
-                    } else if (ingredients.length > 0) {
-                        // If we already have ingredients, check if the line is a direction (starts with a cooking verb, step number, or is a long sentence)
-                        if (line.length > 80 || /^(mix|stir|bake|cook|preheat|chop|slice|whisk|combine|pour|place|add|beat|heat|bring|boil|simmer|roast|fry)\b/i.test(line) || /^\d+[\.\)]\s/.test(line) || /^step\s\d+/i.test(line)) {
-                            directions.push(line);
-                            currentMode = 'dir'; // Lock into directions mode
-                        } else {
-                            ingredients.push(line); // Assume continuation of ingredients
-                        }
-                    } else {
-                        // If nothing else, assume it's an ingredient
-                        ingredients.push(line);
-                    }
-                }
-            }
-
-            // Fallback: If EVERYTHING got pushed to ingredients, split it up if there are numbered steps
-            if (ingredients.length > 0 && directions.length === 0) {
-                const dirIndex = ingredients.findIndex(l => /^\d+[\.\)]\s/.test(l) || l.length > 100);
-                if (dirIndex !== -1 && dirIndex > 0) {
-                    directions = ingredients.splice(dirIndex);
-                }
-            }
-
-            // Update form fields
-            if (title) document.getElementById('formName').value = title;
-            
-            // Only update fields if we found content
-            if (ingredients.length > 0) {
-                document.getElementById('formIngredients').value = ingredients.join('\n');
-            }
-            if (directions.length > 0) {
-                document.getElementById('formDirections').value = directions.join('\n\n');
-            }
-
-            statusEl.innerHTML = '<span class="text-jokerGreen font-bold">⚡ Recipe extracted and auto-filled below! Review and save.</span>';
-        }
-
-        async function fetchHtmlWithProxies(targetUrl) {
-            if (GOOGLE_APPS_SCRIPT_URL) {
-                try {
-                    const relayUrl = `${GOOGLE_APPS_SCRIPT_URL}?scrapeUrl=${encodeURIComponent(targetUrl)}`;
-                    const res = await fetch(relayUrl);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data && data.contents) return data.contents;
-                    }
-                } catch (e) {
-                    console.warn("Apps Script relay failed, falling back to edge proxies:", e);
-                }
-            }
-
-            const endpoints = [
-                async (u) => {
-                    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`);
-                    if (!r.ok) throw new Error('Proxy 1 failed');
-                    const d = await r.json();
-                    return d.contents;
-                },
-                async (u) => {
-                    const r = await fetch(`https://cors.x2u.in/${u}`);
-                    if (!r.ok) throw new Error('Proxy 2 failed');
-                    return await r.text();
-                },
-                async (u) => {
-                    const r = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(u)}`);
-                    if (!r.ok) throw new Error('Proxy 3 failed');
-                    return await r.text();
-                }
-            ];
-
-            let lastError = null;
-            for (let i = 0; i < endpoints.length; i++) {
-                try {
-                    const html = await endpoints[i](targetUrl);
-                    if (html && html.length > 250) return html;
-                } catch (e) {
-                    lastError = e;
-                }
-            }
-            throw lastError || new Error('Website firewall blocked automated fetching.');
-        }
-
         async function importFromWebUrl() {
             const urlInput = document.getElementById('importUrlInput');
             const statusEl = document.getElementById('importStatus');
@@ -1540,122 +1412,108 @@
             }
 
             fetchBtn.disabled = true;
-            fetchBtn.textContent = 'Parsing...';
-            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Extracting recipe data...</span>';
+            fetchBtn.textContent = 'Asking Gemini...';
+            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Gemini is reading the recipe...</span>';
 
             try {
-                const html = await fetchHtmlWithProxies(targetUrl);
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+                // Using a standard POST without 'application/json' headers to avoid CORS preflight failures in Google Apps Script
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'parse_url', payload: targetUrl })
+                });
+                
+                const rawData = await response.json();
+                
+                // Extract the generated text from Gemini's API response structure
+                let geminiText = rawData.candidates[0].content.parts[0].text;
+                
+                // Clean up Markdown code blocks in case Gemini wraps the JSON string
+                geminiText = geminiText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                
+                const recipeJson = JSON.parse(geminiText);
 
-                const scripts = Array.from(doc.querySelectorAll('script[type="application/ld+json"]'));
-                let recipeJson = null;
-
-                for (const script of scripts) {
-                    try {
-                        const parsed = JSON.parse(script.textContent);
-                        const findRecipe = (obj) => {
-                            if (!obj) return null;
-                            if (obj['@type'] === 'Recipe' || (Array.isArray(obj['@type']) && obj['@type'].includes('Recipe'))) return obj;
-                            if (Array.isArray(obj)) {
-                                for (let item of obj) {
-                                    const match = findRecipe(item);
-                                    if (match) return match;
-                                }
-                            }
-                            if (obj['@graph'] && Array.isArray(obj['@graph'])) {
-                                for (let item of obj['@graph']) {
-                                    const match = findRecipe(item);
-                                    if (match) return match;
-                                }
-                            }
-                            return null;
-                        };
-                        recipeJson = findRecipe(parsed);
-                        if (recipeJson) break;
-                    } catch (e) {}
-                }
-
-                if (!recipeJson) {
-                    const ogTitle = doc.querySelector('meta[property="og:title"]')?.content || doc.title || '';
-                    const ogImage = doc.querySelector('meta[property="og:image"]')?.content || '';
-                    if (ogTitle) {
-                        document.getElementById('formName').value = ogTitle.split('|')[0].split('-')[0].trim();
-                        if (ogImage) document.getElementById('formPhotoUrl').value = normalizeImageUrl(ogImage);
-                        document.getElementById('formNotes').value = `Imported from: ${targetUrl}`;
-                        statusEl.innerHTML = '<span class="text-yellow-400 font-bold">Basic details found! Fill in ingredients and steps below.</span>';
-                        return;
-                    }
-                    throw new Error('No Schema.org recipe tags found on this page.');
-                }
-
-                const name = recipeJson.name || doc.title || '';
-                document.getElementById('formName').value = name;
-
-                let photoUrl = '';
-                if (typeof recipeJson.image === 'string') photoUrl = recipeJson.image;
-                else if (Array.isArray(recipeJson.image) && recipeJson.image.length > 0) {
-                    photoUrl = typeof recipeJson.image[0] === 'string' ? recipeJson.image[0] : (recipeJson.image[0].url || '');
-                } else if (recipeJson.image && recipeJson.image.url) {
-                    photoUrl = recipeJson.image.url;
-                }
-                if (photoUrl) document.getElementById('formPhotoUrl').value = normalizeImageUrl(photoUrl);
-
-                const rawIng = recipeJson.recipeIngredient || [];
+                document.getElementById('formName').value = recipeJson.name || '';
+                document.getElementById('formPhotoUrl').value = normalizeImageUrl(recipeJson.photoUrl || '');
+                
+                const rawIng = recipeJson.ingredients || [];
                 document.getElementById('formIngredients').value = Array.isArray(rawIng) ? rawIng.join('\n') : String(rawIng);
 
-                const rawInst = recipeJson.recipeInstructions || [];
-                let steps = [];
-                const extractSteps = (inst) => {
-                    if (typeof inst === 'string') steps.push(inst);
-                    else if (Array.isArray(inst)) inst.forEach(extractSteps);
-                    else if (inst && inst.text) steps.push(inst.text);
-                    else if (inst && inst.itemListElement) extractSteps(inst.itemListElement);
-                };
-                extractSteps(rawInst);
-                document.getElementById('formDirections').value = steps.map((s, idx) => `${idx + 1}. ${s.trim()}`).join('\n\n');
+                const rawInst = recipeJson.directions || [];
+                document.getElementById('formDirections').value = Array.isArray(rawInst) ? rawInst.map((s, idx) => `${idx + 1}. ${s}`).join('\n\n') : String(rawInst);
 
-                let rawCat = '';
-                if (Array.isArray(recipeJson.recipeCategory)) {
-                    rawCat = recipeJson.recipeCategory.join(' ').toLowerCase();
-                } else if (typeof recipeJson.recipeCategory === 'string') {
-                    rawCat = recipeJson.recipeCategory.toLowerCase();
+                document.getElementById('formNotes').value = recipeJson.notes || `Source: ${targetUrl}`;
+                
+                if (recipeJson.category) {
+                     const catSelect = document.getElementById('formCategorySelect');
+                     const match = Array.from(catSelect.options).find(o => o.value.toLowerCase() === recipeJson.category.toLowerCase());
+                     if (match) catSelect.value = match.value;
                 }
 
-                const tLower = name.toLowerCase();
-                let matchedCategory = 'Dinners with Veggies';
-
-                if (rawCat.includes('bread') || tLower.includes('bread') || tLower.includes('sourdough')) matchedCategory = 'Breads & Sourdough';
-                else if (rawCat.includes('dessert') || tLower.includes('cake') || tLower.includes('cookie') || tLower.includes('sweet')) matchedCategory = 'Desserts & Sweets';
-                else if (rawCat.includes('seafood') || tLower.includes('salmon') || tLower.includes('shrimp')) matchedCategory = 'Seafood';
-                else if (rawCat.includes('pork') || tLower.includes('pork') || tLower.includes('ham')) matchedCategory = 'Pork';
-                else if (rawCat.includes('beef') || tLower.includes('steak') || tLower.includes('prime rib')) matchedCategory = 'Beef';
-                else if (rawCat.includes('poultry') || tLower.includes('chicken') || tLower.includes('turkey')) matchedCategory = 'Poultry';
-                else if (tLower.includes('sandwich') || tLower.includes('french dip')) matchedCategory = 'Sandwiches';
-                else if (tLower.includes('egg') || tLower.includes('pancake')) matchedCategory = 'Breakfast';
-
-                const catSelect = document.getElementById('formCategorySelect');
-                if (Array.from(catSelect.options).some(o => o.value === matchedCategory)) {
-                    catSelect.value = matchedCategory;
-                }
-
-                const notesArr = [];
-                if (recipeJson.recipeYield) notesArr.push(`Yield: ${Array.isArray(recipeJson.recipeYield) ? recipeJson.recipeYield[0] : recipeJson.recipeYield}`);
-                if (recipeJson.totalTime) notesArr.push(`Time: ${String(recipeJson.totalTime).replace('PT','').toLowerCase()}`);
-                notesArr.push(`Source: ${targetUrl}`);
-                document.getElementById('formNotes').value = notesArr.join(' | ');
-
-                statusEl.innerHTML = '<span class="text-jokerGreen font-bold">Successfully imported! Review and click Save below.</span>';
+                statusEl.innerHTML = '<span class="text-jokerGreen font-bold">Successfully imported by Gemini! Review and save.</span>';
 
             } catch (err) {
-                console.warn('URL Import error:', err);
+                console.error('Gemini URL Import error:', err);
                 statusEl.innerHTML = `
-                    <span class="text-harleyRed font-bold">This site blocked direct proxy scraping.</span>
-                    <button type="button" onclick="toggleSmartPasteBox()" class="text-xs text-jokerGreen underline ml-1 font-bold">Click here to Smart-Paste the text</button>
+                    <span class="text-harleyRed font-bold">Failed to extract recipe using AI.</span>
+                    <button type="button" onclick="toggleSmartPasteBox()" class="text-xs text-jokerGreen underline ml-1 font-bold">Try Smart-Paste</button>
                 `;
             } finally {
                 fetchBtn.disabled = false;
                 fetchBtn.textContent = 'Fetch';
+            }
+        }
+
+        async function parseSmartPasteText() {
+            const rawText = document.getElementById('smartPasteTextarea').value.trim();
+            const statusEl = document.getElementById('importStatus');
+            const btn = document.querySelector('#smartPasteContainer button');
+            
+            if (!rawText) {
+                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Please paste text first!</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Gemini is processing...';
+            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Gemini is extracting recipe data...</span>';
+
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'parse_text', payload: rawText })
+                });
+
+                const rawData = await response.json();
+                
+                let geminiText = rawData.candidates[0].content.parts[0].text;
+                geminiText = geminiText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                
+                const recipeJson = JSON.parse(geminiText);
+
+                if (recipeJson.name) document.getElementById('formName').value = recipeJson.name;
+                if (recipeJson.photoUrl) document.getElementById('formPhotoUrl').value = normalizeImageUrl(recipeJson.photoUrl);
+                
+                const rawIng = recipeJson.ingredients || [];
+                if (rawIng.length > 0) document.getElementById('formIngredients').value = Array.isArray(rawIng) ? rawIng.join('\n') : String(rawIng);
+
+                const rawInst = recipeJson.directions || [];
+                if (rawInst.length > 0) document.getElementById('formDirections').value = Array.isArray(rawInst) ? rawInst.map((s, idx) => `${idx + 1}. ${s}`).join('\n\n') : String(rawInst);
+
+                if (recipeJson.notes) document.getElementById('formNotes').value = recipeJson.notes;
+                
+                if (recipeJson.category) {
+                     const catSelect = document.getElementById('formCategorySelect');
+                     const match = Array.from(catSelect.options).find(o => o.value.toLowerCase() === recipeJson.category.toLowerCase());
+                     if (match) catSelect.value = match.value;
+                }
+
+                statusEl.innerHTML = '<span class="text-jokerGreen font-bold">⚡ Recipe extracted by Gemini! Review and save.</span>';
+            } catch (err) {
+                console.error('Gemini Paste error:', err);
+                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Could not process text. Try formatting it better.</span>';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '⚡ Extract & Auto-Fill Form';
             }
         }
 
