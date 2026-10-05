@@ -1400,7 +1400,7 @@
             }
         }
 
-        async function importFromWebUrl() {
+       async function importFromWebUrl() {
             const urlInput = document.getElementById('importUrlInput');
             const statusEl = document.getElementById('importStatus');
             const fetchBtn = document.getElementById('importUrlBtn');
@@ -1416,13 +1416,17 @@
             statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Gemini is reading the recipe...</span>';
 
             try {
-                // Using a standard POST without 'application/json' headers to avoid CORS preflight failures in Google Apps Script
                 const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'parse_url', payload: targetUrl })
                 });
                 
                 const rawData = await response.json();
+
+                // Check if the Apps Script backend threw an error directly
+                if (rawData.error) {
+                    throw new Error(`Backend Error: ${rawData.error}`);
+                }
                 
                 // Extract the generated text from Gemini's API response structure
                 let geminiText = rawData.candidates[0].content.parts[0].text;
@@ -1453,8 +1457,9 @@
 
             } catch (err) {
                 console.error('Gemini URL Import error:', err);
+                // THIS will now show us exactly what broke on the screen
                 statusEl.innerHTML = `
-                    <span class="text-harleyRed font-bold">Failed to extract recipe using AI.</span>
+                    <span class="text-harleyRed font-bold text-[10px]">Failed: ${err.message}</span>
                     <button type="button" onclick="toggleSmartPasteBox()" class="text-xs text-jokerGreen underline ml-1 font-bold">Try Smart-Paste</button>
                 `;
             } finally {
@@ -1462,7 +1467,6 @@
                 fetchBtn.textContent = 'Fetch';
             }
         }
-
         async function parseSmartPasteText() {
             const rawText = document.getElementById('smartPasteTextarea').value.trim();
             const statusEl = document.getElementById('importStatus');
