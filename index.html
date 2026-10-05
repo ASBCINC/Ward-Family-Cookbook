@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.2.8 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
+<!-- Ward Family Recipe Vault v2.2.9 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.2.8">
+    <meta name="application-version" content="2.2.9">
     <meta name="build-date" content="2026-10-04">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -624,6 +624,7 @@
             }
         });
 
+        // The CSV export link requested has been added below:
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM4oWWlRktK-xVxLiHaeLL8qMsWdMBX_xYHxHPZBUFzXyrcmSQBzqrAtvjjv0WVCWxBNvLLgow2fbZ/pub?output=csv";
         const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHFORkJi9XAuQ97dGU-IafQob11klXq1Nm5dkpfZ7ReM21Dd1Cr-w2s2-DQ10FdcXsvQ/exec";
 
@@ -671,7 +672,6 @@
                     return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
                 }
             }
-
             return clean;
         }
 
