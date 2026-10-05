@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.2.5 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
+<!-- Ward Family Recipe Vault v2.2.6 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.2.5">
+    <meta name="application-version" content="2.2.6">
     <meta name="build-date" content="2026-10-04">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -166,7 +166,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.5</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.6</div>
                 </div>
             </div>
         </div>
@@ -235,6 +235,9 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <!-- Edit Button -->
+                    <button type="button" onclick="editActiveRecipe()" class="w-9 h-9 bg-[#1c142b] hover:bg-[#2b1f40] border border-jokerPurple/60 rounded-xl text-jokerPurple flex items-center justify-center text-sm shrink-0 transition-all" aria-label="Edit Recipe" title="Edit Recipe">✏️</button>
+                    <!-- Delete Button -->
                     <button type="button" onclick="deleteActiveRecipe()" class="w-9 h-9 bg-harleyRed/20 hover:bg-harleyRed/40 border border-harleyRed/50 rounded-xl text-harleyRed flex items-center justify-center font-bold shrink-0 transition-all" aria-label="Delete Recipe" title="Delete Recipe">🗑</button>
                     <button id="closeDrawerButton" type="button" onclick="toggleDrawer(false)" class="md:hidden w-10 h-10 bg-panelBorder rounded-full text-xl flex items-center justify-center font-bold shrink-0" aria-label="Close">×</button>
                 </div>
@@ -495,19 +498,19 @@
         </div>
     </div>
 
-    <!-- Add Recipe Modal (With Resilient URL + Smart-Paste Parser) -->
+    <!-- Add / Edit Recipe Modal -->
     <div id="customModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex items-center gap-2">
                     <span class="text-lg">🃏</span>
-                    <h3 class="text-lg font-bold text-jokerGreen">Add Family Recipe</h3>
+                    <h3 id="modalTitleText" class="text-lg font-bold text-jokerGreen">Add Family Recipe</h3>
                 </div>
                 <button type="button" onclick="toggleAddModal(false)" class="w-9 h-9 rounded-full bg-harleyBlack border border-panelBorder text-white text-lg flex items-center justify-center">×</button>
             </div>
 
             <!-- ONE-CLICK URL + SMART-PASTE IMPORT ENGINE -->
-            <div class="mb-4 bg-[#140e1b] border border-jokerPurple/40 p-3 rounded-xl space-y-2">
+            <div id="autoImportEngineBlock" class="mb-4 bg-[#140e1b] border border-jokerPurple/40 p-3 rounded-xl space-y-2">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-bold text-jokerGreen uppercase tracking-wider flex items-center gap-1">
                         <span>🔗</span> Auto-Import Recipe
@@ -525,7 +528,7 @@
                     </button>
                 </div>
 
-                <!-- Direct Smart-Paste Box (Bypasses all proxy/Cloudflare firewalls) -->
+                <!-- Direct Smart-Paste Box -->
                 <div id="smartPasteContainer" class="hidden space-y-2">
                     <textarea id="smartPasteTextarea" rows="3" placeholder="Copy recipe text from any website (or ingredients & steps) and paste here..." class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2.5 text-xs text-white leading-relaxed outline-none focus:border-jokerGreen"></textarea>
                     <button type="button" onclick="parseSmartPasteText()" class="w-full py-1.5 rounded-lg bg-jokerGreen text-black text-xs font-bold hover:brightness-110">
@@ -714,6 +717,7 @@
         let isCompactTiles = localStorage.getItem('wardRecipeCompactTiles') === 'true';
         let favoriteIds = new Set(JSON.parse(localStorage.getItem('wardRecipeFavorites') || '[]'));
         let activeRecipe = null;
+        let isEditingRecipe = false;
         let currentScale = 1.0;
         let currentUnitMode = 'original';
 
@@ -2053,14 +2057,43 @@
             modal.classList.toggle('hidden', !show);
             modal.classList.toggle('flex', show);
             if (show) {
+                isEditingRecipe = false;
                 document.getElementById('recipeAddForm').reset();
                 document.getElementById('importUrlInput').value = '';
                 document.getElementById('smartPasteTextarea').value = '';
                 document.getElementById('importStatus').textContent = '';
+                document.getElementById('modalTitleText').textContent = 'Add Family Recipe';
+                document.getElementById('saveRecipeButton').textContent = 'Save to Cloud & Google Sheet';
+                document.getElementById('autoImportEngineBlock').classList.remove('hidden');
                 toggleNewCategoryMode(false);
                 populateCategorySelectors();
                 document.getElementById('submitFeedback').textContent = '';
             }
+        }
+
+        function editActiveRecipe() {
+            if (!activeRecipe) return;
+            isEditingRecipe = true;
+            
+            document.getElementById('formName').value = activeRecipe.name || '';
+            document.getElementById('formCategorySelect').value = activeRecipe.category || '';
+            document.getElementById('formPhotoUrl').value = activeRecipe.photo || '';
+            document.getElementById('formIngredients').value = activeRecipe.ingredients || '';
+            document.getElementById('formDirections').value = activeRecipe.directions || '';
+            document.getElementById('formNotes').value = activeRecipe.notes || '';
+            
+            document.getElementById('modalTitleText').textContent = 'Edit Family Recipe';
+            document.getElementById('saveRecipeButton').textContent = 'Update Cloud & Google Sheet';
+            document.getElementById('autoImportEngineBlock').classList.add('hidden');
+            
+            const modal = document.getElementById('customModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            populateCategorySelectors();
+            toggleNewCategoryMode(false);
+            document.getElementById('submitFeedback').textContent = '';
+            toggleDrawer(false); 
         }
 
         async function handleFormSubmit(event) {
@@ -2078,7 +2111,7 @@
             else finalCategory = selectCatVal || 'Dinners with Veggies';
 
             btn.disabled = true;
-            btn.textContent = 'Saving Recipe...';
+            btn.textContent = isEditingRecipe ? 'Updating Recipe...' : 'Saving Recipe...';
             feedback.innerHTML = '<span class="text-jokerGreen">Uploading to Arkham Storage...</span>';
 
             try {
@@ -2091,8 +2124,10 @@
                     photoUrl = await snapshot.ref.getDownloadURL();
                 }
 
+                const recipeId = isEditingRecipe ? activeRecipe.id : `REC-${Date.now()}`;
+
                 const newRecipe = {
-                    id: `REC-${Date.now()}`,
+                    id: recipeId,
                     category: finalCategory,
                     name: document.getElementById('formName').value.trim(),
                     photo: photoUrl,
@@ -2102,18 +2137,25 @@
                     updatedAt: new Date().toISOString()
                 };
 
-                await db.collection("recipes").doc(newRecipe.id).set(newRecipe);
+                await db.collection("recipes").doc(newRecipe.id).set(newRecipe, { merge: true });
 
                 if (GOOGLE_APPS_SCRIPT_URL) {
+                    const payload = { ...newRecipe, _action: isEditingRecipe ? 'update' : 'create' };
                     await fetch(GOOGLE_APPS_SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(newRecipe)
+                        body: JSON.stringify(payload)
                     });
                 }
 
-                recipes.unshift(newRecipe);
+                if (isEditingRecipe) {
+                    const index = recipes.findIndex(r => r.id === recipeId);
+                    if (index !== -1) recipes[index] = newRecipe;
+                } else {
+                    recipes.unshift(newRecipe);
+                }
+
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
                 
                 buildCategoryButtons();
@@ -2121,32 +2163,37 @@
                 renderCatalog();
                 inspectRecipe(newRecipe, true);
 
-                feedback.innerHTML = '<span class="text-jokerGreen font-bold">Saved! Cloud and catalog updated.</span>';
-                setTimeout(() => toggleAddModal(false), 1200);
+                feedback.innerHTML = `<span class="text-jokerGreen font-bold">${isEditingRecipe ? 'Updated' : 'Saved'}! Cloud and catalog updated.</span>`;
+                setTimeout(() => {
+                    document.getElementById('customModal').classList.add('hidden');
+                    document.getElementById('customModal').classList.remove('flex');
+                    isEditingRecipe = false;
+                }, 1200);
 
             } catch (err) {
                 console.error('Submit error:', err);
                 feedback.innerHTML = `<span class="text-harleyRed">Error: ${err.message}</span>`;
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Save to Cloud & Google Sheet';
+                btn.textContent = isEditingRecipe ? 'Update Cloud & Google Sheet' : 'Save to Cloud & Google Sheet';
             }
         }
 
         async function deleteActiveRecipe() {
             if (!activeRecipe) return;
-            const confirmDelete = confirm(`Are you sure you want to permanently delete "${activeRecipe.name}"?`);
-            if (!confirmDelete) return;
+            
+            const pin = prompt(`To permanently delete "${activeRecipe.name}", enter PIN:`);
+            if (pin !== "0712") {
+                if (pin !== null) alert("Incorrect PIN. Deletion cancelled.");
+                return;
+            }
 
             try {
-                // Delete from Firebase
                 await db.collection("recipes").doc(activeRecipe.id).delete();
 
-                // Remove from local cache array
                 recipes = recipes.filter(r => r.id !== activeRecipe.id);
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
 
-                // Optional: Delete from Google Sheet via Apps Script (if configured to handle DELETE requests)
                 if (GOOGLE_APPS_SCRIPT_URL) {
                      fetch(`${GOOGLE_APPS_SCRIPT_URL}?deleteId=${activeRecipe.id}`, {
                          method: 'GET',
@@ -2154,7 +2201,6 @@
                      }).catch(err => console.log('Sheet delete sync silent failure', err));
                 }
 
-                // Cleanup UI
                 activeRecipe = null;
                 toggleDrawer(false);
                 buildCategoryButtons();
@@ -2199,7 +2245,7 @@
             clearTimeout(headerClickTimer);
             
             if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.2.5 \nBuild: 2026-10-04\n\nForcing hard reload of data...`);
+                alert(`Arkham Kitchen v2.2.6 \nBuild: 2026-10-04\n\nForcing hard reload of data...`);
                 headerClickCount = 0;
                 localStorage.removeItem('wardCachedRecipes');
                 loadCatalog(true);
