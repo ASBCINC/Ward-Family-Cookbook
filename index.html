@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.2.10 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
+<!-- Ward Family Recipe Vault v2.2.11 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.2.10">
+    <meta name="application-version" content="2.2.11">
     <meta name="build-date" content="2026-10-04">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -166,7 +166,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.10</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.11</div>
                 </div>
             </div>
         </div>
@@ -625,7 +625,7 @@
         });
 
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM4oWWlRktK-xVxLiHaeLL8qMsWdMBX_xYHxHPZBUFzXyrcmSQBzqrAtvjjv0WVCWxBNvLLgow2fbZ/pub?output=csv";
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-Fbi4iA6x_8BwHvJtcGSRUqgb-YQaiMc-vPrrXdY0FWBJv93v6t-iE3_gACGqrlhM3Q/exec";
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybV5P_9Pojc5ejKkHHU5XlWjRwPW4gt4X95BOzdP070nhR7HeLjqjeK541rGiGVfmHiw/exec";
 
         const DEFAULT_CATEGORIES = [
             'Breads & Sourdough',
@@ -2154,7 +2154,7 @@
             clearTimeout(headerClickTimer);
             
             if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.2.10 \nBuild: 2026-10-04\n\nForcing hard reload of data...`);
+                alert(`Arkham Kitchen v2.2.11 \nBuild: 2026-10-04\n\nForcing hard reload of data...`);
                 headerClickCount = 0;
                 localStorage.removeItem('wardCachedRecipes');
                 loadCatalog(true);
