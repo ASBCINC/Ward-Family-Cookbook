@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.3.1 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
+<!-- Ward Family Recipe Vault v2.3.2 | Arkham Kitchen Master Suite | Build 2026-10-05 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.3.1">
-    <meta name="build-date" content="2026-10-04">
+    <meta name="application-version" content="2.3.2">
+    <meta name="build-date" content="2026-10-05">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
     <!-- PWA & Favicon Metadata -->
@@ -140,20 +140,17 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                <!-- Shared Real-Time Pantry Drawer Button -->
                 <button type="button" onclick="toggleGroceryDrawer(true)" class="h-9 px-3 rounded-xl bg-cardDark border border-panelBorder text-neutral-200 text-xs sm:text-sm font-bold hover:border-jokerPurple hover:text-white transition-all flex items-center gap-1.5 shadow-sm relative">
                     <span>🛒</span>
                     <span class="hidden sm:inline">Pantry List</span>
                     <span id="groceryCountBadge" class="hidden text-[10px] bg-harleyRed text-white px-1.5 py-0.2 rounded-full font-bold">0</span>
                 </button>
 
-                <!-- Header Timer Trigger Button -->
                 <button type="button" onclick="toggleTimerPanel()" class="h-9 px-3 rounded-xl bg-cardDark border border-jokerPurple/70 text-neutral-200 text-xs sm:text-sm font-bold hover:border-jokerGreen hover:text-jokerGreen transition-all flex items-center gap-1.5 shadow-sm">
                     <span>⏱</span>
                     <span id="headerTimerDisplay" class="font-mono">Timers (0)</span>
                 </button>
 
-                <!-- Install App Button -->
                 <button id="installAppButton" type="button" class="hidden print-hide h-9 px-3 rounded-xl bg-harleyBlack border border-jokerGreen/60 text-jokerGreen text-xs sm:text-sm font-bold hover:bg-jokerGreen hover:text-black transition-all flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,230,118,0.2)]">
                     <span id="installAppIcon" class="flex items-center"></span>
                     <span id="installAppText">Install App</span>
@@ -166,12 +163,11 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.1</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.2</div>
                 </div>
             </div>
         </div>
 
-        <!-- Sub toolbar with filter controls -->
         <div id="quickControls" class="h-12 px-3 sm:px-5 flex items-center gap-2.5 border-t border-panelBorder/70 bg-[#0d0912] overflow-x-auto print-hide">
             <input id="chefFilter" type="text" placeholder="Cook / Contributor" class="h-9 w-36 sm:w-44 shrink-0 bg-cardDark border border-panelBorder rounded-lg px-3 text-xs text-white placeholder:text-textMuted">
             
@@ -184,15 +180,12 @@
                 <span class="text-[11px] font-bold text-jokerGreen uppercase tracking-wider mt-0.5">Baker's Hydration %</span>
             </label>
 
-            <button type="button" onclick="loadCatalog(true)" class="h-9 shrink-0 bg-cardDark border border-panelBorder text-jokerGreen font-medium rounded-lg px-3 text-xs hover:border-jokerGreen transition-colors">↻ Reload Sheet</button>
+            <button type="button" onclick="loadCatalog(true)" class="h-9 shrink-0 bg-cardDark border border-panelBorder text-jokerGreen font-medium rounded-lg px-3 text-xs hover:border-jokerGreen transition-colors">↻ Reload Vault</button>
             <button type="button" onclick="scaleActiveRecipe(2.0)" class="h-9 shrink-0 bg-cardDark border border-harleyRed/50 text-harleyRed font-medium rounded-lg px-3 text-xs hover:border-harleyRed transition-colors">2x Yield</button>
         </div>
     </header>
 
-    <!-- Main Workspace -->
     <main class="flex-1 flex overflow-hidden relative">
-
-        <!-- Recipe Catalog Side -->
         <section id="catalogPanel" class="w-full md:w-2/3 flex flex-col border-r border-panelBorder bg-[#0c0a10] h-full min-h-0">
             <div class="p-3 sm:p-4 bg-cardDark border-b border-panelBorder space-y-3 shrink-0">
                 <input id="searchInput" type="search" autocomplete="off" placeholder="Search by ingredient, name, or recipe notes..." class="w-full bg-harleyBlack border border-panelBorder rounded-xl px-4 h-12 text-sm sm:text-base outline-none focus:border-jokerGreen">
@@ -215,7 +208,6 @@
             <div id="recipeGrid" class="flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-max pb-28 md:pb-6"></div>
         </section>
 
-        <!-- Recipe Drawer (Inspection Pane) -->
         <section id="recipeDrawer" class="fixed md:static inset-x-0 bottom-0 z-40 md:z-auto w-full md:w-1/3 h-[90vh] md:h-full bg-cardDark flex flex-col overflow-y-auto scroll-touch shadow-2xl md:shadow-none rounded-t-2xl md:rounded-none border-t md:border-t-0 border-panelBorder translate-y-full md:translate-y-0 transition-transform duration-300">
             <div class="sticky top-0 z-20 p-4 border-b border-panelBorder flex justify-between items-center shrink-0 bg-cardDark">
                 <div class="min-w-0 pr-2">
@@ -235,15 +227,12 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <!-- Edit Button -->
-                    <button type="button" onclick="editActiveRecipe()" class="w-9 h-9 bg-[#1c142b] hover:bg-[#2b1f40] border border-jokerPurple/60 rounded-xl text-jokerPurple flex items-center justify-center text-sm shrink-0 transition-all" aria-label="Edit Recipe" title="Edit Recipe">✏️️</button>
-                    <!-- Delete Button -->
+                    <button type="button" onclick="editActiveRecipe()" class="w-9 h-9 bg-[#1c142b] hover:bg-[#2b1f40] border border-jokerPurple/60 rounded-xl text-jokerPurple flex items-center justify-center text-sm shrink-0 transition-all" aria-label="Edit Recipe" title="Edit Recipe">✏</button>
                     <button type="button" onclick="deleteActiveRecipe()" class="w-9 h-9 bg-harleyRed/20 hover:bg-harleyRed/40 border border-harleyRed/50 rounded-xl text-harleyRed flex items-center justify-center font-bold shrink-0 transition-all" aria-label="Delete Recipe" title="Delete Recipe">🗑</button>
                     <button id="closeDrawerButton" type="button" onclick="toggleDrawer(false)" class="md:hidden w-10 h-10 bg-panelBorder rounded-full text-xl flex items-center justify-center font-bold shrink-0" aria-label="Close">×</button>
                 </div>
             </div>
 
-            <!-- Card Banner Image -->
             <div id="inspectPhotoContainer" class="h-48 bg-harleyBlack relative overflow-hidden shrink-0 border-b border-panelBorder">
                 <img id="inspectPhoto" src="./icon-512x512.png" alt="Recipe" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-cardDark via-transparent to-transparent"></div>
@@ -253,9 +242,7 @@
                 </button>
             </div>
 
-            <!-- Ingredients & Directions Body -->
             <div class="p-4 space-y-5 text-sm flex-1">
-                <!-- BAKER'S HYDRATION TOOLBAR -->
                 <div id="bakersMathBlock" class="hidden p-3 bg-[#150f1d] border border-jokerPurple/50 rounded-xl space-y-2">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-jokerGreen uppercase tracking-wider flex items-center gap-1">
@@ -272,7 +259,6 @@
                     </div>
                 </div>
 
-                <!-- INGREDIENTS SECTION WITH CONVERSION CONTROLS -->
                 <div>
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-harleyRed flex items-center gap-1.5">
@@ -298,7 +284,6 @@
                     </ul>
                 </div>
 
-                <!-- DIRECT ON-PAGE PREPARATION & DIRECTIONS -->
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-jokerGreen flex items-center gap-1.5">
@@ -315,7 +300,6 @@
                 </div>
             </div>
 
-            <!-- Bottom Kitchen Actions -->
             <div class="sticky bottom-0 z-20 p-3 sm:p-4 bg-[#0a080f] border-t border-panelBorder shrink-0 safe-bottom">
                 <div class="grid grid-cols-3 gap-2">
                     <button type="button" onclick="scaleActiveRecipe(0.5)" class="bg-cardDark border border-panelBorder hover:border-jokerPurple font-bold py-2.5 rounded-xl text-xs text-white">0.5x</button>
@@ -335,7 +319,6 @@
         </section>
     </main>
 
-    <!-- STEP-BY-STEP HANDS-FREE COOK MODE MODAL -->
     <div id="cookModeModal" class="fixed inset-0 bg-harleyBlack z-50 hidden flex-col p-4 sm:p-8 overflow-y-auto">
         <div class="flex justify-between items-center pb-3 border-b border-panelBorder shrink-0">
             <div class="flex items-center gap-3 min-w-0">
@@ -371,7 +354,6 @@
         </div>
     </div>
 
-    <!-- PANTRY / GROCERY LIST SLIDING DRAWER -->
     <div id="groceryDrawer" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-[#110d17] border-l border-panelBorder z-50 translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
         <div class="p-4 border-b border-panelBorder flex justify-between items-center shrink-0 bg-[#0d0912]">
             <div class="flex items-center gap-2">
@@ -408,7 +390,6 @@
         </div>
     </div>
 
-    <!-- MULTI-TIMER COOKING DOCK -->
     <div id="kitchenTimerWidget" class="fixed right-3 bottom-20 md:bottom-5 z-50 transition-all duration-300 select-none">
         <div id="timerMiniBadge" onclick="toggleTimerPanel(true)" class="hidden cursor-pointer bg-cardDark border-2 border-jokerGreen text-white px-3.5 py-2 rounded-2xl shadow-[0_0_16px_rgba(0,230,118,0.35)] flex items-center gap-2.5 hover:scale-105 transition-all">
             <span class="animate-pulse text-base">⏱</span>
@@ -459,7 +440,6 @@
         </div>
     </div>
 
-    <!-- Mobile Floating Bar -->
     <button id="mobileBar" type="button" onclick="toggleDrawer(true)" class="md:hidden fixed z-30 left-3 right-3 bottom-3 bg-gradient-to-r from-jokerPurple to-harleyRed text-white rounded-2xl shadow-2xl px-4 py-3 flex items-center justify-between font-bold safe-bottom border border-jokerGreen/40">
         <span class="flex items-center gap-2 truncate"><span>🃏</span> <span id="mobileRecipeName" class="truncate">Select a Recipe</span></span>
         <span class="text-xs bg-black/40 px-2 py-1 rounded text-jokerGreen font-mono shrink-0">Open</span>
@@ -467,7 +447,6 @@
 
     <div id="drawerBackdrop" onclick="toggleDrawer(false)" class="hidden md:hidden fixed inset-0 z-30 bg-black/80 backdrop-blur-sm"></div>
 
-    <!-- EDIT CATEGORY MODAL -->
     <div id="editCatModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-sm">
             <div class="flex justify-between items-center mb-3">
@@ -498,7 +477,6 @@
         </div>
     </div>
 
-    <!-- Add / Edit Recipe Modal -->
     <div id="customModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-3">
@@ -509,7 +487,6 @@
                 <button type="button" onclick="toggleAddModal(false)" class="w-9 h-9 rounded-full bg-harleyBlack border border-panelBorder text-white text-lg flex items-center justify-center">×</button>
             </div>
 
-            <!-- ONE-CLICK URL + SMART-PASTE IMPORT ENGINE -->
             <div id="autoImportEngineBlock" class="mb-4 bg-[#140e1b] border border-jokerPurple/40 p-3 rounded-xl space-y-2">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-bold text-jokerGreen uppercase tracking-wider flex items-center gap-1">
@@ -520,7 +497,6 @@
                     </button>
                 </div>
 
-                <!-- URL Box -->
                 <div id="urlInputContainer" class="flex gap-2">
                     <input id="importUrlInput" type="url" placeholder="Paste recipe website URL (https://...)" class="flex-1 bg-harleyBlack border border-panelBorder rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-jokerGreen">
                     <button type="button" id="importUrlBtn" onclick="importFromWebUrl()" class="px-3 py-1.5 rounded-lg bg-jokerPurple hover:bg-jokerPurpleDark border border-jokerGreen/50 text-white text-xs font-bold transition-all shrink-0">
@@ -528,7 +504,6 @@
                     </button>
                 </div>
 
-                <!-- Direct Smart-Paste Box -->
                 <div id="smartPasteContainer" class="hidden space-y-2">
                     <textarea id="smartPasteTextarea" rows="3" placeholder="Copy recipe text from any website (or ingredients & steps) and paste here..." class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2.5 text-xs text-white leading-relaxed outline-none focus:border-jokerGreen"></textarea>
                     <button type="button" onclick="parseSmartPasteText()" class="w-full py-1.5 rounded-lg bg-jokerGreen text-black text-xs font-bold hover:brightness-110">
@@ -583,7 +558,7 @@
                 </div>
 
                 <button id="saveRecipeButton" type="submit" class="mt-4 w-full bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-3.5 rounded-xl hover:brightness-110 shadow-lg text-sm border border-jokerGreen/40">
-                    Save to Cloud &amp; Google Sheet
+                    Save to Arkham Cloud
                 </button>
                 <div id="submitFeedback" class="text-center text-xs min-h-[1.25rem]"></div>
             </form>
@@ -625,7 +600,7 @@
         });
 
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM4oWWlRktK-xVxLiHaeLL8qMsWdMBX_xYHxHPZBUFzXyrcmSQBzqrAtvjjv0WVCWxBNvLLgow2fbZ/pub?output=csv";
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzDTxkaBzWgXAqCMs-PRyQ3qoWMpRDN2L6BekUlGSyFD2wEhW3CK50Ylyd6zFrl-sPd/exec";
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxTULOKG47VVeSZ1iN0LfEGGFGStufOKo4pz0TQYeTjOwPGxCX3rUstV5gyirJd1oOJkA/exec";
 
         const DEFAULT_CATEGORIES = [
             'Breads & Sourdough',
@@ -671,7 +646,6 @@
                     return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
                 }
             }
-
             return clean;
         }
 
@@ -1429,7 +1403,6 @@
                     throw new Error(rawData.error);
                 }
 
-                // Groq returns the raw JSON string directly
                 const recipeJson = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
 
                 document.getElementById('formName').value = recipeJson.name || '';
@@ -1519,6 +1492,9 @@
                 btn.textContent = '⚡ Extract & Auto-Fill Form';
             }
         }
+
+        let isCreatingNewCategory = false;
+
         function toggleNewCategoryMode(forceState) {
             isCreatingNewCategory = typeof forceState === 'boolean' ? forceState : !isCreatingNewCategory;
             const selectEl = document.getElementById('formCategorySelect');
@@ -1680,49 +1656,59 @@
             return false;
         }
 
+        // UPDATED: Now primarily loads from Firebase so edits never disappear
         async function loadCatalog(forceRefresh = false) {
             const hasLocal = loadLocalCachedData();
             if (!hasLocal || forceRefresh) {
                 resultCount.textContent = 'Syncing Arkham vault...';
                 if (!hasLocal) {
-                    recipeGrid.innerHTML = '<div class="col-span-full text-center text-textMuted py-16">Syncing recipes from database...</div>';
+                    recipeGrid.innerHTML = '<div class="col-span-full text-center text-textMuted py-16">Syncing recipes from cloud database...</div>';
                 }
             }
 
             try {
-                const syncUrl = `${SHEET_CSV_URL}&_ts=${Date.now()}`;
-                const response = await fetch(syncUrl);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                // 1. Prioritize loading directly from Firebase
+                const snapshot = await db.collection("recipes").get();
+                let fbRecipes = [];
+                snapshot.forEach(doc => fbRecipes.push(doc.data()));
 
-                const csvText = await response.text();
-                const parsed = Papa.parse(csvText, {
-                    header: true,
-                    skipEmptyLines: 'greedy',
-                    transformHeader: h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
-                });
+                if (fbRecipes.length > 0) {
+                    recipes = fbRecipes;
+                    document.getElementById('syncStatusBadge').textContent = 'Firebase Cloud Active';
+                } else {
+                    // 2. Fallback to Google Sheets CSV if Firebase is empty
+                    const syncUrl = `${SHEET_CSV_URL}&_ts=${Date.now()}`;
+                    const response = await fetch(syncUrl);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-                if (parsed.data && parsed.data.length > 0) {
-                    recipes = parsed.data.map((row, idx) => {
-                        const id = row.id || `REC-${idx + 1}`;
-                        const category = row.category || 'Dinners with Veggies';
-                        const name = row.recipename || row.name || 'Untitled Recipe';
-                        const photo = extractPhotoFromRow(row);
-                        const ingredients = row.ingredients || '';
-                        const directions = row.directions || '';
-                        const notes = row.notes || '';
-
-                        return { id, category, name, photo, ingredients, directions, notes };
+                    const csvText = await response.text();
+                    const parsed = Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: 'greedy',
+                        transformHeader: h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
                     });
 
-                    localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
-                    buildCategoryButtons();
-                    populateCategorySelectors();
-                    renderCatalog();
+                    recipes = parsed.data.map((row, idx) => {
+                        return {
+                            id: row.id || `REC-${idx + 1}`,
+                            category: row.category || 'Dinners with Veggies',
+                            name: row.recipename || row.name || 'Untitled Recipe',
+                            photo: extractPhotoFromRow(row),
+                            ingredients: row.ingredients || '',
+                            directions: row.directions || '',
+                            notes: row.notes || ''
+                        };
+                    });
+                    document.getElementById('syncStatusBadge').textContent = 'CSV Fallback Active';
+                }
 
-                    if (!activeRecipe && recipes.length > 0) {
-                        populateInspectionPane(recipes[0]);
-                    }
-                    document.getElementById('syncStatusBadge').textContent = 'Cloud Synced';
+                localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
+                buildCategoryButtons();
+                populateCategorySelectors();
+                renderCatalog();
+
+                if (!activeRecipe && recipes.length > 0) {
+                    populateInspectionPane(recipes[0]);
                 }
             } catch (err) {
                 console.warn('Network sync paused, offline mode active:', err);
@@ -1952,7 +1938,7 @@
                 document.getElementById('smartPasteTextarea').value = '';
                 document.getElementById('importStatus').textContent = '';
                 document.getElementById('modalTitleText').textContent = 'Add Family Recipe';
-                document.getElementById('saveRecipeButton').textContent = 'Save to Cloud & Google Sheet';
+                document.getElementById('saveRecipeButton').textContent = 'Save to Arkham Cloud';
                 document.getElementById('autoImportEngineBlock').classList.remove('hidden');
                 toggleNewCategoryMode(false);
                 populateCategorySelectors();
@@ -1972,7 +1958,7 @@
             document.getElementById('formNotes').value = activeRecipe.notes || '';
             
             document.getElementById('modalTitleText').textContent = 'Edit Family Recipe';
-            document.getElementById('saveRecipeButton').textContent = 'Update Cloud & Google Sheet';
+            document.getElementById('saveRecipeButton').textContent = 'Update Arkham Cloud';
             document.getElementById('autoImportEngineBlock').classList.add('hidden');
             
             const modal = document.getElementById('customModal');
@@ -2001,7 +1987,7 @@
 
             btn.disabled = true;
             btn.textContent = isEditingRecipe ? 'Updating Recipe...' : 'Saving Recipe...';
-            feedback.innerHTML = '<span class="text-jokerGreen">Uploading to Arkham Storage...</span>';
+            feedback.innerHTML = '<span class="text-jokerGreen">Saving to Arkham Cloud...</span>';
 
             try {
                 let photoUrl = normalizeImageUrl(urlInput.value.trim());
@@ -2028,16 +2014,6 @@
 
                 await db.collection("recipes").doc(newRecipe.id).set(newRecipe, { merge: true });
 
-                if (GOOGLE_APPS_SCRIPT_URL) {
-                    const payload = { ...newRecipe, _action: isEditingRecipe ? 'update' : 'create' };
-                    await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify(payload),
-                        redirect: "follow",
-                        credentials: "omit"
-                    });
-                }
-
                 if (isEditingRecipe) {
                     const index = recipes.findIndex(r => r.id === recipeId);
                     if (index !== -1) recipes[index] = newRecipe;
@@ -2052,19 +2028,19 @@
                 renderCatalog();
                 inspectRecipe(newRecipe, true);
 
-                feedback.innerHTML = `<span class="text-jokerGreen font-bold">${isEditingRecipe ? 'Updated' : 'Saved'}! Cloud and catalog updated.</span>`;
+                feedback.innerHTML = `<span class="text-jokerGreen font-bold">${isEditingRecipe ? 'Updated' : 'Saved'} successfully!</span>`;
                 setTimeout(() => {
                     document.getElementById('customModal').classList.add('hidden');
                     document.getElementById('customModal').classList.remove('flex');
                     isEditingRecipe = false;
-                }, 1200);
+                }, 1000);
 
             } catch (err) {
                 console.error('Submit error:', err);
                 feedback.innerHTML = `<span class="text-harleyRed">Error: ${err.message}</span>`;
             } finally {
                 btn.disabled = false;
-                btn.textContent = isEditingRecipe ? 'Update Cloud & Google Sheet' : 'Save to Cloud & Google Sheet';
+                btn.textContent = isEditingRecipe ? 'Update Arkham Cloud' : 'Save to Arkham Cloud';
             }
         }
 
@@ -2082,13 +2058,6 @@
 
                 recipes = recipes.filter(r => r.id !== activeRecipe.id);
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
-
-                if (GOOGLE_APPS_SCRIPT_URL) {
-                     fetch(`${GOOGLE_APPS_SCRIPT_URL}?deleteId=${activeRecipe.id}`, {
-                         method: 'GET',
-                         mode: 'no-cors'
-                     }).catch(err => console.log('Sheet delete sync silent failure', err));
-                }
 
                 activeRecipe = null;
                 toggleDrawer(false);
@@ -2126,7 +2095,6 @@
             }[c]));
         }
 
-        // Easter Egg: Triple Click Header to check version/force reload
         let headerClickCount = 0;
         let headerClickTimer = null;
         document.getElementById('appBrandingTrigger').addEventListener('click', () => {
@@ -2134,7 +2102,7 @@
             clearTimeout(headerClickTimer);
             
             if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.3.1 \nBuild: 2026-10-04\n\nForcing hard reload of data...`);
+                alert(`Arkham Kitchen v2.3.2 \nBuild: 2026-10-05\n\nForcing hard reload of data...`);
                 headerClickCount = 0;
                 localStorage.removeItem('wardCachedRecipes');
                 loadCatalog(true);
