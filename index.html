@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.2.6 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
+<!-- Ward Family Recipe Vault v2.2.7 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.2.6">
+    <meta name="application-version" content="2.2.7">
     <meta name="build-date" content="2026-10-04">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -166,7 +166,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.6</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.7</div>
                 </div>
             </div>
         </div>
@@ -1409,25 +1409,30 @@
             }
 
             const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-            let title = '';
+            
+            // Keep existing title if one is already typed
+            let title = document.getElementById('formName').value.trim(); 
             let ingredients = [];
             let directions = [];
             let currentMode = 'detect';
 
-            for (let i = 0; i < lines.length; i++) {
+            let startIndex = 0;
+            // If no title exists, try to guess if the first line is a title (short, no numbers, no recipe keywords)
+            if (!title && lines.length > 0 && lines[0].length < 60 && !/^[0-9¼½¾⅛⅜⅝⅞]/.test(lines[0]) && !lines[0].toLowerCase().includes('ingredient')) {
+                title = lines[0];
+                startIndex = 1;
+            }
+
+            for (let i = startIndex; i < lines.length; i++) {
                 const line = lines[i];
                 const lower = line.toLowerCase();
 
-                if (!title && i < 3 && line.length < 75 && !lower.includes('ingredient') && !lower.includes('direction')) {
-                    title = line;
-                    continue;
-                }
-
-                if (lower.includes('ingredient')) {
+                // Explicit Headers
+                if (lower === 'ingredients' || lower === 'ingredients:' || lower.includes('what you need')) {
                     currentMode = 'ing';
                     continue;
                 }
-                if (lower.includes('instruction') || lower.includes('direction') || lower.includes('preparation') || lower.includes('method')) {
+                if (lower === 'instructions' || lower === 'directions' || lower === 'instructions:' || lower === 'directions:' || lower === 'method' || lower === 'steps') {
                     currentMode = 'dir';
                     continue;
                 }
@@ -1437,17 +1442,43 @@
                 } else if (currentMode === 'dir') {
                     directions.push(line);
                 } else {
-                    if (/^([\d\s\/\.\,\-]+)\s*(cup|tbsp|tsp|g|oz|gram|tablespoon|teaspoon|lb)/i.test(line)) {
+                    // AUTO-DETECT MODE
+                    // Look for numbers, fractions, or common measurement words
+                    if (/^[0-9¼½¾⅛⅜⅝⅞]/.test(line) || /^(a|an|pinch|dash|bunch|clove|can|package|box)\b/i.test(line) || lower.includes(' cup') || lower.includes(' tsp') || lower.includes(' tbsp') || lower.includes(' oz')) {
                         ingredients.push(line);
-                    } else if (directions.length > 0 || /^\d+\.\s+/.test(line)) {
-                        directions.push(line);
+                    } else if (ingredients.length > 0) {
+                        // If we already have ingredients, check if the line is a direction (starts with a cooking verb, step number, or is a long sentence)
+                        if (line.length > 80 || /^(mix|stir|bake|cook|preheat|chop|slice|whisk|combine|pour|place|add|beat|heat|bring|boil|simmer|roast|fry)\b/i.test(line) || /^\d+[\.\)]\s/.test(line) || /^step\s\d+/i.test(line)) {
+                            directions.push(line);
+                            currentMode = 'dir'; // Lock into directions mode
+                        } else {
+                            ingredients.push(line); // Assume continuation of ingredients
+                        }
+                    } else {
+                        // If nothing else, assume it's an ingredient
+                        ingredients.push(line);
                     }
                 }
             }
 
+            // Fallback: If EVERYTHING got pushed to ingredients, split it up if there are numbered steps
+            if (ingredients.length > 0 && directions.length === 0) {
+                const dirIndex = ingredients.findIndex(l => /^\d+[\.\)]\s/.test(l) || l.length > 100);
+                if (dirIndex !== -1 && dirIndex > 0) {
+                    directions = ingredients.splice(dirIndex);
+                }
+            }
+
+            // Update form fields
             if (title) document.getElementById('formName').value = title;
-            if (ingredients.length > 0) document.getElementById('formIngredients').value = ingredients.join('\n');
-            if (directions.length > 0) document.getElementById('formDirections').value = directions.join('\n\n');
+            
+            // Only update fields if we found content
+            if (ingredients.length > 0) {
+                document.getElementById('formIngredients').value = ingredients.join('\n');
+            }
+            if (directions.length > 0) {
+                document.getElementById('formDirections').value = directions.join('\n\n');
+            }
 
             statusEl.innerHTML = '<span class="text-jokerGreen font-bold">⚡ Recipe extracted and auto-filled below! Review and save.</span>';
         }
@@ -2245,7 +2276,7 @@
             clearTimeout(headerClickTimer);
             
             if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.2.6 \nBuild: 2026-10-04\n\nForcing hard reload of data...`);
+                alert(`Arkham Kitchen v2.2.7 \nBuild: 2026-10-04\n\nForcing hard reload of data...`);
                 headerClickCount = 0;
                 localStorage.removeItem('wardCachedRecipes');
                 loadCatalog(true);
