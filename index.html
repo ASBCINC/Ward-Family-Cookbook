@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.2.7 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
+<!-- Ward Family Recipe Vault v2.2.8 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.2.7">
+    <meta name="application-version" content="2.2.8">
     <meta name="build-date" content="2026-10-04">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -166,7 +166,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.7</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.8</div>
                 </div>
             </div>
         </div>
@@ -531,7 +531,7 @@
                 <!-- Direct Smart-Paste Box -->
                 <div id="smartPasteContainer" class="hidden space-y-2">
                     <textarea id="smartPasteTextarea" rows="3" placeholder="Copy recipe text from any website (or ingredients & steps) and paste here..." class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2.5 text-xs text-white leading-relaxed outline-none focus:border-jokerGreen"></textarea>
-                    <button type="button" onclick="parseSmartPasteText()" class="w-full py-1.5 rounded-lg bg-jokerGreen text-black text-xs font-bold hover:brightness-110">
+                    <button type="button" id="parseTextBtn" onclick="parseSmartPasteText()" class="w-full py-1.5 rounded-lg bg-jokerGreen text-black text-xs font-bold hover:brightness-110">
                         ⚡ Extract &amp; Auto-Fill Form
                     </button>
                 </div>
@@ -625,7 +625,7 @@
         });
 
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM4oWWlRktK-xVxLiHaeLL8qMsWdMBX_xYHxHPZBUFzXyrcmSQBzqrAtvjjv0WVCWxBNvLLgow2fbZ/pub?output=csv";
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRLrb1JAbJaWeJPdaM_pxFQqWCbA7lCL-dgllC6MThRUjnoSg83QvAwNoha465l4KjhQ/exec";
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHFORkJi9XAuQ97dGU-IafQob11klXq1Nm5dkpfZ7ReM21Dd1Cr-w2s2-DQ10FdcXsvQ/exec";
 
         const DEFAULT_CATEGORIES = [
             'Breads & Sourdough',
@@ -1400,132 +1400,55 @@
             }
         }
 
-        function parseSmartPasteText() {
-            const raw = document.getElementById('smartPasteTextarea').value.trim();
+        // --- NEW GEMINI AI EXTRACTION ROUTINES ---
+        
+        async function fetchHtmlWithProxies(targetUrl) {
+            // Unused in Gemini Version, but kept to prevent console errors if called
+            return ""; 
+        }
+
+        async function parseSmartPasteText() {
+            const rawText = document.getElementById('smartPasteTextarea').value.trim();
             const statusEl = document.getElementById('importStatus');
-            if (!raw) {
+            const btn = document.getElementById('parseTextBtn');
+
+            if (!rawText) {
                 statusEl.innerHTML = '<span class="text-harleyRed font-bold">Please paste text first!</span>';
                 return;
             }
 
-            const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-            
-            // Keep existing title if one is already typed
-            let title = document.getElementById('formName').value.trim(); 
-            let ingredients = [];
-            let directions = [];
-            let currentMode = 'detect';
-
-            let startIndex = 0;
-            // If no title exists, try to guess if the first line is a title (short, no numbers, no recipe keywords)
-            if (!title && lines.length > 0 && lines[0].length < 60 && !/^[0-9¼½¾⅛⅜⅝⅞]/.test(lines[0]) && !lines[0].toLowerCase().includes('ingredient')) {
-                title = lines[0];
-                startIndex = 1;
+            if (!GOOGLE_APPS_SCRIPT_URL) {
+                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Error: GOOGLE_APPS_SCRIPT_URL not set!</span>';
+                return;
             }
 
-            for (let i = startIndex; i < lines.length; i++) {
-                const line = lines[i];
-                const lower = line.toLowerCase();
+            btn.disabled = true;
+            btn.textContent = 'AI Extracting...';
+            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Gemini is analyzing the text...</span>';
 
-                // Explicit Headers
-                if (lower === 'ingredients' || lower === 'ingredients:' || lower.includes('what you need')) {
-                    currentMode = 'ing';
-                    continue;
-                }
-                if (lower === 'instructions' || lower === 'directions' || lower === 'instructions:' || lower === 'directions:' || lower === 'method' || lower === 'steps') {
-                    currentMode = 'dir';
-                    continue;
-                }
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'parse_text', payload: rawText })
+                });
+                
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
 
-                if (currentMode === 'ing') {
-                    ingredients.push(line);
-                } else if (currentMode === 'dir') {
-                    directions.push(line);
-                } else {
-                    // AUTO-DETECT MODE
-                    // Look for numbers, fractions, or common measurement words
-                    if (/^[0-9¼½¾⅛⅜⅝⅞]/.test(line) || /^(a|an|pinch|dash|bunch|clove|can|package|box)\b/i.test(line) || lower.includes(' cup') || lower.includes(' tsp') || lower.includes(' tbsp') || lower.includes(' oz')) {
-                        ingredients.push(line);
-                    } else if (ingredients.length > 0) {
-                        // If we already have ingredients, check if the line is a direction (starts with a cooking verb, step number, or is a long sentence)
-                        if (line.length > 80 || /^(mix|stir|bake|cook|preheat|chop|slice|whisk|combine|pour|place|add|beat|heat|bring|boil|simmer|roast|fry)\b/i.test(line) || /^\d+[\.\)]\s/.test(line) || /^step\s\d+/i.test(line)) {
-                            directions.push(line);
-                            currentMode = 'dir'; // Lock into directions mode
-                        } else {
-                            ingredients.push(line); // Assume continuation of ingredients
-                        }
-                    } else {
-                        // If nothing else, assume it's an ingredient
-                        ingredients.push(line);
-                    }
-                }
+                let jsonStr = data.candidates[0].content.parts[0].text;
+                jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+                const recipeJson = JSON.parse(jsonStr);
+
+                fillFormWithGeminiData(recipeJson);
+                statusEl.innerHTML = '<span class="text-jokerGreen font-bold">⚡ Recipe extracted and auto-filled below! Review and save.</span>';
+
+            } catch (err) {
+                console.error('Gemini Parse Error:', err);
+                statusEl.innerHTML = `<span class="text-harleyRed font-bold">Extraction failed. Check text and try again.</span>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '⚡ Extract & Auto-Fill Form';
             }
-
-            // Fallback: If EVERYTHING got pushed to ingredients, split it up if there are numbered steps
-            if (ingredients.length > 0 && directions.length === 0) {
-                const dirIndex = ingredients.findIndex(l => /^\d+[\.\)]\s/.test(l) || l.length > 100);
-                if (dirIndex !== -1 && dirIndex > 0) {
-                    directions = ingredients.splice(dirIndex);
-                }
-            }
-
-            // Update form fields
-            if (title) document.getElementById('formName').value = title;
-            
-            // Only update fields if we found content
-            if (ingredients.length > 0) {
-                document.getElementById('formIngredients').value = ingredients.join('\n');
-            }
-            if (directions.length > 0) {
-                document.getElementById('formDirections').value = directions.join('\n\n');
-            }
-
-            statusEl.innerHTML = '<span class="text-jokerGreen font-bold">⚡ Recipe extracted and auto-filled below! Review and save.</span>';
-        }
-
-        async function fetchHtmlWithProxies(targetUrl) {
-            if (GOOGLE_APPS_SCRIPT_URL) {
-                try {
-                    const relayUrl = `${GOOGLE_APPS_SCRIPT_URL}?scrapeUrl=${encodeURIComponent(targetUrl)}`;
-                    const res = await fetch(relayUrl);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data && data.contents) return data.contents;
-                    }
-                } catch (e) {
-                    console.warn("Apps Script relay failed, falling back to edge proxies:", e);
-                }
-            }
-
-            const endpoints = [
-                async (u) => {
-                    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`);
-                    if (!r.ok) throw new Error('Proxy 1 failed');
-                    const d = await r.json();
-                    return d.contents;
-                },
-                async (u) => {
-                    const r = await fetch(`https://cors.x2u.in/${u}`);
-                    if (!r.ok) throw new Error('Proxy 2 failed');
-                    return await r.text();
-                },
-                async (u) => {
-                    const r = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(u)}`);
-                    if (!r.ok) throw new Error('Proxy 3 failed');
-                    return await r.text();
-                }
-            ];
-
-            let lastError = null;
-            for (let i = 0; i < endpoints.length; i++) {
-                try {
-                    const html = await endpoints[i](targetUrl);
-                    if (html && html.length > 250) return html;
-                } catch (e) {
-                    lastError = e;
-                }
-            }
-            throw lastError || new Error('Website firewall blocked automated fetching.');
         }
 
         async function importFromWebUrl() {
@@ -1539,767 +1462,23 @@
                 return;
             }
 
+            if (!GOOGLE_APPS_SCRIPT_URL) {
+                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Error: GOOGLE_APPS_SCRIPT_URL not set!</span>';
+                return;
+            }
+
             fetchBtn.disabled = true;
             fetchBtn.textContent = 'Parsing...';
-            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Extracting recipe data...</span>';
+            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Gemini is scanning the website...</span>';
 
             try {
-                const html = await fetchHtmlWithProxies(targetUrl);
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-
-                const scripts = Array.from(doc.querySelectorAll('script[type="application/ld+json"]'));
-                let recipeJson = null;
-
-                for (const script of scripts) {
-                    try {
-                        const parsed = JSON.parse(script.textContent);
-                        const findRecipe = (obj) => {
-                            if (!obj) return null;
-                            if (obj['@type'] === 'Recipe' || (Array.isArray(obj['@type']) && obj['@type'].includes('Recipe'))) return obj;
-                            if (Array.isArray(obj)) {
-                                for (let item of obj) {
-                                    const match = findRecipe(item);
-                                    if (match) return match;
-                                }
-                            }
-                            if (obj['@graph'] && Array.isArray(obj['@graph'])) {
-                                for (let item of obj['@graph']) {
-                                    const match = findRecipe(item);
-                                    if (match) return match;
-                                }
-                            }
-                            return null;
-                        };
-                        recipeJson = findRecipe(parsed);
-                        if (recipeJson) break;
-                    } catch (e) {}
-                }
-
-                if (!recipeJson) {
-                    const ogTitle = doc.querySelector('meta[property="og:title"]')?.content || doc.title || '';
-                    const ogImage = doc.querySelector('meta[property="og:image"]')?.content || '';
-                    if (ogTitle) {
-                        document.getElementById('formName').value = ogTitle.split('|')[0].split('-')[0].trim();
-                        if (ogImage) document.getElementById('formPhotoUrl').value = normalizeImageUrl(ogImage);
-                        document.getElementById('formNotes').value = `Imported from: ${targetUrl}`;
-                        statusEl.innerHTML = '<span class="text-yellow-400 font-bold">Basic details found! Fill in ingredients and steps below.</span>';
-                        return;
-                    }
-                    throw new Error('No Schema.org recipe tags found on this page.');
-                }
-
-                const name = recipeJson.name || doc.title || '';
-                document.getElementById('formName').value = name;
-
-                let photoUrl = '';
-                if (typeof recipeJson.image === 'string') photoUrl = recipeJson.image;
-                else if (Array.isArray(recipeJson.image) && recipeJson.image.length > 0) {
-                    photoUrl = typeof recipeJson.image[0] === 'string' ? recipeJson.image[0] : (recipeJson.image[0].url || '');
-                } else if (recipeJson.image && recipeJson.image.url) {
-                    photoUrl = recipeJson.image.url;
-                }
-                if (photoUrl) document.getElementById('formPhotoUrl').value = normalizeImageUrl(photoUrl);
-
-                const rawIng = recipeJson.recipeIngredient || [];
-                document.getElementById('formIngredients').value = Array.isArray(rawIng) ? rawIng.join('\n') : String(rawIng);
-
-                const rawInst = recipeJson.recipeInstructions || [];
-                let steps = [];
-                const extractSteps = (inst) => {
-                    if (typeof inst === 'string') steps.push(inst);
-                    else if (Array.isArray(inst)) inst.forEach(extractSteps);
-                    else if (inst && inst.text) steps.push(inst.text);
-                    else if (inst && inst.itemListElement) extractSteps(inst.itemListElement);
-                };
-                extractSteps(rawInst);
-                document.getElementById('formDirections').value = steps.map((s, idx) => `${idx + 1}. ${s.trim()}`).join('\n\n');
-
-                let rawCat = '';
-                if (Array.isArray(recipeJson.recipeCategory)) {
-                    rawCat = recipeJson.recipeCategory.join(' ').toLowerCase();
-                } else if (typeof recipeJson.recipeCategory === 'string') {
-                    rawCat = recipeJson.recipeCategory.toLowerCase();
-                }
-
-                const tLower = name.toLowerCase();
-                let matchedCategory = 'Dinners with Veggies';
-
-                if (rawCat.includes('bread') || tLower.includes('bread') || tLower.includes('sourdough')) matchedCategory = 'Breads & Sourdough';
-                else if (rawCat.includes('dessert') || tLower.includes('cake') || tLower.includes('cookie') || tLower.includes('sweet')) matchedCategory = 'Desserts & Sweets';
-                else if (rawCat.includes('seafood') || tLower.includes('salmon') || tLower.includes('shrimp')) matchedCategory = 'Seafood';
-                else if (rawCat.includes('pork') || tLower.includes('pork') || tLower.includes('ham')) matchedCategory = 'Pork';
-                else if (rawCat.includes('beef') || tLower.includes('steak') || tLower.includes('prime rib')) matchedCategory = 'Beef';
-                else if (rawCat.includes('poultry') || tLower.includes('chicken') || tLower.includes('turkey')) matchedCategory = 'Poultry';
-                else if (tLower.includes('sandwich') || tLower.includes('french dip')) matchedCategory = 'Sandwiches';
-                else if (tLower.includes('egg') || tLower.includes('pancake')) matchedCategory = 'Breakfast';
-
-                const catSelect = document.getElementById('formCategorySelect');
-                if (Array.from(catSelect.options).some(o => o.value === matchedCategory)) {
-                    catSelect.value = matchedCategory;
-                }
-
-                const notesArr = [];
-                if (recipeJson.recipeYield) notesArr.push(`Yield: ${Array.isArray(recipeJson.recipeYield) ? recipeJson.recipeYield[0] : recipeJson.recipeYield}`);
-                if (recipeJson.totalTime) notesArr.push(`Time: ${String(recipeJson.totalTime).replace('PT','').toLowerCase()}`);
-                notesArr.push(`Source: ${targetUrl}`);
-                document.getElementById('formNotes').value = notesArr.join(' | ');
-
-                statusEl.innerHTML = '<span class="text-jokerGreen font-bold">Successfully imported! Review and click Save below.</span>';
-
-            } catch (err) {
-                console.warn('URL Import error:', err);
-                statusEl.innerHTML = `
-                    <span class="text-harleyRed font-bold">This site blocked direct proxy scraping.</span>
-                    <button type="button" onclick="toggleSmartPasteBox()" class="text-xs text-jokerGreen underline ml-1 font-bold">Click here to Smart-Paste the text</button>
-                `;
-            } finally {
-                fetchBtn.disabled = false;
-                fetchBtn.textContent = 'Fetch';
-            }
-        }
-
-        let isCreatingNewCategory = false;
-
-        function toggleNewCategoryMode(forceState) {
-            isCreatingNewCategory = typeof forceState === 'boolean' ? forceState : !isCreatingNewCategory;
-            const selectEl = document.getElementById('formCategorySelect');
-            const wrapperEl = document.getElementById('newCategoryWrapper');
-            const toggleBtn = document.getElementById('toggleNewCatBtn');
-            const newCatInput = document.getElementById('formNewCategoryInput');
-
-            if (isCreatingNewCategory) {
-                selectEl.classList.add('opacity-50');
-                wrapperEl.classList.remove('hidden');
-                toggleBtn.textContent = 'Use Existing';
-                newCatInput.focus();
-            } else {
-                selectEl.classList.remove('opacity-50');
-                wrapperEl.classList.add('hidden');
-                toggleBtn.textContent = '+ New';
-                newCatInput.value = '';
-            }
-        }
-
-        function getAllCategories() {
-            return [...new Set([...DEFAULT_CATEGORIES, ...recipes.map(r => r.category).filter(Boolean)])].sort();
-        }
-
-        function populateCategorySelectors() {
-            const allCategories = getAllCategories();
-
-            const formSelect = document.getElementById('formCategorySelect');
-            const currentSelected = formSelect.value;
-            formSelect.innerHTML = allCategories.map(cat => `
-                <option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>
-            `).join('');
-            if (currentSelected && allCategories.includes(currentSelected)) {
-                formSelect.value = currentSelected;
-            }
-        }
-
-        let wakeLockSentinel = null;
-        const wakeLockStatus = document.getElementById('wakeLockStatus');
-
-        async function requestScreenWakeLock() {
-            if ('wakeLock' in navigator) {
-                try {
-                    wakeLockSentinel = await navigator.wakeLock.request('screen');
-                    wakeLockSentinel.addEventListener('release', () => updateWakeLockUI(false));
-                    updateWakeLockUI(true);
-                } catch (err) {
-                    updateWakeLockUI(false);
-                }
-            } else {
-                updateWakeLockUI(false);
-            }
-        }
-
-        async function releaseScreenWakeLock() {
-            if (wakeLockSentinel !== null) {
-                try { await wakeLockSentinel.release(); } catch (e) {}
-                wakeLockSentinel = null;
-                updateWakeLockUI(false);
-            }
-        }
-
-        function updateWakeLockUI(isActive) {
-            if (!wakeLockStatus) return;
-            if (isActive) {
-                wakeLockStatus.innerHTML = `
-                    <span class="w-1.5 h-1.5 rounded-full bg-jokerGreen animate-pulse"></span>
-                    <span class="text-jokerGreen font-bold">Screen Kept Awake</span>
-                `;
-                wakeLockStatus.className = "inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-jokerGreen/10 border border-jokerGreen/40 text-jokerGreen shrink-0";
-            } else {
-                wakeLockStatus.innerHTML = `
-                    <span class="w-1.5 h-1.5 rounded-full bg-neutral-500"></span>
-                    <span>Screen Sleep Normal</span>
-                `;
-                wakeLockStatus.className = "inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700 text-textMuted shrink-0";
-            }
-        }
-
-        document.addEventListener('visibilitychange', async () => {
-            if (wakeLockSentinel !== null && document.visibilityState === 'visible') {
-                await requestScreenWakeLock();
-            }
-        });
-
-        let deferredInstallPrompt = null;
-        const installAppButton = document.getElementById('installAppButton');
-        const installAppIcon = document.getElementById('installAppIcon');
-        const installAppText = document.getElementById('installAppText');
-
-        function isAppAlreadyInstalled() {
-            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || document.referrer.includes('android-app://');
-        }
-
-        function setInstallIcon() {
-            const ua = navigator.userAgent.toLowerCase();
-            let svg = '';
-            if (ua.includes('android')) svg = `<svg class="w-4 h-4 fill-current" viewBox="0 0 576 512"><path d="M420.22 165.29a244 244 0 0 0 -264.44 0l-28.75-49.76a14.77 14.77 0 0 0 -20.19-5.41 14.65 14.65 0 0 0 -5.39 20l30.06 52.05A250.77 250.77 0 0 0 0 357.51h576a250.73 250.73 0 0 0 -131.51-175.34l30.05-52.05a14.63 14.63 0 0 0 -5.4-20 14.76 14.76 0 0 0 -20.18 5.41zm-247.96 109.13a29.15 29.15 0 1 1 29.14-29.15 29.16 29.16 0 0 1 -29.14 29.15zm231.48 0a29.15 29.15 0 1 1 29.15-29.15 29.16 29.16 0 0 1 -29.15 29.15z"/></svg>`;
-            else if (ua.includes('mac') || ua.includes('iphone') || ua.includes('ipad')) svg = `<svg class="w-4 h-4 fill-current pb-[1px]" viewBox="0 0 384 512"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.3 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.3zM34.3 120.5c5.3-26.1 27.5-63.6 57.6-82.5 2.1-1.3 4.4-2.5 6.7-3.6 22.3-10.4 46.3-15.1 69.8-15.1 1.4 0 2.8 0 4.1.1 1.6 30.4-11.4 67.8-37.1 91.8-19.1 17.9-46 29.8-70.1 31.3-1.8.1-3.6.1-5.3.1-1.5 0-3-.1-4.5-.2-1.2-22.1 4.7-48.4 18.8-71.9z"/></svg>`;
-            else if (ua.includes('win')) svg = `<svg class="w-4 h-4 fill-current" viewBox="0 0 448 512"><path d="M0 93.7l183.6-25.3v177.4H0V93.7zm0 324.6l183.6 25.3V268.4H0v149.9zm203.8 28L448 480V268.4H203.8v177.9zm0-380.6v180.1H448V32L203.8 65.7z"/></svg>`;
-
-            if (svg) installAppIcon.innerHTML = svg;
-            installAppText.textContent = `Install`;
-        }
-
-        window.addEventListener('beforeinstallprompt', event => {
-            if (isAppAlreadyInstalled()) return;
-            event.preventDefault();
-            deferredInstallPrompt = event;
-            setInstallIcon();
-            installAppButton.classList.remove('hidden');
-        });
-
-        installAppButton.addEventListener('click', async () => {
-            const isIosDevice = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
-            if (isIosDevice) {
-                alert('To install on iPhone/iPad: Tap the Share button at the bottom of Safari, then choose "Add to Home Screen" 📲');
-                return;
-            }
-            if (!deferredInstallPrompt) {
-                alert('App can be installed using your browser menu: click "Add to Home Screen" or "Install App"');
-                return;
-            }
-            deferredInstallPrompt.prompt();
-            await deferredInstallPrompt.userChoice;
-            deferredInstallPrompt = null;
-            installAppButton.classList.add('hidden');
-        });
-
-        window.addEventListener('appinstalled', () => {
-            deferredInstallPrompt = null;
-            installAppButton.classList.add('hidden');
-        });
-
-        const isIosDevice = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
-        if (!isAppAlreadyInstalled() && isIosDevice) {
-            setInstallIcon();
-            installAppButton.classList.remove('hidden');
-        }
-
-        function loadLocalCachedData() {
-            try {
-                const cached = localStorage.getItem('wardCachedRecipes');
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        recipes = parsed;
-                        buildCategoryButtons();
-                        populateCategorySelectors();
-                        updateDensityButton();
-                        renderCatalog();
-                        if (!activeRecipe) populateInspectionPane(recipes[0]);
-                        return true;
-                    }
-                }
-            } catch (e) {
-                console.warn('Cache read error:', e);
-            }
-            return false;
-        }
-
-        async function loadCatalog(forceRefresh = false) {
-            const hasLocal = loadLocalCachedData();
-            if (!hasLocal || forceRefresh) {
-                resultCount.textContent = 'Syncing Arkham vault...';
-                if (!hasLocal) {
-                    recipeGrid.innerHTML = '<div class="col-span-full text-center text-textMuted py-16">Syncing recipes from database...</div>';
-                }
-            }
-
-            try {
-                const syncUrl = `${SHEET_CSV_URL}&_ts=${Date.now()}`;
-                const response = await fetch(syncUrl);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                const csvText = await response.text();
-                const parsed = Papa.parse(csvText, {
-                    header: true,
-                    skipEmptyLines: 'greedy',
-                    transformHeader: h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'parse_url', payload: targetUrl })
                 });
 
-                if (parsed.data && parsed.data.length > 0) {
-                    recipes = parsed.data.map((row, idx) => {
-                        const id = row.id || `REC-${idx + 1}`;
-                        const category = row.category || 'Dinners with Veggies';
-                        const name = row.recipename || row.name || 'Untitled Recipe';
-                        const photo = extractPhotoFromRow(row);
-                        const ingredients = row.ingredients || '';
-                        const directions = row.directions || '';
-                        const notes = row.notes || '';
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
 
-                        return { id, category, name, photo, ingredients, directions, notes };
-                    });
-
-                    localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
-                    buildCategoryButtons();
-                    populateCategorySelectors();
-                    renderCatalog();
-
-                    if (!activeRecipe && recipes.length > 0) {
-                        populateInspectionPane(recipes[0]);
-                    }
-                    document.getElementById('syncStatusBadge').textContent = 'Cloud Synced';
-                }
-            } catch (err) {
-                console.warn('Network sync paused, offline mode active:', err);
-                if (recipes.length === 0) loadLocalCachedData();
-                document.getElementById('syncStatusBadge').textContent = 'Offline Active';
-            }
-        }
-
-        function buildCategoryButtons() {
-            const categories = ['All', ...new Set(recipes.map(r => r.category).filter(Boolean))];
-            categoryButtons.innerHTML = '';
-            categories.forEach(cat => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.textContent = cat;
-                btn.className = 'shrink-0 text-xs px-3.5 py-1.5 rounded-full border border-panelBorder bg-cardDark text-neutral-300 transition-all hover:border-jokerGreen';
-                btn.classList.toggle('category-active', cat === selectedCategory);
-                btn.onclick = () => {
-                    selectedCategory = cat;
-                    buildCategoryButtons();
-                    renderCatalog();
-                };
-                categoryButtons.appendChild(btn);
-            });
-        }
-
-        function getVisibleRecipes() {
-            const search = (searchInput.value || '').trim().toLowerCase();
-
-            return recipes.filter(r => {
-                const matchesCat = selectedCategory === 'All' || r.category === selectedCategory;
-                const matchesSearch = !search || `${r.name} ${r.category} ${r.ingredients} ${r.notes}`.toLowerCase().includes(search);
-                const matchesFav = !favoritesOnly || favoriteIds.has(r.id);
-                return matchesCat && matchesSearch && matchesFav;
-            });
-        }
-
-        favoritesFilterButton.onclick = () => {
-            favoritesOnly = !favoritesOnly;
-            favoritesFilterButton.classList.toggle('favorites-active', favoritesOnly);
-            renderCatalog();
-        };
-
-        function renderCatalog() {
-            const visible = getVisibleRecipes();
-            resultCount.textContent = `${visible.length} recipe${visible.length === 1 ? '' : 's'}`;
-            recipeGrid.innerHTML = '';
-
-            if (visible.length === 0) {
-                recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-8 text-center text-textMuted';
-                recipeGrid.innerHTML = '<div>No recipes found matching your search.</div>';
-                return;
-            }
-
-            if (isCompactTiles) {
-                recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 auto-rows-max pb-28 md:pb-6';
-                visible.forEach(r => {
-                    const isFav = favoriteIds.has(r.id);
-                    const fallbackImg = getCategoryFallbackImage(r.category);
-                    const imgUrl = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
-
-                    const tile = document.createElement('article');
-                    tile.className = 'w-full bg-cardDark border border-panelBorder rounded-xl overflow-hidden custom-card-glow cursor-pointer transition-all flex flex-col justify-between select-none shadow-sm';
-                    tile.onclick = () => inspectRecipe(r, true);
-                    tile.innerHTML = `
-                        <div class="h-28 w-full bg-harleyBlack relative overflow-hidden shrink-0">
-                            <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='${fallbackImg}';">
-                            <button type="button" data-fav-id="${r.id}" class="fav-toggle absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-harleyBlack/80 border border-panelBorder flex items-center justify-center text-xs ${isFav ? 'text-harleyRed' : 'text-neutral-400'}">♥</button>
-                        </div>
-                        <div class="p-2 flex flex-col justify-between flex-1">
-                            <h3 class="font-bold text-xs text-white leading-tight line-clamp-2">${escapeHtml(r.name)}</h3>
-                            <span class="text-[9px] text-jokerGreen font-mono font-bold uppercase truncate mt-1">${escapeHtml(r.category)}</span>
-                        </div>
-                    `;
-                    recipeGrid.appendChild(tile);
-                });
-            } else {
-                recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-max pb-28 md:pb-6';
-                visible.forEach(r => {
-                    const isFav = favoriteIds.has(r.id);
-                    const fallbackImg = getCategoryFallbackImage(r.category);
-                    const imgUrl = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
-
-                    const card = document.createElement('article');
-                    card.className = 'w-full min-h-[260px] h-auto bg-cardDark border border-panelBorder rounded-2xl overflow-hidden custom-card-glow cursor-pointer transition-all flex flex-col justify-between select-none shadow-md';
-                    card.onclick = () => inspectRecipe(r, true);
-                    card.innerHTML = `
-                        <div class="flex flex-col">
-                            <div class="h-40 w-full bg-harleyBlack relative overflow-hidden shrink-0">
-                                <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='${fallbackImg}';">
-                                <div class="absolute top-2 left-2 bg-harleyBlack/80 border border-panelBorder px-2 py-0.5 rounded text-[10px] font-bold text-jokerGreen uppercase font-mono">
-                                    ${escapeHtml(r.category)}
-                                </div>
-                                <button type="button" data-fav-id="${r.id}" class="fav-toggle absolute top-2 right-2 w-8 h-8 rounded-full bg-harleyBlack/80 border border-panelBorder flex items-center justify-center text-sm ${isFav ? 'text-harleyRed' : 'text-neutral-400'}">♥</button>
-                            </div>
-                            <div class="p-3.5 flex flex-col flex-grow">
-                                <h3 class="font-bold text-sm text-white mb-1.5 leading-snug line-clamp-2">${escapeHtml(r.name)}</h3>
-                                <p class="text-xs text-textMuted line-clamp-2 leading-relaxed">${escapeHtml(r.ingredients)}</p>
-                            </div>
-                        </div>
-                        <div class="px-3.5 py-2.5 border-t border-panelBorder/70 flex justify-between items-center text-[11px] text-textMuted font-mono shrink-0">
-                            <span class="text-harleyRed font-bold">Arkham Approved</span>
-                            <span class="text-jokerGreen">Select →</span>
-                        </div>
-                    `;
-                    recipeGrid.appendChild(card);
-                });
-            }
-        }
-
-        function populateInspectionPane(r) {
-            if (!r) return;
-            activeRecipe = r;
-            currentScale = 1.0;
-            currentUnitMode = 'original';
-            setMeasurementUnit('original');
-            
-            const scaleBadge = document.getElementById('scaleMultiplierBadge');
-            if (scaleBadge) scaleBadge.textContent = '1x Scale';
-
-            const titleEl = document.getElementById('activeInspectTitle');
-            if (titleEl) titleEl.textContent = r.name || 'Untitled Recipe';
-            
-            const catEl = document.getElementById('inspectCategory');
-            if (catEl) catEl.textContent = `${r.category || 'General'} · ${r.id || 'REC'}`;
-            
-            const idBadge = document.getElementById('inspectIdBadge');
-            if (idBadge) idBadge.textContent = r.id || 'REC';
-            
-            const mobName = document.getElementById('mobileRecipeName');
-            if (mobName) mobName.textContent = r.name || 'Selected Recipe';
-
-            const fallbackImg = getCategoryFallbackImage(r.category);
-            const detailPhoto = document.getElementById('inspectPhoto');
-            if (detailPhoto) {
-                const finalImg = (r.photo && r.photo.startsWith('http')) ? r.photo : fallbackImg;
-                detailPhoto.src = finalImg;
-                detailPhoto.onerror = function() {
-                    this.onerror = null;
-                    this.src = fallbackImg;
-                };
-            }
-
-            checkAndRenderBakersMath(r);
-            renderScaledIngredients();
-            
-            const dirList = document.getElementById('inspectDirectionsList');
-            if (dirList) {
-                dirList.innerHTML = formatDirectionsWithTimers(r.directions || '');
-            }
-
-            const notesBlock = document.getElementById('inspectNotesBlock');
-            const notesText = document.getElementById('inspectNotesText');
-            if (notesBlock && notesText) {
-                if (r.notes && r.notes.trim()) {
-                    notesText.textContent = r.notes;
-                    notesBlock.classList.remove('hidden');
-                } else {
-                    notesBlock.classList.add('hidden');
-                }
-            }
-        }
-
-        function inspectRecipe(r, shouldOpenDrawer = false) {
-            populateInspectionPane(r);
-            if (shouldOpenDrawer) toggleDrawer(true);
-            requestScreenWakeLock();
-        }
-
-        function scaleActiveRecipe(factor) {
-            currentScale = factor;
-            const badge = document.getElementById('scaleMultiplierBadge');
-            if (badge) badge.textContent = `${factor}x Scale`;
-            renderScaledIngredients();
-        }
-
-        function renderScaledIngredients(customWaterGrams = null) {
-            if (!activeRecipe) return;
-            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
-            const listEl = document.getElementById('inspectIngredientsList');
-            if (!listEl) return;
-            
-            listEl.innerHTML = ingLines.map(line => {
-                const convertedLine = convertIngredientLine(line, currentUnitMode, currentScale, customWaterGrams);
-                return `
-                    <li class="flex items-start gap-2 bg-harleyBlack/50 p-1.5 rounded border border-panelBorder/50">
-                        <input type="checkbox" class="mt-0.5 rounded text-jokerGreen focus:ring-0">
-                        <span class="leading-tight flex-1">${escapeHtml(convertedLine)}</span>
-                    </li>
-                `;
-            }).join('');
-        }
-
-        function toggleFavorite(id) {
-            if (favoriteIds.has(id)) favoriteIds.delete(id);
-            else favoriteIds.add(id);
-            localStorage.setItem('wardRecipeFavorites', JSON.stringify([...favoriteIds]));
-            renderCatalog();
-        }
-
-        recipeGrid.addEventListener('click', e => {
-            const favBtn = e.target.closest('.fav-toggle');
-            if (favBtn) {
-                e.stopPropagation();
-                toggleFavorite(favBtn.dataset.favId);
-            }
-        });
-
-        function toggleDrawer(show) {
-            const drawer = document.getElementById('recipeDrawer');
-            const backdrop = document.getElementById('drawerBackdrop');
-            if (drawer) drawer.classList.toggle('drawer-open', show);
-            if (backdrop) backdrop.classList.toggle('hidden', !show);
-            if (show) requestScreenWakeLock();
-            else releaseScreenWakeLock();
-        }
-
-        function toggleAddModal(show) {
-            const modal = document.getElementById('customModal');
-            if (!modal) return;
-            modal.classList.toggle('hidden', !show);
-            modal.classList.toggle('flex', show);
-            if (show) {
-                isEditingRecipe = false;
-                document.getElementById('recipeAddForm').reset();
-                document.getElementById('importUrlInput').value = '';
-                document.getElementById('smartPasteTextarea').value = '';
-                document.getElementById('importStatus').textContent = '';
-                document.getElementById('modalTitleText').textContent = 'Add Family Recipe';
-                document.getElementById('saveRecipeButton').textContent = 'Save to Cloud & Google Sheet';
-                document.getElementById('autoImportEngineBlock').classList.remove('hidden');
-                toggleNewCategoryMode(false);
-                populateCategorySelectors();
-                document.getElementById('submitFeedback').textContent = '';
-            }
-        }
-
-        function editActiveRecipe() {
-            if (!activeRecipe) return;
-            isEditingRecipe = true;
-            
-            document.getElementById('formName').value = activeRecipe.name || '';
-            document.getElementById('formCategorySelect').value = activeRecipe.category || '';
-            document.getElementById('formPhotoUrl').value = activeRecipe.photo || '';
-            document.getElementById('formIngredients').value = activeRecipe.ingredients || '';
-            document.getElementById('formDirections').value = activeRecipe.directions || '';
-            document.getElementById('formNotes').value = activeRecipe.notes || '';
-            
-            document.getElementById('modalTitleText').textContent = 'Edit Family Recipe';
-            document.getElementById('saveRecipeButton').textContent = 'Update Cloud & Google Sheet';
-            document.getElementById('autoImportEngineBlock').classList.add('hidden');
-            
-            const modal = document.getElementById('customModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            populateCategorySelectors();
-            toggleNewCategoryMode(false);
-            document.getElementById('submitFeedback').textContent = '';
-            toggleDrawer(false); 
-        }
-
-        async function handleFormSubmit(event) {
-            event.preventDefault();
-            const btn = document.getElementById('saveRecipeButton');
-            const feedback = document.getElementById('submitFeedback');
-            const fileInput = document.getElementById('formPhotoFile');
-            const urlInput = document.getElementById('formPhotoUrl');
-
-            let finalCategory = '';
-            const newCatVal = document.getElementById('formNewCategoryInput').value.trim();
-            const selectCatVal = document.getElementById('formCategorySelect').value.trim();
-
-            if (isCreatingNewCategory && newCatVal) finalCategory = newCatVal;
-            else finalCategory = selectCatVal || 'Dinners with Veggies';
-
-            btn.disabled = true;
-            btn.textContent = isEditingRecipe ? 'Updating Recipe...' : 'Saving Recipe...';
-            feedback.innerHTML = '<span class="text-jokerGreen">Uploading to Arkham Storage...</span>';
-
-            try {
-                let photoUrl = normalizeImageUrl(urlInput.value.trim());
-
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const storageRef = storage.ref(`recipe_photos/${Date.now()}_${file.name}`);
-                    const snapshot = await storageRef.put(file);
-                    photoUrl = await snapshot.ref.getDownloadURL();
-                }
-
-                const recipeId = isEditingRecipe ? activeRecipe.id : `REC-${Date.now()}`;
-
-                const newRecipe = {
-                    id: recipeId,
-                    category: finalCategory,
-                    name: document.getElementById('formName').value.trim(),
-                    photo: photoUrl,
-                    ingredients: document.getElementById('formIngredients').value.trim(),
-                    directions: document.getElementById('formDirections').value.trim(),
-                    notes: document.getElementById('formNotes').value.trim(),
-                    updatedAt: new Date().toISOString()
-                };
-
-                await db.collection("recipes").doc(newRecipe.id).set(newRecipe, { merge: true });
-
-                if (GOOGLE_APPS_SCRIPT_URL) {
-                    const payload = { ...newRecipe, _action: isEditingRecipe ? 'update' : 'create' };
-                    await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                }
-
-                if (isEditingRecipe) {
-                    const index = recipes.findIndex(r => r.id === recipeId);
-                    if (index !== -1) recipes[index] = newRecipe;
-                } else {
-                    recipes.unshift(newRecipe);
-                }
-
-                localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
-                
-                buildCategoryButtons();
-                populateCategorySelectors();
-                renderCatalog();
-                inspectRecipe(newRecipe, true);
-
-                feedback.innerHTML = `<span class="text-jokerGreen font-bold">${isEditingRecipe ? 'Updated' : 'Saved'}! Cloud and catalog updated.</span>`;
-                setTimeout(() => {
-                    document.getElementById('customModal').classList.add('hidden');
-                    document.getElementById('customModal').classList.remove('flex');
-                    isEditingRecipe = false;
-                }, 1200);
-
-            } catch (err) {
-                console.error('Submit error:', err);
-                feedback.innerHTML = `<span class="text-harleyRed">Error: ${err.message}</span>`;
-            } finally {
-                btn.disabled = false;
-                btn.textContent = isEditingRecipe ? 'Update Cloud & Google Sheet' : 'Save to Cloud & Google Sheet';
-            }
-        }
-
-        async function deleteActiveRecipe() {
-            if (!activeRecipe) return;
-            
-            const pin = prompt(`To permanently delete "${activeRecipe.name}", enter PIN:`);
-            if (pin !== "0712") {
-                if (pin !== null) alert("Incorrect PIN. Deletion cancelled.");
-                return;
-            }
-
-            try {
-                await db.collection("recipes").doc(activeRecipe.id).delete();
-
-                recipes = recipes.filter(r => r.id !== activeRecipe.id);
-                localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
-
-                if (GOOGLE_APPS_SCRIPT_URL) {
-                     fetch(`${GOOGLE_APPS_SCRIPT_URL}?deleteId=${activeRecipe.id}`, {
-                         method: 'GET',
-                         mode: 'no-cors'
-                     }).catch(err => console.log('Sheet delete sync silent failure', err));
-                }
-
-                activeRecipe = null;
-                toggleDrawer(false);
-                buildCategoryButtons();
-                renderCatalog();
-                alert('Recipe deleted successfully.');
-
-            } catch (error) {
-                console.error("Error deleting recipe: ", error);
-                alert("Failed to delete recipe from the cloud database.");
-            }
-        }
-
-        function shareRecipe() {
-            if (!activeRecipe) return;
-            let text = `🃏 ${activeRecipe.name} (Arkham Kitchen)\n\n`;
-            text += `Category: ${activeRecipe.category}\n\n`;
-            text += `Ingredients (${currentScale}x batch - ${currentUnitMode}):\n`;
-            
-            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
-            text += ingLines.map(line => `• ${convertIngredientLine(line, currentUnitMode, currentScale)}`).join('\n') + '\n\n';
-            text += `Directions:\n${activeRecipe.directions}\n\n`;
-            if (activeRecipe.notes) text += `Notes: ${activeRecipe.notes}\n`;
-
-            if (navigator.share) {
-                navigator.share({ title: activeRecipe.name, text }).catch(() => {});
-            } else {
-                navigator.clipboard.writeText(text).then(() => alert('Recipe copied to clipboard!'));
-            }
-        }
-
-        function escapeHtml(str) {
-            return String(str || '').replace(/[&<>'"]/g, c => ({
-                '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
-            }[c]));
-        }
-
-        // Easter Egg: Triple Click Header to check version/force reload
-        let headerClickCount = 0;
-        let headerClickTimer = null;
-        document.getElementById('appBrandingTrigger').addEventListener('click', () => {
-            headerClickCount++;
-            clearTimeout(headerClickTimer);
-            
-            if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.2.7 \nBuild: 2026-10-04\n\nForcing hard reload of data...`);
-                headerClickCount = 0;
-                localStorage.removeItem('wardCachedRecipes');
-                loadCatalog(true);
-            } else {
-                headerClickTimer = setTimeout(() => { headerClickCount = 0; }, 500);
-            }
-        });
-
-        searchInput.addEventListener('input', renderCatalog);
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                toggleAddModal(false);
-                closeEditCategoryModal();
-                toggleDrawer(false);
-                closeCookMode();
-                toggleGroceryDrawer(false);
-                toggleTimerPanel(false, true);
-            }
-        });
-
-        updateHeaderTimerDisplay();
-        loadCatalog();
-    </script>
-</body>
-</html>
+                let jsonStr = data.candidates[0].content.parts[0].text;
+                jsonStr = jsonStr.replace(/```json/g, '').replace(/
