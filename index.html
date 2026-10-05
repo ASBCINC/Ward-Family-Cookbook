@@ -1657,25 +1657,84 @@
         }
 
         // UPDATED: Now primarily loads from Firebase so edits never disappear
-        async function loadCatalog(forceRefresh = false) {
+       async function loadCatalog(forceRefresh = false) {
             const hasLocal = loadLocalCachedData();
             if (!hasLocal || forceRefresh) {
                 resultCount.textContent = 'Syncing Arkham vault...';
                 if (!hasLocal) {
-                    recipeGrid.innerHTML = '<div class="col-span-full text-center text-textMuted py-16">Syncing recipes from cloud database...</div>';
+                    recipeGrid.innerHTML = '<div class="col-span-full text-center text-textMuted py-16">Syncing hybrid database...</div>';
                 }
             }
 
             try {
-                // 1. Prioritize loading directly from Firebase
+                // 1. Fetch the latest edits and new recipes from Firebase
                 const snapshot = await db.collection("recipes").get();
-                let fbRecipes = [];
-                snapshot.forEach(doc => fbRecipes.push(doc.data()));
+                let fbRecipes = new Map();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data && data.id) fbRecipes.set(data.id, data);
+                });
 
-                if (fbRecipes.length > 0) {
-                    recipes = fbRecipes;
-                    document.getElementById('syncStatusBadge').textContent = 'Firebase Cloud Active';
-                } else {
+                // 2. Fetch the entire legacy catalog from Google Sheets
+                const syncUrl = `${SHEET_CSV_URL}&_ts=${Date.now()}`;
+                const response = await fetch(syncUrl);
+                let sheetRecipes = [];
+                
+                if (response.ok) {
+                    const csvText = await response.text();
+                    const parsed = Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: 'greedy',
+                        transformHeader: h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+                    });
+
+                    sheetRecipes = parsed.data.map((row, idx) => {
+                        return {
+                            id: row.id || `REC-${idx + 1}`,
+                            category: row.category || 'Dinners with Veggies',
+                            name: row.recipename || row.name || 'Untitled Recipe',
+                            photo: extractPhotoFromRow(row),
+                            ingredients: row.ingredients || '',
+                            directions: row.directions || '',
+                            notes: row.notes || ''
+                        };
+                    });
+                }
+
+                // 3. Merge them together (Firebase edits overwrite Sheet defaults)
+                let mergedRecipes = [];
+                
+                sheetRecipes.forEach(sheetRec => {
+                    if (fbRecipes.has(sheetRec.id)) {
+                        mergedRecipes.push(fbRecipes.get(sheetRec.id)); // Use the edited Firebase version
+                        fbRecipes.delete(sheetRec.id); // Remove from Map so we don't duplicate
+                    } else {
+                        mergedRecipes.push(sheetRec); // Use the original Sheet version
+                    }
+                });
+                
+                // Add any brand new recipes that only exist in Firebase
+                fbRecipes.forEach(fbRec => {
+                    mergedRecipes.unshift(fbRec); // Put brand new ones at the top
+                });
+
+                recipes = mergedRecipes;
+                document.getElementById('syncStatusBadge').textContent = 'Hybrid Sync Active';
+
+                localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
+                buildCategoryButtons();
+                populateCategorySelectors();
+                renderCatalog();
+
+                if (!activeRecipe && recipes.length > 0) {
+                    populateInspectionPane(recipes[0]);
+                }
+            } catch (err) {
+                console.warn('Network sync paused, offline mode active:', err);
+                if (recipes.length === 0) loadLocalCachedData();
+                document.getElementById('syncStatusBadge').textContent = 'Offline Active';
+            }
+        }
                     // 2. Fallback to Google Sheets CSV if Firebase is empty
                     const syncUrl = `${SHEET_CSV_URL}&_ts=${Date.now()}`;
                     const response = await fetch(syncUrl);
