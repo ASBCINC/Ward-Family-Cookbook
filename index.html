@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.2.9 | Arkham Kitchen Master Suite | Build 2026-10-05 -->
+<!-- Ward Family Recipe Vault v2.2.7 | Arkham Kitchen Master Suite | Build 2026-10-04 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.2.9">
-    <meta name="build-date" content="2026-10-05">
+    <meta name="application-version" content="2.2.7">
+    <meta name="build-date" content="2026-10-04">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
     <!-- PWA & Favicon Metadata -->
@@ -166,7 +166,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.9</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.2.7</div>
                 </div>
             </div>
         </div>
@@ -236,7 +236,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <!-- Edit Button -->
-                    <button type="button" onclick="editActiveRecipe()" class="w-9 h-9 bg-[#1c142b] hover:bg-[#2b1f40] border border-jokerPurple/60 rounded-xl text-jokerPurple flex items-center justify-center text-sm shrink-0 transition-all" aria-label="Edit Recipe" title="Edit Recipe">✏</button>
+                    <button type="button" onclick="editActiveRecipe()" class="w-9 h-9 bg-[#1c142b] hover:bg-[#2b1f40] border border-jokerPurple/60 rounded-xl text-jokerPurple flex items-center justify-center text-sm shrink-0 transition-all" aria-label="Edit Recipe" title="Edit Recipe">✏️️</button>
                     <!-- Delete Button -->
                     <button type="button" onclick="deleteActiveRecipe()" class="w-9 h-9 bg-harleyRed/20 hover:bg-harleyRed/40 border border-harleyRed/50 rounded-xl text-harleyRed flex items-center justify-center font-bold shrink-0 transition-all" aria-label="Delete Recipe" title="Delete Recipe">🗑</button>
                     <button id="closeDrawerButton" type="button" onclick="toggleDrawer(false)" class="md:hidden w-10 h-10 bg-panelBorder rounded-full text-xl flex items-center justify-center font-bold shrink-0" aria-label="Close">×</button>
@@ -625,9 +625,7 @@
         });
 
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM4oWWlRktK-xVxLiHaeLL8qMsWdMBX_xYHxHPZBUFzXyrcmSQBzqrAtvjjv0WVCWxBNvLLgow2fbZ/pub?output=csv";
-        
-        // --- NEW UPDATED APPS SCRIPT URL ---
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzK7ED3AjubnGWNrs2FoTX7GkdGg4AXh6JdC5zmbmPhSwUMqCwr19PxFuXnBJeWejd4BA/exec";
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRLrb1JAbJaWeJPdaM_pxFQqWCbA7lCL-dgllC6MThRUjnoSg83QvAwNoha465l4KjhQ/exec";
 
         const DEFAULT_CATEGORIES = [
             'Breads & Sourdough',
@@ -1418,27 +1416,18 @@
             statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Gemini is reading the recipe...</span>';
 
             try {
+                // Using a standard POST without 'application/json' headers to avoid CORS preflight failures in Google Apps Script
                 const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'parse_url', payload: targetUrl })
                 });
                 
                 const rawData = await response.json();
-
-                if (rawData.error && typeof rawData.error === 'string') {
-                    throw new Error(rawData.error);
-                }
                 
-                if (rawData.error && rawData.error.message) {
-                    throw new Error(`Gemini API: ${rawData.error.message}`);
-                }
-
-                if (!rawData.candidates || !rawData.candidates[0]) {
-                    throw new Error(`Unexpected Response: ${JSON.stringify(rawData)}`);
-                }
-                
+                // Extract the generated text from Gemini's API response structure
                 let geminiText = rawData.candidates[0].content.parts[0].text;
                 
+                // Clean up Markdown code blocks in case Gemini wraps the JSON string
                 geminiText = geminiText.replace(/```json/gi, '').replace(/```/g, '').trim();
                 
                 const recipeJson = JSON.parse(geminiText);
@@ -1465,8 +1454,8 @@
             } catch (err) {
                 console.error('Gemini URL Import error:', err);
                 statusEl.innerHTML = `
-                    <span class="text-harleyRed font-bold text-[10px]">Failed: ${err.message}</span>
-                    <button type="button" onclick="toggleSmartPasteBox()" class="text-xs text-jokerGreen underline ml-1 font-bold mt-1">Try Smart-Paste Instead</button>
+                    <span class="text-harleyRed font-bold">Failed to extract recipe using AI.</span>
+                    <button type="button" onclick="toggleSmartPasteBox()" class="text-xs text-jokerGreen underline ml-1 font-bold">Try Smart-Paste</button>
                 `;
             } finally {
                 fetchBtn.disabled = false;
@@ -1496,18 +1485,6 @@
 
                 const rawData = await response.json();
                 
-                if (rawData.error && typeof rawData.error === 'string') {
-                    throw new Error(rawData.error);
-                }
-                
-                if (rawData.error && rawData.error.message) {
-                    throw new Error(`Gemini API: ${rawData.error.message}`);
-                }
-
-                if (!rawData.candidates || !rawData.candidates[0]) {
-                    throw new Error(`Unexpected Response: ${JSON.stringify(rawData)}`);
-                }
-                
                 let geminiText = rawData.candidates[0].content.parts[0].text;
                 geminiText = geminiText.replace(/```json/gi, '').replace(/```/g, '').trim();
                 
@@ -1533,7 +1510,7 @@
                 statusEl.innerHTML = '<span class="text-jokerGreen font-bold">⚡ Recipe extracted by Gemini! Review and save.</span>';
             } catch (err) {
                 console.error('Gemini Paste error:', err);
-                statusEl.innerHTML = `<span class="text-harleyRed font-bold text-[10px]">Failed: ${err.message}</span>`;
+                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Could not process text. Try formatting it better.</span>';
             } finally {
                 btn.disabled = false;
                 btn.textContent = '⚡ Extract & Auto-Fill Form';
@@ -1894,4 +1871,293 @@
             
             const dirList = document.getElementById('inspectDirectionsList');
             if (dirList) {
-                dirList.innerHTML = formatDirectionsWithTimers(r.
+                dirList.innerHTML = formatDirectionsWithTimers(r.directions || '');
+            }
+
+            const notesBlock = document.getElementById('inspectNotesBlock');
+            const notesText = document.getElementById('inspectNotesText');
+            if (notesBlock && notesText) {
+                if (r.notes && r.notes.trim()) {
+                    notesText.textContent = r.notes;
+                    notesBlock.classList.remove('hidden');
+                } else {
+                    notesBlock.classList.add('hidden');
+                }
+            }
+        }
+
+        function inspectRecipe(r, shouldOpenDrawer = false) {
+            populateInspectionPane(r);
+            if (shouldOpenDrawer) toggleDrawer(true);
+            requestScreenWakeLock();
+        }
+
+        function scaleActiveRecipe(factor) {
+            currentScale = factor;
+            const badge = document.getElementById('scaleMultiplierBadge');
+            if (badge) badge.textContent = `${factor}x Scale`;
+            renderScaledIngredients();
+        }
+
+        function renderScaledIngredients(customWaterGrams = null) {
+            if (!activeRecipe) return;
+            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const listEl = document.getElementById('inspectIngredientsList');
+            if (!listEl) return;
+            
+            listEl.innerHTML = ingLines.map(line => {
+                const convertedLine = convertIngredientLine(line, currentUnitMode, currentScale, customWaterGrams);
+                return `
+                    <li class="flex items-start gap-2 bg-harleyBlack/50 p-1.5 rounded border border-panelBorder/50">
+                        <input type="checkbox" class="mt-0.5 rounded text-jokerGreen focus:ring-0">
+                        <span class="leading-tight flex-1">${escapeHtml(convertedLine)}</span>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        function toggleFavorite(id) {
+            if (favoriteIds.has(id)) favoriteIds.delete(id);
+            else favoriteIds.add(id);
+            localStorage.setItem('wardRecipeFavorites', JSON.stringify([...favoriteIds]));
+            renderCatalog();
+        }
+
+        recipeGrid.addEventListener('click', e => {
+            const favBtn = e.target.closest('.fav-toggle');
+            if (favBtn) {
+                e.stopPropagation();
+                toggleFavorite(favBtn.dataset.favId);
+            }
+        });
+
+        function toggleDrawer(show) {
+            const drawer = document.getElementById('recipeDrawer');
+            const backdrop = document.getElementById('drawerBackdrop');
+            if (drawer) drawer.classList.toggle('drawer-open', show);
+            if (backdrop) backdrop.classList.toggle('hidden', !show);
+            if (show) requestScreenWakeLock();
+            else releaseScreenWakeLock();
+        }
+
+        function toggleAddModal(show) {
+            const modal = document.getElementById('customModal');
+            if (!modal) return;
+            modal.classList.toggle('hidden', !show);
+            modal.classList.toggle('flex', show);
+            if (show) {
+                isEditingRecipe = false;
+                document.getElementById('recipeAddForm').reset();
+                document.getElementById('importUrlInput').value = '';
+                document.getElementById('smartPasteTextarea').value = '';
+                document.getElementById('importStatus').textContent = '';
+                document.getElementById('modalTitleText').textContent = 'Add Family Recipe';
+                document.getElementById('saveRecipeButton').textContent = 'Save to Cloud & Google Sheet';
+                document.getElementById('autoImportEngineBlock').classList.remove('hidden');
+                toggleNewCategoryMode(false);
+                populateCategorySelectors();
+                document.getElementById('submitFeedback').textContent = '';
+            }
+        }
+
+        function editActiveRecipe() {
+            if (!activeRecipe) return;
+            isEditingRecipe = true;
+            
+            document.getElementById('formName').value = activeRecipe.name || '';
+            document.getElementById('formCategorySelect').value = activeRecipe.category || '';
+            document.getElementById('formPhotoUrl').value = activeRecipe.photo || '';
+            document.getElementById('formIngredients').value = activeRecipe.ingredients || '';
+            document.getElementById('formDirections').value = activeRecipe.directions || '';
+            document.getElementById('formNotes').value = activeRecipe.notes || '';
+            
+            document.getElementById('modalTitleText').textContent = 'Edit Family Recipe';
+            document.getElementById('saveRecipeButton').textContent = 'Update Cloud & Google Sheet';
+            document.getElementById('autoImportEngineBlock').classList.add('hidden');
+            
+            const modal = document.getElementById('customModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            populateCategorySelectors();
+            toggleNewCategoryMode(false);
+            document.getElementById('submitFeedback').textContent = '';
+            toggleDrawer(false); 
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const btn = document.getElementById('saveRecipeButton');
+            const feedback = document.getElementById('submitFeedback');
+            const fileInput = document.getElementById('formPhotoFile');
+            const urlInput = document.getElementById('formPhotoUrl');
+
+            let finalCategory = '';
+            const newCatVal = document.getElementById('formNewCategoryInput').value.trim();
+            const selectCatVal = document.getElementById('formCategorySelect').value.trim();
+
+            if (isCreatingNewCategory && newCatVal) finalCategory = newCatVal;
+            else finalCategory = selectCatVal || 'Dinners with Veggies';
+
+            btn.disabled = true;
+            btn.textContent = isEditingRecipe ? 'Updating Recipe...' : 'Saving Recipe...';
+            feedback.innerHTML = '<span class="text-jokerGreen">Uploading to Arkham Storage...</span>';
+
+            try {
+                let photoUrl = normalizeImageUrl(urlInput.value.trim());
+
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const storageRef = storage.ref(`recipe_photos/${Date.now()}_${file.name}`);
+                    const snapshot = await storageRef.put(file);
+                    photoUrl = await snapshot.ref.getDownloadURL();
+                }
+
+                const recipeId = isEditingRecipe ? activeRecipe.id : `REC-${Date.now()}`;
+
+                const newRecipe = {
+                    id: recipeId,
+                    category: finalCategory,
+                    name: document.getElementById('formName').value.trim(),
+                    photo: photoUrl,
+                    ingredients: document.getElementById('formIngredients').value.trim(),
+                    directions: document.getElementById('formDirections').value.trim(),
+                    notes: document.getElementById('formNotes').value.trim(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                await db.collection("recipes").doc(newRecipe.id).set(newRecipe, { merge: true });
+
+                if (GOOGLE_APPS_SCRIPT_URL) {
+                    const payload = { ...newRecipe, _action: isEditingRecipe ? 'update' : 'create' };
+                    await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                if (isEditingRecipe) {
+                    const index = recipes.findIndex(r => r.id === recipeId);
+                    if (index !== -1) recipes[index] = newRecipe;
+                } else {
+                    recipes.unshift(newRecipe);
+                }
+
+                localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
+                
+                buildCategoryButtons();
+                populateCategorySelectors();
+                renderCatalog();
+                inspectRecipe(newRecipe, true);
+
+                feedback.innerHTML = `<span class="text-jokerGreen font-bold">${isEditingRecipe ? 'Updated' : 'Saved'}! Cloud and catalog updated.</span>`;
+                setTimeout(() => {
+                    document.getElementById('customModal').classList.add('hidden');
+                    document.getElementById('customModal').classList.remove('flex');
+                    isEditingRecipe = false;
+                }, 1200);
+
+            } catch (err) {
+                console.error('Submit error:', err);
+                feedback.innerHTML = `<span class="text-harleyRed">Error: ${err.message}</span>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = isEditingRecipe ? 'Update Cloud & Google Sheet' : 'Save to Cloud & Google Sheet';
+            }
+        }
+
+        async function deleteActiveRecipe() {
+            if (!activeRecipe) return;
+            
+            const pin = prompt(`To permanently delete "${activeRecipe.name}", enter PIN:`);
+            if (pin !== "0712") {
+                if (pin !== null) alert("Incorrect PIN. Deletion cancelled.");
+                return;
+            }
+
+            try {
+                await db.collection("recipes").doc(activeRecipe.id).delete();
+
+                recipes = recipes.filter(r => r.id !== activeRecipe.id);
+                localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
+
+                if (GOOGLE_APPS_SCRIPT_URL) {
+                     fetch(`${GOOGLE_APPS_SCRIPT_URL}?deleteId=${activeRecipe.id}`, {
+                         method: 'GET',
+                         mode: 'no-cors'
+                     }).catch(err => console.log('Sheet delete sync silent failure', err));
+                }
+
+                activeRecipe = null;
+                toggleDrawer(false);
+                buildCategoryButtons();
+                renderCatalog();
+                alert('Recipe deleted successfully.');
+
+            } catch (error) {
+                console.error("Error deleting recipe: ", error);
+                alert("Failed to delete recipe from the cloud database.");
+            }
+        }
+
+        function shareRecipe() {
+            if (!activeRecipe) return;
+            let text = `🃏 ${activeRecipe.name} (Arkham Kitchen)\n\n`;
+            text += `Category: ${activeRecipe.category}\n\n`;
+            text += `Ingredients (${currentScale}x batch - ${currentUnitMode}):\n`;
+            
+            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            text += ingLines.map(line => `• ${convertIngredientLine(line, currentUnitMode, currentScale)}`).join('\n') + '\n\n';
+            text += `Directions:\n${activeRecipe.directions}\n\n`;
+            if (activeRecipe.notes) text += `Notes: ${activeRecipe.notes}\n`;
+
+            if (navigator.share) {
+                navigator.share({ title: activeRecipe.name, text }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(text).then(() => alert('Recipe copied to clipboard!'));
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/[&<>'"]/g, c => ({
+                '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
+            }[c]));
+        }
+
+        // Easter Egg: Triple Click Header to check version/force reload
+        let headerClickCount = 0;
+        let headerClickTimer = null;
+        document.getElementById('appBrandingTrigger').addEventListener('click', () => {
+            headerClickCount++;
+            clearTimeout(headerClickTimer);
+            
+            if (headerClickCount >= 3) {
+                alert(`Arkham Kitchen v2.2.7 \nBuild: 2026-10-04\n\nForcing hard reload of data...`);
+                headerClickCount = 0;
+                localStorage.removeItem('wardCachedRecipes');
+                loadCatalog(true);
+            } else {
+                headerClickTimer = setTimeout(() => { headerClickCount = 0; }, 500);
+            }
+        });
+
+        searchInput.addEventListener('input', renderCatalog);
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                toggleAddModal(false);
+                closeEditCategoryModal();
+                toggleDrawer(false);
+                closeCookMode();
+                toggleGroceryDrawer(false);
+                toggleTimerPanel(false, true);
+            }
+        });
+
+        updateHeaderTimerDisplay();
+        loadCatalog();
+    </script>
+</body>
+</html>
