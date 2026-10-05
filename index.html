@@ -625,7 +625,7 @@
         });
 
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM4oWWlRktK-xVxLiHaeLL8qMsWdMBX_xYHxHPZBUFzXyrcmSQBzqrAtvjjv0WVCWxBNvLLgow2fbZ/pub?output=csv";
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRLrb1JAbJaWeJPdaM_pxFQqWCbA7lCL-dgllC6MThRUjnoSg83QvAwNoha465l4KjhQ/exec";
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzK7ED3AjubnGWNrs2FoTX7GkdGg4AXh6JdC5zmbmPhSwUMqCwr19PxFuXnBJeWejd4BA/exec";
 
         const DEFAULT_CATEGORIES = [
             'Breads & Sourdough',
@@ -1416,18 +1416,27 @@
             statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Gemini is reading the recipe...</span>';
 
             try {
-                // Using a standard POST without 'application/json' headers to avoid CORS preflight failures in Google Apps Script
                 const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'parse_url', payload: targetUrl })
                 });
                 
                 const rawData = await response.json();
+
+                if (rawData.error && typeof rawData.error === 'string') {
+                    throw new Error(rawData.error);
+                }
                 
-                // Extract the generated text from Gemini's API response structure
+                if (rawData.error && rawData.error.message) {
+                    throw new Error(`Gemini API: ${rawData.error.message}`);
+                }
+
+                if (!rawData.candidates || !rawData.candidates[0]) {
+                    throw new Error(`Unexpected Response: ${JSON.stringify(rawData)}`);
+                }
+                
                 let geminiText = rawData.candidates[0].content.parts[0].text;
                 
-                // Clean up Markdown code blocks in case Gemini wraps the JSON string
                 geminiText = geminiText.replace(/```json/gi, '').replace(/```/g, '').trim();
                 
                 const recipeJson = JSON.parse(geminiText);
@@ -1454,8 +1463,8 @@
             } catch (err) {
                 console.error('Gemini URL Import error:', err);
                 statusEl.innerHTML = `
-                    <span class="text-harleyRed font-bold">Failed to extract recipe using AI.</span>
-                    <button type="button" onclick="toggleSmartPasteBox()" class="text-xs text-jokerGreen underline ml-1 font-bold">Try Smart-Paste</button>
+                    <span class="text-harleyRed font-bold text-[10px]">Failed: ${err.message}</span>
+                    <button type="button" onclick="toggleSmartPasteBox()" class="text-xs text-jokerGreen underline ml-1 font-bold mt-1">Try Smart-Paste Instead</button>
                 `;
             } finally {
                 fetchBtn.disabled = false;
@@ -1485,6 +1494,18 @@
 
                 const rawData = await response.json();
                 
+                if (rawData.error && typeof rawData.error === 'string') {
+                    throw new Error(rawData.error);
+                }
+                
+                if (rawData.error && rawData.error.message) {
+                    throw new Error(`Gemini API: ${rawData.error.message}`);
+                }
+
+                if (!rawData.candidates || !rawData.candidates[0]) {
+                    throw new Error(`Unexpected Response: ${JSON.stringify(rawData)}`);
+                }
+                
                 let geminiText = rawData.candidates[0].content.parts[0].text;
                 geminiText = geminiText.replace(/```json/gi, '').replace(/```/g, '').trim();
                 
@@ -1510,13 +1531,12 @@
                 statusEl.innerHTML = '<span class="text-jokerGreen font-bold">⚡ Recipe extracted by Gemini! Review and save.</span>';
             } catch (err) {
                 console.error('Gemini Paste error:', err);
-                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Could not process text. Try formatting it better.</span>';
+                statusEl.innerHTML = `<span class="text-harleyRed font-bold text-[10px]">Failed: ${err.message}</span>`;
             } finally {
                 btn.disabled = false;
                 btn.textContent = '⚡ Extract & Auto-Fill Form';
             }
         }
-
         let isCreatingNewCategory = false;
 
         function toggleNewCategoryMode(forceState) {
