@@ -2032,9 +2032,9 @@
                     const payload = { ...newRecipe, _action: isEditingRecipe ? 'update' : 'create' };
                     await fetch(GOOGLE_APPS_SCRIPT_URL, {
                         method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify(payload),
+                        redirect: "follow",
+                        credentials: "omit"
                     });
                 }
 
