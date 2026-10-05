@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.3.2 | Arkham Kitchen Master Suite | Build 2026-10-05 -->
+<!-- Ward Family Recipe Vault v2.3.3 | Arkham Kitchen Master Suite | Build 2026-10-05 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.3.2">
+    <meta name="application-version" content="2.3.3">
     <meta name="build-date" content="2026-10-05">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -126,7 +126,6 @@
 
 <body class="bg-harleyBlack text-white h-screen flex flex-col overflow-hidden font-sans selection:bg-harleyRed selection:text-white">
 
-    <!-- Header Toolbar -->
     <header class="bg-[#100c14] border-b border-panelBorder flex flex-col justify-between shadow-lg shrink-0 z-20">
         <div class="h-16 px-3 sm:px-5 flex items-center justify-between">
             <div class="flex items-center gap-3 sm:gap-4 min-w-0" id="appBrandingTrigger">
@@ -163,7 +162,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.2</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.3</div>
                 </div>
             </div>
         </div>
@@ -1656,12 +1655,14 @@
             return false;
         }
 
-        // UPDATED: Now primarily loads from Firebase so edits never disappear
-       async function loadCatalog(forceRefresh = false) {
+        // FULL HYBRID SYNC (Firebase + Google Sheets Merge)
+        async function loadCatalog(forceRefresh = false) {
             const hasLocal = loadLocalCachedData();
+            const badgeEl = document.getElementById('syncStatusBadge');
+            
             if (!hasLocal || forceRefresh) {
-                resultCount.textContent = 'Syncing Arkham vault...';
-                if (!hasLocal) {
+                if (resultCount) resultCount.textContent = 'Syncing Arkham vault...';
+                if (!hasLocal && recipeGrid) {
                     recipeGrid.innerHTML = '<div class="col-span-full text-center text-textMuted py-16">Syncing hybrid database...</div>';
                 }
             }
@@ -1688,17 +1689,19 @@
                         transformHeader: h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
                     });
 
-                    sheetRecipes = parsed.data.map((row, idx) => {
-                        return {
-                            id: row.id || `REC-${idx + 1}`,
-                            category: row.category || 'Dinners with Veggies',
-                            name: row.recipename || row.name || 'Untitled Recipe',
-                            photo: extractPhotoFromRow(row),
-                            ingredients: row.ingredients || '',
-                            directions: row.directions || '',
-                            notes: row.notes || ''
-                        };
-                    });
+                    if (parsed && parsed.data) {
+                        sheetRecipes = parsed.data.map((row, idx) => {
+                            return {
+                                id: row.id || `REC-${idx + 1}`,
+                                category: row.category || 'Dinners with Veggies',
+                                name: row.recipename || row.name || 'Untitled Recipe',
+                                photo: extractPhotoFromRow(row),
+                                ingredients: row.ingredients || '',
+                                directions: row.directions || '',
+                                notes: row.notes || ''
+                            };
+                        });
+                    }
                 }
 
                 // 3. Merge them together (Firebase edits overwrite Sheet defaults)
@@ -1719,7 +1722,7 @@
                 });
 
                 recipes = mergedRecipes;
-                document.getElementById('syncStatusBadge').textContent = 'Hybrid Sync Active';
+                if (badgeEl) badgeEl.textContent = 'Hybrid Sync Active';
 
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
                 buildCategoryButtons();
@@ -1732,47 +1735,7 @@
             } catch (err) {
                 console.warn('Network sync paused, offline mode active:', err);
                 if (recipes.length === 0) loadLocalCachedData();
-                document.getElementById('syncStatusBadge').textContent = 'Offline Active';
-            }
-        }
-                    // 2. Fallback to Google Sheets CSV if Firebase is empty
-                    const syncUrl = `${SHEET_CSV_URL}&_ts=${Date.now()}`;
-                    const response = await fetch(syncUrl);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                    const csvText = await response.text();
-                    const parsed = Papa.parse(csvText, {
-                        header: true,
-                        skipEmptyLines: 'greedy',
-                        transformHeader: h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
-                    });
-
-                    recipes = parsed.data.map((row, idx) => {
-                        return {
-                            id: row.id || `REC-${idx + 1}`,
-                            category: row.category || 'Dinners with Veggies',
-                            name: row.recipename || row.name || 'Untitled Recipe',
-                            photo: extractPhotoFromRow(row),
-                            ingredients: row.ingredients || '',
-                            directions: row.directions || '',
-                            notes: row.notes || ''
-                        };
-                    });
-                    document.getElementById('syncStatusBadge').textContent = 'CSV Fallback Active';
-                }
-
-                localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
-                buildCategoryButtons();
-                populateCategorySelectors();
-                renderCatalog();
-
-                if (!activeRecipe && recipes.length > 0) {
-                    populateInspectionPane(recipes[0]);
-                }
-            } catch (err) {
-                console.warn('Network sync paused, offline mode active:', err);
-                if (recipes.length === 0) loadLocalCachedData();
-                document.getElementById('syncStatusBadge').textContent = 'Offline Active';
+                if (badgeEl) badgeEl.textContent = 'Offline Active';
             }
         }
 
@@ -2161,7 +2124,7 @@
             clearTimeout(headerClickTimer);
             
             if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.3.2 \nBuild: 2026-10-05\n\nForcing hard reload of data...`);
+                alert(`Arkham Kitchen v2.3.3 \nBuild: 2026-10-05\n\nForcing hard reload of data...`);
                 headerClickCount = 0;
                 localStorage.removeItem('wardCachedRecipes');
                 loadCatalog(true);
