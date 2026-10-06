@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.3.6 | Arkham Kitchen Master Suite | Build 2026-10-05 -->
+<!-- Ward Family Recipe Vault v2.3.7 | Arkham Kitchen Master Suite | Build 2026-10-05 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.3.6">
+    <meta name="application-version" content="2.3.7">
     <meta name="build-date" content="2026-10-05">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -162,13 +162,15 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.6</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.7</div>
                 </div>
             </div>
         </div>
 
         <div id="quickControls" class="h-12 px-3 sm:px-5 flex items-center gap-2.5 border-t border-panelBorder/70 bg-[#0d0912] overflow-x-auto print-hide">
-            <!-- Cleaned up dead UI elements from here -->
+            <button type="button" onclick="exportAllRecipesBackup()" class="h-9 shrink-0 bg-cardDark border border-panelBorder text-neutral-300 font-medium rounded-lg px-3 text-xs hover:border-jokerPurple transition-colors flex items-center gap-1.5" title="Download backup of all recipes">
+                <span>💾</span> Backup All
+            </button>
             <button type="button" onclick="loadCatalog(true)" class="h-9 shrink-0 bg-cardDark border border-panelBorder text-jokerGreen font-medium rounded-lg px-3 text-xs hover:border-jokerGreen transition-colors">↻ Reload Vault</button>
             <button type="button" onclick="scaleActiveRecipe(2.0)" class="h-9 shrink-0 bg-cardDark border border-harleyRed/50 text-harleyRed font-medium rounded-lg px-3 text-xs hover:border-harleyRed transition-colors">2x Yield</button>
         </div>
@@ -555,7 +557,6 @@
     </div>
 
     <!-- Firebase v10 Compat SDKs -->
-    <!-- Removed Storage SDK for leaner load times since Canvas Base64 handles photos -->
     <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
 
@@ -2145,6 +2146,24 @@
             }[c]));
         }
 
+        function exportAllRecipesBackup() {
+            if (!recipes || recipes.length === 0) {
+                alert("No recipes currently loaded to backup!");
+                return;
+            }
+            const backupData = JSON.stringify(recipes, null, 2);
+            const blob = new Blob([backupData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const dateStr = new Date().toISOString().split('T')[0];
+            a.download = `arkham_kitchen_backup_${dateStr}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         let headerClickCount = 0;
         let headerClickTimer = null;
         document.getElementById('appBrandingTrigger').addEventListener('click', () => {
@@ -2152,7 +2171,7 @@
             clearTimeout(headerClickTimer);
             
             if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.3.6 \nBuild: 2026-10-05\n\nForcing hard reload of data...`);
+                alert(`Arkham Kitchen v2.3.7 \nBuild: 2026-10-05\n\nForcing hard reload of data...`);
                 headerClickCount = 0;
                 localStorage.removeItem('wardCachedRecipes');
                 loadCatalog(true);
