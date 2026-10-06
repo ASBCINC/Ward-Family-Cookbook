@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.4.1 | Arkham Kitchen Master Suite | Build 2026-10-05 -->
+<!-- Ward Family Recipe Vault v2.3.7 | Arkham Kitchen Master Suite | Build 2026-10-05 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta name="application-version" content="2.4.1">
+    <meta name="application-version" content="2.3.7">
     <meta name="build-date" content="2026-10-05">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
@@ -70,11 +70,6 @@
             color: #ffffff !important;
             box-shadow: 0 0 12px rgba(233, 30, 99, 0.45);
         }
-        
-        .tag-active {
-            background: #ffffff !important;
-            color: #000000 !important;
-        }
 
         .unit-active {
             background: #00E676 !important;
@@ -120,7 +115,7 @@
 
         @media print {
             body { background: white !important; color: black !important; height: auto !important; overflow: visible !important; }
-            header, #catalogPanel, #mobileBar, #drawerBackdrop, #customModal, #editCatModal, #kitchenTimerWidget, #groceryDrawer, #cookModeModal, #fridgeScannerModal, .print-hide { display: none !important; }
+            header, #catalogPanel, #mobileBar, #drawerBackdrop, #customModal, #editCatModal, #kitchenTimerWidget, #groceryDrawer, #cookModeModal, .print-hide { display: none !important; }
             main { display: block !important; height: auto !important; overflow: visible !important; }
             #recipeDrawer { position: static !important; display: block !important; transform: none !important; width: 100% !important; height: auto !important; background: white !important; border: 0 !important; }
             #recipeDrawer::before { content: "Ward Family Recipe Vault"; display: block; font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid black; }
@@ -167,27 +162,17 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.4.1</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.7</div>
                 </div>
             </div>
         </div>
 
         <div id="quickControls" class="h-12 px-3 sm:px-5 flex items-center gap-2.5 border-t border-panelBorder/70 bg-[#0d0912] overflow-x-auto print-hide">
-            <!-- Family Filters -->
-            <div class="flex items-center gap-1 bg-cardDark border border-panelBorder rounded-lg p-1 shrink-0">
-                <button type="button" onclick="toggleFamilyTagFilter('Clarissa')" id="tagBtnClarissa" class="px-2 py-1 text-xs rounded-md text-harleyRed hover:bg-panelBorder font-bold transition-all">👩 Clarissa</button>
-                <button type="button" onclick="toggleFamilyTagFilter('Josiah')" id="tagBtnJosiah" class="px-2 py-1 text-xs rounded-md text-blue-400 hover:bg-panelBorder font-bold transition-all">👨 Josiah</button>
-                <button type="button" onclick="toggleFamilyTagFilter('Madi')" id="tagBtnMadi" class="px-2 py-1 text-xs rounded-md text-purple-400 hover:bg-panelBorder font-bold transition-all">👧 Madi</button>
-            </div>
-
-            <!-- Fridge Scan -->
-            <button type="button" onclick="openFridgeScanner()" class="h-9 shrink-0 bg-cardDark border border-jokerPurple text-jokerPurple hover:text-white font-medium rounded-lg px-3 text-xs hover:border-jokerPurple transition-colors flex items-center gap-1.5 shadow-[0_0_8px_rgba(123,31,162,0.3)]">
-                <span>🧊</span> What's in my Fridge?
+            <button type="button" onclick="exportAllRecipesBackup()" class="h-9 shrink-0 bg-cardDark border border-panelBorder text-neutral-300 font-medium rounded-lg px-3 text-xs hover:border-jokerPurple transition-colors flex items-center gap-1.5" title="Download backup of all recipes">
+                <span>💾</span> Backup All
             </button>
-
-            <!-- Utility -->
             <button type="button" onclick="loadCatalog(true)" class="h-9 shrink-0 bg-cardDark border border-panelBorder text-jokerGreen font-medium rounded-lg px-3 text-xs hover:border-jokerGreen transition-colors">↻ Reload Vault</button>
-            <button type="button" onclick="exportAllRecipesBackup()" class="h-9 shrink-0 bg-cardDark border border-panelBorder text-neutral-400 font-medium rounded-lg px-3 text-xs hover:text-white transition-colors">💾 Backup</button>
+            <button type="button" onclick="scaleActiveRecipe(2.0)" class="h-9 shrink-0 bg-cardDark border border-harleyRed/50 text-harleyRed font-medium rounded-lg px-3 text-xs hover:border-harleyRed transition-colors">2x Yield</button>
         </div>
     </header>
 
@@ -205,17 +190,9 @@
                             Compact Tiles
                         </button>
                         <button id="favoritesFilterButton" type="button" class="border border-panelBorder rounded-full px-3 py-1.5 transition-colors hover:border-harleyRed text-white">
-                            ♥ Favorites
+                            ♥ Favorites Only
                         </button>
                     </div>
-                </div>
-                
-                <!-- Active AI Fridge Scan Banner -->
-                <div id="aiFridgeBanner" class="hidden items-center justify-between bg-jokerPurple/20 border border-jokerPurple rounded-xl px-3 py-2">
-                    <div class="flex items-center gap-2 text-xs font-bold text-white">
-                        <span>🧊</span> <span>AI Fridge Scan Results</span>
-                    </div>
-                    <button type="button" onclick="clearFridgeScan()" class="text-[10px] text-harleyRed hover:text-white underline font-mono">Clear Filter</button>
                 </div>
             </div>
 
@@ -257,9 +234,6 @@
             </div>
 
             <div class="p-4 space-y-5 text-sm flex-1">
-                <!-- Recipe Tags Rendering Block -->
-                <div id="inspectTagsBlock" class="flex gap-2 hidden"></div>
-
                 <div id="bakersMathBlock" class="hidden p-3 bg-[#150f1d] border border-jokerPurple/50 rounded-xl space-y-2">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-jokerGreen uppercase tracking-wider flex items-center gap-1">
@@ -336,29 +310,6 @@
         </section>
     </main>
 
-    <!-- WHAT'S IN MY FRIDGE MODAL -->
-    <div id="fridgeScannerModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-cardDark border border-jokerPurple p-5 rounded-2xl shadow-2xl w-full max-w-md">
-            <div class="flex justify-between items-center mb-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-xl">🧊</span>
-                    <h3 class="text-lg font-bold text-white">What's in my Fridge?</h3>
-                </div>
-                <button type="button" onclick="closeFridgeScanner()" class="w-8 h-8 rounded-full bg-harleyBlack border border-panelBorder text-white text-base">×</button>
-            </div>
-            
-            <p class="text-xs text-textMuted mb-4 leading-relaxed">Tell Groq AI what ingredients you have lying around, and it will instantly scan your Arkham vault to find recipes you can make tonight.</p>
-
-            <textarea id="fridgeInputText" rows="3" placeholder="e.g., Chicken breasts, heavy cream, half an onion, and some old pasta..." class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-3 text-sm text-white outline-none focus:border-jokerPurple mb-4"></textarea>
-
-            <button type="button" id="fridgeScanBtn" onclick="runFridgeScan()" class="w-full bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-3 rounded-xl text-sm shadow-[0_0_15px_rgba(123,31,162,0.4)] hover:brightness-110 flex items-center justify-center gap-2">
-                <span>⚡</span> Scan Vault
-            </button>
-            <div id="fridgeScanStatus" class="text-center text-xs mt-3 min-h-[1rem]"></div>
-        </div>
-    </div>
-
-    <!-- COOK MODE MODAL -->
     <div id="cookModeModal" class="fixed inset-0 bg-harleyBlack z-50 hidden flex-col p-4 sm:p-8 overflow-y-auto">
         <div class="flex justify-between items-center pb-3 border-b border-panelBorder shrink-0">
             <div class="flex items-center gap-3 min-w-0">
@@ -368,15 +319,9 @@
                     <p id="cookModeStepIndicator" class="text-xs text-jokerGreen font-mono font-bold">Step 1 of 6</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <!-- VOICE CONTROL BUTTON -->
-                <button type="button" id="voiceCookBtn" onclick="toggleVoiceCookMode()" class="px-3 sm:px-4 py-2 bg-cardDark border border-jokerPurple rounded-xl text-xs font-bold text-white hover:bg-jokerPurple/20 transition-all flex items-center gap-1.5">
-                    🎙️ <span class="hidden sm:inline">Enable Voice</span>
-                </button>
-                <button type="button" onclick="closeCookMode()" class="px-3 sm:px-4 py-2 bg-cardDark border border-panelBorder rounded-xl text-xs font-bold text-neutral-300 hover:text-white">
-                    ✕ Exit
-                </button>
-            </div>
+            <button type="button" onclick="closeCookMode()" class="px-4 py-2 bg-cardDark border border-panelBorder rounded-xl text-xs font-bold text-neutral-300 hover:text-white">
+                ✕ Exit Cook Mode
+            </button>
         </div>
 
         <div class="w-full bg-panelBorder h-2 rounded-full my-4 overflow-hidden shrink-0">
@@ -400,7 +345,6 @@
         </div>
     </div>
 
-    <!-- PANTRY DRAWER -->
     <div id="groceryDrawer" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-[#110d17] border-l border-panelBorder z-50 translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
         <div class="p-4 border-b border-panelBorder flex justify-between items-center shrink-0 bg-[#0d0912]">
             <div class="flex items-center gap-2">
@@ -437,7 +381,6 @@
         </div>
     </div>
 
-    <!-- KITCHEN TIMER -->
     <div id="kitchenTimerWidget" class="fixed right-3 bottom-20 md:bottom-5 z-50 transition-all duration-300 select-none">
         <div id="timerMiniBadge" onclick="toggleTimerPanel(true)" class="hidden cursor-pointer bg-cardDark border-2 border-jokerGreen text-white px-3.5 py-2 rounded-2xl shadow-[0_0_16px_rgba(0,230,118,0.35)] flex items-center gap-2.5 hover:scale-105 transition-all">
             <span class="animate-pulse text-base">⏱</span>
@@ -488,7 +431,43 @@
         </div>
     </div>
 
-    <!-- RECIPE ADD/EDIT MODAL -->
+    <button id="mobileBar" type="button" onclick="toggleDrawer(true)" class="md:hidden fixed z-30 left-3 right-3 bottom-3 bg-gradient-to-r from-jokerPurple to-harleyRed text-white rounded-2xl shadow-2xl px-4 py-3 flex items-center justify-between font-bold safe-bottom border border-jokerGreen/40">
+        <span class="flex items-center gap-2 truncate"><span>🃏</span> <span id="mobileRecipeName" class="truncate">Select a Recipe</span></span>
+        <span class="text-xs bg-black/40 px-2 py-1 rounded text-jokerGreen font-mono shrink-0">Open</span>
+    </button>
+
+    <div id="drawerBackdrop" onclick="toggleDrawer(false)" class="hidden md:hidden fixed inset-0 z-30 bg-black/80 backdrop-blur-sm"></div>
+
+    <div id="editCatModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-sm">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-base font-bold text-jokerGreen flex items-center gap-2">
+                    <span>✏</span> Edit Recipe Category
+                </h3>
+                <button type="button" onclick="closeEditCategoryModal()" class="w-8 h-8 rounded-full bg-harleyBlack border border-panelBorder text-white text-base">×</button>
+            </div>
+            
+            <p id="editCatRecipeName" class="text-xs text-textMuted mb-3 font-semibold truncate"></p>
+
+            <form onsubmit="handleCategoryUpdateSubmit(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block uppercase font-bold tracking-wider text-white mb-1">Select Category</label>
+                    <select id="editCatDropdown" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2.5 text-sm text-white outline-none focus:border-jokerGreen"></select>
+                </div>
+
+                <div>
+                    <label class="block uppercase font-bold tracking-wider text-textMuted mb-1">Or Type New Category</label>
+                    <input id="editCatCustomInput" type="text" placeholder="e.g. Late Night Bites" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2.5 text-sm text-white outline-none focus:border-jokerGreen">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-2">
+                    <button type="button" onclick="closeEditCategoryModal()" class="bg-panelBorder text-neutral-300 font-bold py-2.5 rounded-xl text-xs">Cancel</button>
+                    <button type="submit" id="saveCatBtn" class="bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-2.5 rounded-xl text-xs shadow-md border border-jokerGreen/40">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="customModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-3">
@@ -554,22 +533,6 @@
                     </div>
                 </div>
 
-                <!-- FAMILY TAGS FEATURE -->
-                <div class="p-2 border border-panelBorder/70 rounded-xl bg-harleyBlack/50">
-                    <label class="block uppercase font-bold tracking-wider mb-2 text-white">Family Tags</label>
-                    <div class="flex flex-wrap gap-4">
-                        <label class="flex items-center gap-1.5 cursor-pointer text-white hover:text-harleyRed transition-colors">
-                            <input type="checkbox" id="tagClarissa" value="Clarissa" class="rounded text-harleyRed focus:ring-0"> 👩 Clarissa's
-                        </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer text-white hover:text-blue-400 transition-colors">
-                            <input type="checkbox" id="tagJosiah" value="Josiah" class="rounded text-blue-500 focus:ring-0"> 👨 Josiah's
-                        </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer text-white hover:text-purple-400 transition-colors">
-                            <input type="checkbox" id="tagMadi" value="Madi" class="rounded text-purple-400 focus:ring-0"> 👧 Madi's
-                        </label>
-                    </div>
-                </div>
-
                 <div>
                     <label class="block uppercase font-bold tracking-wider mb-1 text-white">Ingredients (separated by line or comma) *</label>
                     <textarea id="formIngredients" required rows="4" placeholder="500g Bread Flour&#10;375g Water (75% hydration)&#10;100g Active Starter&#10;10g Sea Salt" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-3 text-sm text-white leading-relaxed"></textarea>
@@ -589,32 +552,6 @@
                     Save to Arkham Cloud
                 </button>
                 <div id="submitFeedback" class="text-center text-xs min-h-[1.25rem]"></div>
-            </form>
-        </div>
-    </div>
-    
-    <div id="editCatModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-sm">
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="text-base font-bold text-jokerGreen flex items-center gap-2">
-                    <span>✏</span> Edit Recipe Category
-                </h3>
-                <button type="button" onclick="closeEditCategoryModal()" class="w-8 h-8 rounded-full bg-harleyBlack border border-panelBorder text-white text-base">×</button>
-            </div>
-            <p id="editCatRecipeName" class="text-xs text-textMuted mb-3 font-semibold truncate"></p>
-            <form onsubmit="handleCategoryUpdateSubmit(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block uppercase font-bold tracking-wider text-white mb-1">Select Category</label>
-                    <select id="editCatDropdown" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2.5 text-sm text-white outline-none focus:border-jokerGreen"></select>
-                </div>
-                <div>
-                    <label class="block uppercase font-bold tracking-wider text-textMuted mb-1">Or Type New Category</label>
-                    <input id="editCatCustomInput" type="text" placeholder="e.g. Late Night Bites" class="w-full bg-harleyBlack border border-panelBorder rounded-xl p-2.5 text-sm text-white outline-none focus:border-jokerGreen">
-                </div>
-                <div class="grid grid-cols-2 gap-2 pt-2">
-                    <button type="button" onclick="closeEditCategoryModal()" class="bg-panelBorder text-neutral-300 font-bold py-2.5 rounded-xl text-xs">Cancel</button>
-                    <button type="submit" id="saveCatBtn" class="bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-2.5 rounded-xl text-xs shadow-md border border-jokerGreen/40">Save</button>
-                </div>
             </form>
         </div>
     </div>
@@ -646,15 +583,26 @@
         const db = firebase.firestore();
 
         db.enablePersistence().catch(err => {
-            if (err.code !== 'failed-precondition') console.warn('Offline persistence notice:', err.code);
+            if (err.code !== 'failed-precondition') {
+                console.warn('Offline persistence notice:', err.code);
+            }
         });
 
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQM4oWWlRktK-xVxLiHaeLL8qMsWdMBX_xYHxHPZBUFzXyrcmSQBzqrAtvjjv0WVCWxBNvLLgow2fbZ/pub?output=csv";
         const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzDTxkaBzWgXAqCMs-PRyQ3qoWMpRDN2L6BekUlGSyFD2wEhW3CK50Ylyd6zFrl-sPd/exec";
 
         const DEFAULT_CATEGORIES = [
-            'Breads & Sourdough', 'Dinners with Veggies', 'Seafood', 'Pork', 'Beef', 'Poultry', 
-            'Sandwiches', 'Breakfast', 'Sides & Apps', 'Sauces, Seasonings & Marinades', 'Desserts & Sweets'
+            'Breads & Sourdough',
+            'Dinners with Veggies',
+            'Seafood',
+            'Pork',
+            'Beef',
+            'Poultry',
+            'Sandwiches',
+            'Breakfast',
+            'Sides & Apps',
+            'Sauces, Seasonings & Marinades',
+            'Desserts & Sweets'
         ];
 
         const CATEGORY_FALLBACK_IMAGES = {
@@ -680,9 +628,12 @@
             if (!url) return '';
             let clean = String(url).trim();
             if (!clean.startsWith('http') && !clean.startsWith('data:image')) return '';
+
             if (clean.includes('drive.google.com')) {
                 const idMatch = clean.match(/\/d\/([a-zA-Z0-9_-]+)/) || clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-                if (idMatch && idMatch[1]) return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
+                if (idMatch && idMatch[1]) {
+                    return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
+                }
             }
             return clean;
         }
@@ -705,7 +656,9 @@
         }
 
         function formatDirectionsWithTimers(text) {
-            if (!text || !text.trim()) return '<li class="italic text-textMuted list-none">No directions listed for this recipe.</li>';
+            if (!text || !text.trim()) {
+                return '<li class="italic text-textMuted list-none">No directions listed for this recipe.</li>';
+            }
             const rawSteps = text.split(/\n+|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
             const timeRegex = /(\b\d+(?:[\.,]\d+)?\s*(?:-\s*\d+)?\s*(?:minutes|minute|mins|min|hours|hour|hrs|hr)\b)/gi;
 
@@ -730,9 +683,6 @@
         let isEditingRecipe = false;
         let currentScale = 1.0;
         let currentUnitMode = 'original';
-        
-        let activeFamilyTag = null; 
-        let fridgeMatchIds = null;
 
         const searchInput = document.getElementById('searchInput');
         const recipeGrid = document.getElementById('recipeGrid');
@@ -746,9 +696,13 @@
 
         function setPantryStatus(type, msg) {
             if (!pantryStatusEl) return;
-            if (type === 'synced') pantryStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-jokerGreen"></span><span class="text-jokerGreen font-bold">${msg}</span>`;
-            else if (type === 'warning') pantryStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span><span class="text-yellow-400 font-bold">${msg}</span>`;
-            else pantryStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-harleyRed"></span><span class="text-harleyRed font-bold">${msg}</span>`;
+            if (type === 'synced') {
+                pantryStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-jokerGreen"></span><span class="text-jokerGreen font-bold">${msg}</span>`;
+            } else if (type === 'warning') {
+                pantryStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span><span class="text-yellow-400 font-bold">${msg}</span>`;
+            } else {
+                pantryStatusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-harleyRed"></span><span class="text-harleyRed font-bold">${msg}</span>`;
+            }
         }
 
         PANTRY_DOC_REF.onSnapshot((doc) => {
@@ -764,8 +718,11 @@
         }, (err) => {
             console.error("Firestore Pantry Sync Error:", err);
             groceryList = JSON.parse(localStorage.getItem('wardGroceryList') || '[]');
-            if (err.code === 'permission-denied') setPantryStatus('error', 'Update Firebase Rules!');
-            else setPantryStatus('warning', 'Offline Mode Active');
+            if (err.code === 'permission-denied') {
+                setPantryStatus('error', 'Update Firebase Rules!');
+            } else {
+                setPantryStatus('warning', 'Offline Mode Active');
+            }
             renderGroceryList();
         });
 
@@ -776,8 +733,12 @@
                 await PANTRY_DOC_REF.set({ items: groceryList, updatedAt: new Date().toISOString() });
                 setPantryStatus('synced', 'Saved to Cloud');
             } catch (e) {
-                if (e.code === 'permission-denied') setPantryStatus('error', 'Denied: Check Rules');
-                else setPantryStatus('warning', 'Saved to Phone');
+                console.warn("Could not save to cloud, saved locally:", e);
+                if (e.code === 'permission-denied') {
+                    setPantryStatus('error', 'Denied: Check Rules');
+                } else {
+                    setPantryStatus('warning', 'Saved to Phone');
+                }
             }
         }
 
@@ -799,7 +760,8 @@
         }
 
         function toggleGroceryDrawer(show) {
-            document.getElementById('groceryDrawer').classList.toggle('translate-x-full', !show);
+            const drawer = document.getElementById('groceryDrawer');
+            drawer.classList.toggle('translate-x-full', !show);
             if (show) renderGroceryList();
         }
 
@@ -815,6 +777,7 @@
 
             badge.textContent = groceryList.length;
             badge.classList.remove('hidden');
+
             listEl.innerHTML = groceryList.map((item, idx) => `
                 <li class="flex items-center justify-between p-2 rounded-xl bg-cardDark border border-panelBorder/70">
                     <label class="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
@@ -835,10 +798,27 @@
             saveSharedGroceryList();
         }
 
-        function toggleGroceryItem(idx) { groceryList[idx].checked = !groceryList[idx].checked; saveSharedGroceryList(); }
-        function deleteGroceryItem(idx) { groceryList.splice(idx, 1); saveSharedGroceryList(); }
-        function clearCheckedGroceryItems() { groceryList = groceryList.filter(item => !item.checked); saveSharedGroceryList(); }
-        function clearAllGroceryItems() { if (confirm('Clear entire shared family pantry list?')) { groceryList = []; saveSharedGroceryList(); } }
+        function toggleGroceryItem(idx) {
+            groceryList[idx].checked = !groceryList[idx].checked;
+            saveSharedGroceryList();
+        }
+
+        function deleteGroceryItem(idx) {
+            groceryList.splice(idx, 1);
+            saveSharedGroceryList();
+        }
+
+        function clearCheckedGroceryItems() {
+            groceryList = groceryList.filter(item => !item.checked);
+            saveSharedGroceryList();
+        }
+
+        function clearAllGroceryItems() {
+            if (confirm('Clear entire shared family pantry list?')) {
+                groceryList = [];
+                saveSharedGroceryList();
+            }
+        }
 
         function addAllActiveIngredientsToGrocery() {
             if (!activeRecipe) return;
@@ -854,12 +834,27 @@
         }
 
         function exportToGoogleKeep() {
-            if (groceryList.length === 0) return alert('Your pantry list is empty! Add ingredients first.');
+            if (groceryList.length === 0) {
+                alert('Your pantry list is empty! Add ingredients first.');
+                return;
+            }
+
             const textLines = groceryList.map(item => `${item.checked ? '☑' : '☐'} ${item.text}`).join('\n');
             const shareTitle = 'Arkham Kitchen Grocery List';
             const shareText = `🛒 ${shareTitle}:\n\n${textLines}`;
-            if (navigator.share) navigator.share({ title: shareTitle, text: shareText }).catch(() => {});
-            else navigator.clipboard.writeText(shareText).then(() => alert('Checklist copied to clipboard! Paste directly into your shared Google Keep note. 📝')).catch(() => alert(shareText));
+
+            if (navigator.share) {
+                navigator.share({
+                    title: shareTitle,
+                    text: shareText
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('Checklist copied to clipboard! Paste directly into your shared Google Keep note. 📝');
+                }).catch(() => {
+                    alert(shareText);
+                });
+            }
         }
 
         function toggleDensityView() {
@@ -874,80 +869,759 @@
             if (btn) btn.textContent = isCompactTiles ? 'Card View' : 'Compact Tiles';
         }
 
-        function toggleFamilyTagFilter(tag) {
-            activeFamilyTag = activeFamilyTag === tag ? null : tag;
-            ['Clarissa', 'Josiah', 'Madi'].forEach(t => {
-                const btn = document.getElementById(`tagBtn${t}`);
-                if(btn) {
-                    if (activeFamilyTag === t) btn.classList.add('tag-active');
-                    else btn.classList.remove('tag-active');
+        let baseFlourWeight = 500;
+        let baseWaterWeight = 375;
+
+        function checkAndRenderBakersMath(recipe) {
+            const block = document.getElementById('bakersMathBlock');
+            if (!block) return;
+            const cat = (recipe.category || '').toLowerCase();
+            const nm = (recipe.name || '').toLowerCase();
+            const isBreadOrDough = cat.includes('bread') || cat.includes('dough') || nm.includes('sourdough') || nm.includes('roll');
+
+            if (!isBreadOrDough) {
+                block.classList.add('hidden');
+                return;
+            }
+
+            const ingText = (recipe.ingredients || '').toLowerCase();
+            const flourMatch = ingText.match(/(\d+)\s*g[^\n,]*flour/i);
+            const waterMatch = ingText.match(/(\d+)\s*g[^\n,]*water/i);
+
+            if (flourMatch && waterMatch) {
+                baseFlourWeight = parseInt(flourMatch[1], 10);
+                baseWaterWeight = parseInt(waterMatch[1], 10);
+                const currentHydration = Math.round((baseWaterWeight / baseFlourWeight) * 100);
+                document.getElementById('bakersHydrationDisplay').textContent = `${currentHydration}% Hydration`;
+                document.getElementById('hydrationSlider').value = currentHydration;
+                document.getElementById('sliderPercentVal').textContent = `${currentHydration}%`;
+                block.classList.remove('hidden');
+            } else {
+                block.classList.add('hidden');
+            }
+        }
+
+        function handleHydrationSliderChange(newHydration) {
+            document.getElementById('sliderPercentVal').textContent = `${newHydration}%`;
+            document.getElementById('bakersHydrationDisplay').textContent = `${newHydration}% Hydration`;
+            const newWaterGrams = Math.round(baseFlourWeight * (newHydration / 100) * currentScale);
+            renderScaledIngredients(newWaterGrams);
+        }
+
+        let cookModeSteps = [];
+        let currentCookStepIndex = 0;
+
+        function openCookMode() {
+            if (!activeRecipe) return;
+            cookModeSteps = (activeRecipe.directions || '').split(/\n+|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
+            if (cookModeSteps.length === 0) return;
+
+            currentCookStepIndex = 0;
+            document.getElementById('cookModeTitle').textContent = activeRecipe.name;
+            document.getElementById('cookModeModal').classList.remove('hidden');
+            document.getElementById('cookModeModal').classList.add('flex');
+            renderActiveCookStep();
+            requestScreenWakeLock();
+        }
+
+        function closeCookMode() {
+            document.getElementById('cookModeModal').classList.add('hidden');
+            document.getElementById('cookModeModal').classList.remove('flex');
+        }
+
+        function renderActiveCookStep() {
+            const stepText = cookModeSteps[currentCookStepIndex];
+            const total = cookModeSteps.length;
+            const progress = ((currentCookStepIndex + 1) / total) * 100;
+
+            document.getElementById('cookModeStepIndicator').textContent = `Step ${currentCookStepIndex + 1} of ${total}`;
+            document.getElementById('cookModeProgressBar').style.width = `${progress}%`;
+            document.getElementById('cookModeStepText').textContent = stepText;
+
+            const timeMatch = stepText.match(/(\b\d+(?:[\.,]\d+)?\s*(?:-\s*\d+)?\s*(?:minutes|minute|mins|min|hours|hour|hrs|hr)\b)/i);
+            const timerTriggerEl = document.getElementById('cookModeStepTimerTrigger');
+            
+            if (timeMatch) {
+                let mins = 10;
+                const matchStr = timeMatch[0].toLowerCase();
+                if (matchStr.includes('hr') || matchStr.includes('hour')) mins = Math.round(parseFloat(matchStr) * 60) || 60;
+                else mins = parseInt(matchStr.replace(/[^\d]/g, ''), 10) || 10;
+
+                timerTriggerEl.innerHTML = `
+                    <button type="button" onclick="addQuickTimer(${mins}, 'Step ${currentCookStepIndex + 1}: ${mins}m')" class="px-5 py-2.5 rounded-2xl bg-jokerGreen text-black font-black text-sm flex items-center gap-2 shadow-[0_0_15px_rgba(0,230,118,0.4)] hover:scale-105 transition-all">
+                        <span>⏱ Start ${timeMatch[0]} Timer</span>
+                    </button>
+                `;
+            } else {
+                timerTriggerEl.innerHTML = '';
+            }
+
+            document.getElementById('cookModePrevBtn').disabled = currentCookStepIndex === 0;
+            document.getElementById('cookModePrevBtn').classList.toggle('opacity-40', currentCookStepIndex === 0);
+            document.getElementById('cookModeNextBtn').textContent = currentCookStepIndex === total - 1 ? 'Finish Recipe 🎉' : 'Next Step →';
+        }
+
+        function navigateCookStep(direction) {
+            currentCookStepIndex += direction;
+            if (currentCookStepIndex >= cookModeSteps.length) {
+                alert('Recipe Complete! Bon Appétit! 🃏');
+                closeCookMode();
+                return;
+            }
+            if (currentCookStepIndex < 0) currentCookStepIndex = 0;
+            renderActiveCookStep();
+        }
+
+        function parseFractionString(str) {
+            const parts = str.trim().split(/\s+/);
+            let total = 0;
+            for (let part of parts) {
+                if (part.includes('/')) {
+                    const [num, den] = part.split('/').map(Number);
+                    if (den) total += num / den;
+                } else {
+                    const num = parseFloat(part);
+                    if (!isNaN(num)) total += num;
+                }
+            }
+            return total || 0;
+        }
+
+        function formatDecimalAsFraction(val) {
+            if (val <= 0) return '0';
+            const whole = Math.floor(val);
+            const remainder = val - whole;
+
+            const fractions = [
+                { frac: '1/8', val: 0.125 }, { frac: '1/4', val: 0.25 },
+                { frac: '1/3', val: 0.333 }, { frac: '1/2', val: 0.5 },
+                { frac: '2/3', val: 0.666 }, { frac: '3/4', val: 0.75 },
+                { frac: '7/8', val: 0.875 }
+            ];
+
+            let closest = null;
+            let minDiff = 0.06;
+
+            for (let f of fractions) {
+                const diff = Math.abs(remainder - f.val);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closest = f.frac;
+                }
+            }
+
+            if (closest) return whole > 0 ? `${whole} ${closest}` : closest;
+            return val.toFixed(val >= 10 ? 0 : 1).replace(/\.0$/, '');
+        }
+
+        function getIngredientDensity(ingredientName) {
+            const lower = (ingredientName || '').toLowerCase();
+            if (lower.includes('flour')) return 120;
+            if (lower.includes('sugar') && (lower.includes('brown') || lower.includes('granulated') || lower.includes('white'))) return 200;
+            if (lower.includes('powdered sugar') || lower.includes('confectioners')) return 125;
+            if (lower.includes('butter')) return 227;
+            if (lower.includes('oil')) return 218;
+            if (lower.includes('honey') || lower.includes('molasses')) return 340;
+            if (lower.includes('cocoa')) return 85;
+            return 240;
+        }
+
+        function convertIngredientLine(line, targetMode, scale, customWaterGrams = null) {
+            let processedLine = line;
+
+            if (customWaterGrams !== null && processedLine.toLowerCase().includes('water') && processedLine.toLowerCase().includes('g')) {
+                return `${customWaterGrams}g Water (Adjusted Hydration)`;
+            }
+
+            const match = processedLine.match(/^([\d\s\/\.\,\-]+)\s*(cups?|c|tablespoons?|tbsp?|tbs|teaspoons?|tsp|ounces?|oz|grams?|g|ml|milliliters?|pounds?|lbs?|sticks?)\b(.*)$/i);
+
+            if (!match) {
+                if (scale !== 1.0) {
+                    return processedLine.replace(/^([\d\s\/\.\,]+)/, (m) => {
+                        const val = parseFractionString(m) * scale;
+                        return formatDecimalAsFraction(val);
+                    });
+                }
+                return processedLine;
+            }
+
+            const rawQty = match[1].trim();
+            const rawUnit = match[2].trim().toLowerCase();
+            const rest = match[3];
+            let qty = parseFractionString(rawQty) * scale;
+
+            if (targetMode === 'original') {
+                return `${formatDecimalAsFraction(qty)} ${match[2]}${rest}`;
+            }
+
+            const density = getIngredientDensity(rest);
+            let inGrams = 0;
+            let isLiquid = rest.toLowerCase().includes('water') || rest.toLowerCase().includes('milk') || rest.toLowerCase().includes('juice') || rest.toLowerCase().includes('oil');
+
+            if (['g', 'gram', 'grams'].includes(rawUnit)) inGrams = qty;
+            else if (['ml', 'milliliters', 'milliliter'].includes(rawUnit)) { inGrams = qty; isLiquid = true; }
+            else if (['oz', 'ounce', 'ounces'].includes(rawUnit)) inGrams = qty * 28.35;
+            else if (['lb', 'lbs', 'pound', 'pounds'].includes(rawUnit)) inGrams = qty * 453.59;
+            else if (['cup', 'cups', 'c'].includes(rawUnit)) inGrams = qty * density;
+            else if (['tablespoon', 'tablespoons', 'tbsp', 'tbs'].includes(rawUnit)) inGrams = qty * (density / 16);
+            else if (['teaspoon', 'teaspoons', 'tsp'].includes(rawUnit)) inGrams = qty * (density / 48);
+            else if (['stick', 'sticks'].includes(rawUnit)) inGrams = qty * 113.4;
+            else inGrams = qty;
+
+            if (targetMode === 'metric') {
+                if (isLiquid && inGrams >= 5) return `${Math.round(inGrams)} ml${rest}`;
+                return `${Math.round(inGrams)} g${rest}`;
+            }
+
+            if (targetMode === 'us') {
+                const cups = inGrams / density;
+                if (cups >= 0.25) return `${formatDecimalAsFraction(cups)} cups${rest}`;
+                const tbsp = inGrams / (density / 16);
+                if (tbsp >= 1) return `${formatDecimalAsFraction(tbsp)} tbsp${rest}`;
+                const tsp = inGrams / (density / 48);
+                if (tsp >= 0.25) return `${formatDecimalAsFraction(tsp)} tsp${rest}`;
+                const oz = inGrams / 28.35;
+                return `${formatDecimalAsFraction(oz)} oz${rest}`;
+            }
+
+            return `${formatDecimalAsFraction(qty)} ${match[2]}${rest}`;
+        }
+
+        function setMeasurementUnit(mode) {
+            currentUnitMode = mode;
+            ['unitBtnOriginal', 'unitBtnMetric', 'unitBtnUs'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.remove('unit-active');
+                    el.classList.add('text-neutral-300');
                 }
             });
-            renderCatalog();
+
+            const activeBtn = document.getElementById(mode === 'original' ? 'unitBtnOriginal' : mode === 'metric' ? 'unitBtnMetric' : 'unitBtnUs');
+            if (activeBtn) activeBtn.classList.add('unit-active');
+
+            renderScaledIngredients();
         }
 
-        function openFridgeScanner() {
-            document.getElementById('fridgeScannerModal').classList.remove('hidden');
-            document.getElementById('fridgeScannerModal').classList.add('flex');
-            document.getElementById('fridgeInputText').value = '';
-            document.getElementById('fridgeScanStatus').innerHTML = '';
+        function openEditCategoryModal(recipe = null) {
+            const target = recipe || activeRecipe;
+            if (!target) return;
+
+            document.getElementById('editCatRecipeName').textContent = target.name;
+            const dropdown = document.getElementById('editCatDropdown');
+            const customInput = document.getElementById('editCatCustomInput');
+            customInput.value = '';
+
+            const allCats = getAllCategories();
+            dropdown.innerHTML = allCats.map(cat => `
+                <option value="${escapeHtml(cat)}" ${cat === target.category ? 'selected' : ''}>${escapeHtml(cat)}</option>
+            `).join('');
+
+            const modal = document.getElementById('editCatModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
-        function closeFridgeScanner() {
-            document.getElementById('fridgeScannerModal').classList.add('hidden');
-            document.getElementById('fridgeScannerModal').classList.remove('flex');
+        function closeEditCategoryModal() {
+            const modal = document.getElementById('editCatModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
-        function clearFridgeScan() {
-            fridgeMatchIds = null;
-            document.getElementById('aiFridgeBanner').classList.add('hidden');
-            document.getElementById('aiFridgeBanner').classList.remove('flex');
-            renderCatalog();
-        }
+        async function handleCategoryUpdateSubmit(e) {
+            e.preventDefault();
+            if (!activeRecipe) return;
 
-        async function runFridgeScan() {
-            const btn = document.getElementById('fridgeScanBtn');
-            const status = document.getElementById('fridgeScanStatus');
-            const fridgeItems = document.getElementById('fridgeInputText').value.trim();
+            const dropdownVal = document.getElementById('editCatDropdown').value.trim();
+            const customVal = document.getElementById('editCatCustomInput').value.trim();
+            const newCategory = customVal || dropdownVal;
 
-            if (!fridgeItems) { status.innerHTML = '<span class="text-harleyRed font-bold">Please list some ingredients first!</span>'; return; }
+            if (!newCategory) return;
 
+            const btn = document.getElementById('saveCatBtn');
             btn.disabled = true;
-            btn.innerHTML = '⚡ Scanning Vault...';
-            status.innerHTML = '<span class="text-jokerGreen animate-pulse">Groq is analyzing your pantry...</span>';
+            btn.textContent = 'Saving...';
 
-            const lightweightVault = recipes.map(r => ({ id: r.id, name: r.name, ingredients: r.ingredients }));
+            try {
+                activeRecipe.category = newCategory;
+                const match = recipes.find(r => r.id === activeRecipe.id);
+                if (match) match.category = newCategory;
+
+                localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
+
+                await db.collection("recipes").doc(activeRecipe.id).set({ category: newCategory }, { merge: true });
+
+                document.getElementById('inspectCategory').textContent = `${newCategory} · ${activeRecipe.id}`;
+                buildCategoryButtons();
+                renderCatalog();
+                closeEditCategoryModal();
+
+            } catch (err) {
+                console.warn('Category update warning:', err);
+                closeEditCategoryModal();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save';
+            }
+        }
+
+        /* ── MULTI-TIMER COOKING SYSTEM ── */
+        let activeTimers = [];
+        let timerTickerInterval = null;
+
+        function formatTimerString(totalSecs) {
+            const m = Math.floor(totalSecs / 60);
+            const s = totalSecs % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function ensureTimerTicker() {
+            if (timerTickerInterval) return;
+            timerTickerInterval = setInterval(() => {
+                let updated = false;
+                activeTimers.forEach(t => {
+                    if (t.isRunning && t.remaining > 0) {
+                        t.remaining--;
+                        updated = true;
+                        if (t.remaining === 0) {
+                            t.isRunning = false;
+                            playTimerChime(t.name);
+                        }
+                    }
+                });
+                if (updated || activeTimers.length > 0) {
+                    renderActiveTimersList();
+                    updateHeaderTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function addQuickTimer(minutes, label) {
+            activeTimers.push({
+                id: Date.now() + Math.random(),
+                name: label,
+                duration: minutes * 60,
+                remaining: minutes * 60,
+                isRunning: true
+            });
+            ensureTimerTicker();
+            renderActiveTimersList();
+            updateHeaderTimerDisplay();
+            toggleTimerPanel(true);
+        }
+
+        function addNewCustomTimer() {
+            const labelInput = document.getElementById('timerCustomLabelInput');
+            const minInput = document.getElementById('timerInputMinutes');
+            const secInput = document.getElementById('timerInputSeconds');
+
+            const m = parseInt(minInput.value, 10) || 0;
+            const s = parseInt(secInput.value, 10) || 0;
+            const totalSecs = (m * 60) + s;
+
+            if (totalSecs <= 0) return;
+
+            const name = labelInput.value.trim() || `Timer ${activeTimers.length + 1}`;
+            activeTimers.push({
+                id: Date.now() + Math.random(),
+                name: name,
+                duration: totalSecs,
+                remaining: totalSecs,
+                isRunning: true
+            });
+
+            labelInput.value = '';
+            ensureTimerTicker();
+            renderActiveTimersList();
+            updateHeaderTimerDisplay();
+        }
+
+        function toggleTimerItem(id) {
+            const timer = activeTimers.find(t => t.id === id);
+            if (timer) {
+                timer.isRunning = !timer.isRunning;
+                renderActiveTimersList();
+                updateHeaderTimerDisplay();
+            }
+        }
+
+        function deleteTimerItem(id) {
+            activeTimers = activeTimers.filter(t => t.id !== id);
+            renderActiveTimersList();
+            updateHeaderTimerDisplay();
+        }
+
+        function renderActiveTimersList() {
+            const listEl = document.getElementById('activeTimersList');
+            if (activeTimers.length === 0) {
+                listEl.innerHTML = '<div class="text-center text-textMuted py-4 text-xs italic">No active kitchen timers. Launch one below!</div>';
+                return;
+            }
+
+            listEl.innerHTML = activeTimers.map(t => {
+                const percent = Math.round(((t.duration - t.remaining) / t.duration) * 100);
+                return `
+                    <div class="p-2.5 rounded-xl bg-harleyBlack border ${t.remaining === 0 ? 'border-harleyRed animate-pulse' : 'border-panelBorder'} flex flex-col gap-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-white truncate max-w-[150px]">${escapeHtml(t.name)}</span>
+                            <span class="font-mono text-sm font-bold ${t.remaining === 0 ? 'text-harleyRed' : 'text-jokerGreen'}">${formatTimerString(t.remaining)}</span>
+                        </div>
+                        <div class="w-full bg-panelBorder h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-gradient-to-r from-jokerPurple to-jokerGreen h-full transition-all duration-500" style="width: ${percent}%;"></div>
+                        </div>
+                        <div class="flex justify-end gap-1.5 pt-0.5">
+                            <button type="button" onclick="toggleTimerItem(${t.id})" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded ${t.isRunning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-jokerGreen/20 text-jokerGreen'}">
+                                ${t.isRunning ? 'Pause' : 'Resume'}
+                            </button>
+                            <button type="button" onclick="deleteTimerItem(${t.id})" class="text-[10px] font-mono text-neutral-400 hover:text-harleyRed px-1.5 py-0.5 rounded bg-panelBorder">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateHeaderTimerDisplay() {
+            const runningCount = activeTimers.filter(t => t.isRunning).length;
+            const headerDisplay = document.getElementById('headerTimerDisplay');
+            const miniDisplay = document.getElementById('miniTimerTime');
+
+            if (runningCount > 0) {
+                const shortest = [...activeTimers].filter(t => t.isRunning).sort((a,b) => a.remaining - b.remaining)[0];
+                headerDisplay.textContent = formatTimerString(shortest.remaining);
+                miniDisplay.textContent = `${formatTimerString(shortest.remaining)} (${runningCount})`;
+            } else {
+                headerDisplay.textContent = `Timers (${activeTimers.length})`;
+                miniDisplay.textContent = `${activeTimers.length} Timers`;
+            }
+        }
+
+        function playTimerChime(name) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const tones = [587.33, 880, 1174.66];
+                tones.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.12);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.12 + 0.9);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + idx * 0.12);
+                    osc.stop(audioCtx.currentTime + idx * 0.12 + 0.95);
+                });
+            } catch (e) {}
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('Arkham Kitchen Timer Alert! 🃏', {
+                    body: `${name || 'Kitchen Timer'} is ready!`,
+                    icon: './icon-192x192.png'
+                });
+            }
+        }
+
+        function toggleTimerPanel(forceOpen = null, isMinimize = false) {
+            const consoleEl = document.getElementById('timerExpandedConsole');
+            const badgeEl = document.getElementById('timerMiniBadge');
+            const isConsoleOpen = !consoleEl.classList.contains('hidden');
+
+            if (forceOpen === true) {
+                consoleEl.classList.remove('hidden');
+                badgeEl.classList.add('hidden');
+            } else if (forceOpen === false) {
+                consoleEl.classList.add('hidden');
+                if (isMinimize && activeTimers.length > 0) badgeEl.classList.remove('hidden');
+                else badgeEl.classList.add('hidden');
+            } else {
+                if (isConsoleOpen) {
+                    consoleEl.classList.add('hidden');
+                    if (activeTimers.length > 0) badgeEl.classList.remove('hidden');
+                } else {
+                    consoleEl.classList.remove('hidden');
+                    badgeEl.classList.add('hidden');
+                }
+            }
+        }
+
+        function toggleSmartPasteBox() {
+            const box = document.getElementById('smartPasteContainer');
+            const urlBox = document.getElementById('urlInputContainer');
+            const btn = document.getElementById('smartPasteToggleBtn');
+            const isHidden = box.classList.contains('hidden');
+            
+            if (isHidden) {
+                box.classList.remove('hidden');
+                urlBox.classList.add('hidden');
+                btn.textContent = 'Use URL Link instead';
+            } else {
+                box.classList.add('hidden');
+                urlBox.classList.remove('hidden');
+                btn.textContent = 'Direct Text / Smart-Paste';
+            }
+        }
+
+        async function importFromWebUrl() {
+            const urlInput = document.getElementById('importUrlInput');
+            const statusEl = document.getElementById('importStatus');
+            const fetchBtn = document.getElementById('importUrlBtn');
+            const targetUrl = urlInput.value.trim();
+
+            if (!targetUrl || !targetUrl.startsWith('http')) {
+                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Please enter a valid recipe link (https://...)</span>';
+                return;
+            }
+
+            fetchBtn.disabled = true;
+            fetchBtn.textContent = 'Asking Groq...';
+            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Groq AI is reading the recipe...</span>';
 
             try {
                 const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'fridge_scan', payload: { fridge: fridgeItems, vault: lightweightVault } }),
+                    body: JSON.stringify({ action: 'parse_url', payload: targetUrl }),
+                    redirect: "follow",
+                    credentials: "omit"
+                });
+                
+                const rawData = await response.json();
+
+                if (rawData.error) {
+                    throw new Error(rawData.error);
+                }
+
+                const recipeJson = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+
+                document.getElementById('formName').value = recipeJson.name || '';
+                document.getElementById('formPhotoUrl').value = normalizeImageUrl(recipeJson.photoUrl || '');
+                
+                const rawIng = recipeJson.ingredients || [];
+                document.getElementById('formIngredients').value = Array.isArray(rawIng) ? rawIng.join('\n') : String(rawIng);
+
+                const rawInst = recipeJson.directions || [];
+                document.getElementById('formDirections').value = Array.isArray(rawInst) ? rawInst.map((s, idx) => `${idx + 1}. ${s}`).join('\n\n') : String(rawInst);
+
+                document.getElementById('formNotes').value = recipeJson.notes || `Source: ${targetUrl}`;
+                
+                if (recipeJson.category) {
+                     const catSelect = document.getElementById('formCategorySelect');
+                     const match = Array.from(catSelect.options).find(o => o.value.toLowerCase() === recipeJson.category.toLowerCase());
+                     if (match) catSelect.value = match.value;
+                }
+
+                statusEl.innerHTML = '<span class="text-jokerGreen font-bold">Successfully imported by Groq! Review and save.</span>';
+
+            } catch (err) {
+                console.error('Groq URL Import error:', err);
+                statusEl.innerHTML = `
+                    <span class="text-harleyRed font-bold text-[10px]">Failed: ${err.message}</span>
+                    <button type="button" onclick="toggleSmartPasteBox()" class="text-xs text-jokerGreen underline ml-1 font-bold mt-1">Try Smart-Paste Instead</button>
+                `;
+            } finally {
+                fetchBtn.disabled = false;
+                fetchBtn.textContent = 'Fetch';
+            }
+        }
+
+        async function parseSmartPasteText() {
+            const rawText = document.getElementById('smartPasteTextarea').value.trim();
+            const statusEl = document.getElementById('importStatus');
+            const btn = document.querySelector('#smartPasteContainer button');
+            
+            if (!rawText) {
+                statusEl.innerHTML = '<span class="text-harleyRed font-bold">Please paste text first!</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Groq is processing...';
+            statusEl.innerHTML = '<span class="text-jokerGreen animate-pulse">Groq is extracting recipe data...</span>';
+
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'parse_text', payload: rawText }),
                     redirect: "follow",
                     credentials: "omit"
                 });
 
                 const rawData = await response.json();
-                if (rawData.error) throw new Error(rawData.error);
                 
-                const resultJson = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+                if (rawData.error) {
+                    throw new Error(rawData.error);
+                }
                 
-                if (resultJson.matched_ids && Array.isArray(resultJson.matched_ids)) {
-                    fridgeMatchIds = resultJson.matched_ids;
-                    document.getElementById('aiFridgeBanner').classList.remove('hidden');
-                    document.getElementById('aiFridgeBanner').classList.add('flex');
-                    closeFridgeScanner();
-                    renderCatalog();
-                } else {
-                    status.innerHTML = '<span class="text-yellow-400 font-bold">Groq couldn\'t find any good matches!</span>';
+                const recipeJson = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+
+                if (recipeJson.name) document.getElementById('formName').value = recipeJson.name;
+                if (recipeJson.photoUrl) document.getElementById('formPhotoUrl').value = normalizeImageUrl(recipeJson.photoUrl);
+                
+                const rawIng = recipeJson.ingredients || [];
+                if (rawIng.length > 0) document.getElementById('formIngredients').value = Array.isArray(rawIng) ? rawIng.join('\n') : String(rawIng);
+
+                const rawInst = recipeJson.directions || [];
+                if (rawInst.length > 0) document.getElementById('formDirections').value = Array.isArray(rawInst) ? rawInst.map((s, idx) => `${idx + 1}. ${s}`).join('\n\n') : String(rawInst);
+
+                if (recipeJson.notes) document.getElementById('formNotes').value = recipeJson.notes;
+                
+                if (recipeJson.category) {
+                     const catSelect = document.getElementById('formCategorySelect');
+                     const match = Array.from(catSelect.options).find(o => o.value.toLowerCase() === recipeJson.category.toLowerCase());
+                     if (match) catSelect.value = match.value;
                 }
 
+                statusEl.innerHTML = '<span class="text-jokerGreen font-bold">⚡ Recipe extracted by Groq! Review and save.</span>';
             } catch (err) {
-                console.error('Fridge Scan Error:', err);
-                status.innerHTML = `<span class="text-harleyRed font-bold">Error: ${err.message}</span>`;
+                console.error('Groq Paste error:', err);
+                statusEl.innerHTML = `<span class="text-harleyRed font-bold text-[10px]">Failed: ${err.message}</span>`;
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '⚡ Scan Vault';
+                btn.textContent = '⚡ Extract & Auto-Fill Form';
             }
+        }
+
+        let isCreatingNewCategory = false;
+
+        function toggleNewCategoryMode(forceState) {
+            isCreatingNewCategory = typeof forceState === 'boolean' ? forceState : !isCreatingNewCategory;
+            const selectEl = document.getElementById('formCategorySelect');
+            const wrapperEl = document.getElementById('newCategoryWrapper');
+            const toggleBtn = document.getElementById('toggleNewCatBtn');
+            const newCatInput = document.getElementById('formNewCategoryInput');
+
+            if (isCreatingNewCategory) {
+                selectEl.classList.add('opacity-50');
+                wrapperEl.classList.remove('hidden');
+                toggleBtn.textContent = 'Use Existing';
+                newCatInput.focus();
+            } else {
+                selectEl.classList.remove('opacity-50');
+                wrapperEl.classList.add('hidden');
+                toggleBtn.textContent = '+ New';
+                newCatInput.value = '';
+            }
+        }
+
+        function getAllCategories() {
+            return [...new Set([...DEFAULT_CATEGORIES, ...recipes.map(r => r.category).filter(Boolean)])].sort();
+        }
+
+        function populateCategorySelectors() {
+            const allCategories = getAllCategories();
+
+            const formSelect = document.getElementById('formCategorySelect');
+            const currentSelected = formSelect.value;
+            formSelect.innerHTML = allCategories.map(cat => `
+                <option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>
+            `).join('');
+            if (currentSelected && allCategories.includes(currentSelected)) {
+                formSelect.value = currentSelected;
+            }
+        }
+
+        let wakeLockSentinel = null;
+        const wakeLockStatus = document.getElementById('wakeLockStatus');
+
+        async function requestScreenWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLockSentinel = await navigator.wakeLock.request('screen');
+                    wakeLockSentinel.addEventListener('release', () => updateWakeLockUI(false));
+                    updateWakeLockUI(true);
+                } catch (err) {
+                    updateWakeLockUI(false);
+                }
+            } else {
+                updateWakeLockUI(false);
+            }
+        }
+
+        async function releaseScreenWakeLock() {
+            if (wakeLockSentinel !== null) {
+                try { await wakeLockSentinel.release(); } catch (e) {}
+                wakeLockSentinel = null;
+                updateWakeLockUI(false);
+            }
+        }
+
+        function updateWakeLockUI(isActive) {
+            if (!wakeLockStatus) return;
+            if (isActive) {
+                wakeLockStatus.innerHTML = `
+                    <span class="w-1.5 h-1.5 rounded-full bg-jokerGreen animate-pulse"></span>
+                    <span class="text-jokerGreen font-bold">Screen Kept Awake</span>
+                `;
+                wakeLockStatus.className = "inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-jokerGreen/10 border border-jokerGreen/40 text-jokerGreen shrink-0";
+            } else {
+                wakeLockStatus.innerHTML = `
+                    <span class="w-1.5 h-1.5 rounded-full bg-neutral-500"></span>
+                    <span>Screen Sleep Normal</span>
+                `;
+                wakeLockStatus.className = "inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700 text-textMuted shrink-0";
+            }
+        }
+
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLockSentinel !== null && document.visibilityState === 'visible') {
+                await requestScreenWakeLock();
+            }
+        });
+
+        let deferredInstallPrompt = null;
+        const installAppButton = document.getElementById('installAppButton');
+        const installAppIcon = document.getElementById('installAppIcon');
+        const installAppText = document.getElementById('installAppText');
+
+        function isAppAlreadyInstalled() {
+            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || document.referrer.includes('android-app://');
+        }
+
+        function setInstallIcon() {
+            const ua = navigator.userAgent.toLowerCase();
+            let svg = '';
+            if (ua.includes('android')) svg = `<svg class="w-4 h-4 fill-current" viewBox="0 0 576 512"><path d="M420.22 165.29a244 244 0 0 0 -264.44 0l-28.75-49.76a14.77 14.77 0 0 0 -20.19-5.41 14.65 14.65 0 0 0 -5.39 20l30.06 52.05A250.77 250.77 0 0 0 0 357.51h576a250.73 250.73 0 0 0 -131.51-175.34l30.05-52.05a14.63 14.63 0 0 0 -5.4-20 14.76 14.76 0 0 0 -20.18 5.41zm-247.96 109.13a29.15 29.15 0 1 1 29.14-29.15 29.16 29.16 0 0 1 -29.14 29.15zm231.48 0a29.15 29.15 0 1 1 29.15-29.15 29.16 29.16 0 0 1 -29.15 29.15z"/></svg>`;
+            else if (ua.includes('mac') || ua.includes('iphone') || ua.includes('ipad')) svg = `<svg class="w-4 h-4 fill-current pb-[1px]" viewBox="0 0 384 512"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.3 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.3zM34.3 120.5c5.3-26.1 27.5-63.6 57.6-82.5 2.1-1.3 4.4-2.5 6.7-3.6 22.3-10.4 46.3-15.1 69.8-15.1 1.4 0 2.8 0 4.1.1 1.6 30.4-11.4 67.8-37.1 91.8-19.1 17.9-46 29.8-70.1 31.3-1.8.1-3.6.1-5.3.1-1.5 0-3-.1-4.5-.2-1.2-22.1 4.7-48.4 18.8-71.9z"/></svg>`;
+            else if (ua.includes('win')) svg = `<svg class="w-4 h-4 fill-current" viewBox="0 0 448 512"><path d="M0 93.7l183.6-25.3v177.4H0V93.7zm0 324.6l183.6 25.3V268.4H0v149.9zm203.8 28L448 480V268.4H203.8v177.9zm0-380.6v180.1H448V32L203.8 65.7z"/></svg>`;
+
+            if (svg) installAppIcon.innerHTML = svg;
+            installAppText.textContent = `Install`;
+        }
+
+        window.addEventListener('beforeinstallprompt', event => {
+            if (isAppAlreadyInstalled()) return;
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            setInstallIcon();
+            installAppButton.classList.remove('hidden');
+        });
+
+        installAppButton.addEventListener('click', async () => {
+            const isIosDevice = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+            if (isIosDevice) {
+                alert('To install on iPhone/iPad: Tap the Share button at the bottom of Safari, then choose "Add to Home Screen" 📲');
+                return;
+            }
+            if (!deferredInstallPrompt) {
+                alert('App can be installed using your browser menu: click "Add to Home Screen" or "Install App"');
+                return;
+            }
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+            installAppButton.classList.add('hidden');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            installAppButton.classList.add('hidden');
+        });
+
+        const isIosDevice = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+        if (!isAppAlreadyInstalled() && isIosDevice) {
+            setInstallIcon();
+            installAppButton.classList.remove('hidden');
         }
 
         function loadLocalCachedData() {
@@ -965,11 +1639,13 @@
                         return true;
                     }
                 }
-            } catch (e) { console.warn('Cache read error:', e); }
+            } catch (e) {
+                console.warn('Cache read error:', e);
+            }
             return false;
         }
 
-        // v2.4.1 ROBUST HYBRID SYNC: Firebase and Sheets load independently
+        // FULL HYBRID SYNC (Firebase + Google Sheets Merge)
         async function loadCatalog(forceRefresh = false) {
             const hasLocal = loadLocalCachedData();
             const badgeEl = document.getElementById('syncStatusBadge');
@@ -981,24 +1657,20 @@
                 }
             }
 
-            let fbRecipes = new Map();
-            let sheetRecipes = [];
-
-            // 1. Fetch Firebase (Fail silently if ad-blocked or glitched)
             try {
+                // 1. Fetch the latest edits and new recipes from Firebase
                 const snapshot = await db.collection("recipes").get();
+                let fbRecipes = new Map();
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if (data && data.id) fbRecipes.set(data.id, data);
                 });
-            } catch (fbErr) {
-                console.warn('Firebase sync bypassed, loading Google Sheets...', fbErr);
-            }
 
-            // 2. Fetch Google Sheets (Fail silently if offline)
-            try {
+                // 2. Fetch the entire legacy catalog from Google Sheets
                 const syncUrl = `${SHEET_CSV_URL}&_ts=${Date.now()}`;
                 const response = await fetch(syncUrl);
+                let sheetRecipes = [];
+                
                 if (response.ok) {
                     const csvText = await response.text();
                     const parsed = Papa.parse(csvText, {
@@ -1016,44 +1688,44 @@
                                 photo: extractPhotoFromRow(row),
                                 ingredients: row.ingredients || '',
                                 directions: row.directions || '',
-                                notes: row.notes || '',
-                                tags: [] // legacy sheet recipes don't have tags
+                                notes: row.notes || ''
                             };
                         });
                     }
                 }
-            } catch (sheetErr) {
-                console.warn('Google Sheets sync bypassed:', sheetErr);
-            }
 
-            // 3. Merge Databases
-            let mergedRecipes = [];
-            sheetRecipes.forEach(sheetRec => {
-                if (fbRecipes.has(sheetRec.id)) {
-                    mergedRecipes.push(fbRecipes.get(sheetRec.id)); 
-                    fbRecipes.delete(sheetRec.id); 
-                } else {
-                    mergedRecipes.push(sheetRec); 
-                }
-            });
-            fbRecipes.forEach(fbRec => mergedRecipes.unshift(fbRec));
+                // 3. Merge them together (Firebase edits overwrite Sheet defaults)
+                let mergedRecipes = [];
+                
+                sheetRecipes.forEach(sheetRec => {
+                    if (fbRecipes.has(sheetRec.id)) {
+                        mergedRecipes.push(fbRecipes.get(sheetRec.id)); // Use the edited Firebase version
+                        fbRecipes.delete(sheetRec.id); // Remove from Map so we don't duplicate
+                    } else {
+                        mergedRecipes.push(sheetRec); // Use the original Sheet version
+                    }
+                });
+                
+                // Add any brand new recipes that only exist in Firebase
+                fbRecipes.forEach(fbRec => {
+                    mergedRecipes.unshift(fbRec); // Put brand new ones at the top
+                });
 
-            // 4. Render Updates
-            if (mergedRecipes.length > 0) {
                 recipes = mergedRecipes;
                 if (badgeEl) badgeEl.textContent = 'Hybrid Sync Active';
+
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
                 buildCategoryButtons();
                 populateCategorySelectors();
                 renderCatalog();
-                if (!activeRecipe && recipes.length > 0) populateInspectionPane(recipes[0]);
-            } else {
+
+                if (!activeRecipe && recipes.length > 0) {
+                    populateInspectionPane(recipes[0]);
+                }
+            } catch (err) {
+                console.warn('Network sync paused, offline mode active:', err);
                 if (recipes.length === 0) loadLocalCachedData();
                 if (badgeEl) badgeEl.textContent = 'Offline Active';
-                if (recipes.length === 0 && recipeGrid) {
-                     recipeGrid.innerHTML = '<div class="col-span-full text-center text-harleyRed font-bold py-16">Could not load database. Check your internet connection or Google Sheet link.</div>';
-                     resultCount.textContent = '0 recipes';
-                }
             }
         }
 
@@ -1077,13 +1749,12 @@
 
         function getVisibleRecipes() {
             const search = (searchInput.value || '').trim().toLowerCase();
+
             return recipes.filter(r => {
                 const matchesCat = selectedCategory === 'All' || r.category === selectedCategory;
                 const matchesSearch = !search || `${r.name} ${r.category} ${r.ingredients} ${r.notes}`.toLowerCase().includes(search);
                 const matchesFav = !favoritesOnly || favoriteIds.has(r.id);
-                const matchesFridge = !fridgeMatchIds || fridgeMatchIds.includes(r.id);
-                const matchesFamily = !activeFamilyTag || (r.tags && r.tags.includes(activeFamilyTag));
-                return matchesCat && matchesSearch && matchesFav && matchesFridge && matchesFamily;
+                return matchesCat && matchesSearch && matchesFav;
             });
         }
 
@@ -1093,13 +1764,6 @@
             renderCatalog();
         };
 
-        function getTagColor(tag) {
-            if (tag === 'Clarissa') return 'bg-harleyRed';
-            if (tag === 'Josiah') return 'bg-blue-500';
-            if (tag === 'Madi') return 'bg-purple-500';
-            return 'bg-jokerGreen';
-        }
-
         function renderCatalog() {
             const visible = getVisibleRecipes();
             resultCount.textContent = `${visible.length} recipe${visible.length === 1 ? '' : 's'}`;
@@ -1107,7 +1771,7 @@
 
             if (visible.length === 0) {
                 recipeGrid.className = 'flex-1 overflow-y-auto scroll-touch p-8 text-center text-textMuted';
-                recipeGrid.innerHTML = '<div>No recipes found matching your filters.</div>';
+                recipeGrid.innerHTML = '<div>No recipes found matching your search.</div>';
                 return;
             }
 
@@ -1117,11 +1781,6 @@
                     const isFav = favoriteIds.has(r.id);
                     const fallbackImg = getCategoryFallbackImage(r.category);
                     const imgUrl = (r.photo && (r.photo.startsWith('http') || r.photo.startsWith('data:image'))) ? r.photo : fallbackImg;
-                    
-                    let tagsHtml = '';
-                    if (r.tags && r.tags.length > 0) {
-                        tagsHtml = `<div class="absolute bottom-1.5 left-1.5 flex gap-1">${r.tags.map(t => `<span class="w-2 h-2 rounded-full ${getTagColor(t)} border border-panelBorder shadow-sm"></span>`).join('')}</div>`;
-                    }
 
                     const tile = document.createElement('article');
                     tile.className = 'w-full bg-cardDark border border-panelBorder rounded-xl overflow-hidden custom-card-glow cursor-pointer transition-all flex flex-col justify-between select-none shadow-sm';
@@ -1130,7 +1789,6 @@
                         <div class="h-28 w-full bg-harleyBlack relative overflow-hidden shrink-0">
                             <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='${fallbackImg}';">
                             <button type="button" data-fav-id="${r.id}" class="fav-toggle absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-harleyBlack/80 border border-panelBorder flex items-center justify-center text-xs ${isFav ? 'text-harleyRed' : 'text-neutral-400'}">♥</button>
-                            ${tagsHtml}
                         </div>
                         <div class="p-2 flex flex-col justify-between flex-1">
                             <h3 class="font-bold text-xs text-white leading-tight line-clamp-2">${escapeHtml(r.name)}</h3>
@@ -1146,11 +1804,6 @@
                     const fallbackImg = getCategoryFallbackImage(r.category);
                     const imgUrl = (r.photo && (r.photo.startsWith('http') || r.photo.startsWith('data:image'))) ? r.photo : fallbackImg;
 
-                    let tagsHtml = '';
-                    if (r.tags && r.tags.length > 0) {
-                        tagsHtml = `<div class="absolute bottom-2 left-2 flex gap-1.5">${r.tags.map(t => `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold text-white shadow-md ${getTagColor(t)}">${t}</span>`).join('')}</div>`;
-                    }
-
                     const card = document.createElement('article');
                     card.className = 'w-full min-h-[260px] h-auto bg-cardDark border border-panelBorder rounded-2xl overflow-hidden custom-card-glow cursor-pointer transition-all flex flex-col justify-between select-none shadow-md';
                     card.onclick = () => inspectRecipe(r, true);
@@ -1162,7 +1815,6 @@
                                     ${escapeHtml(r.category)}
                                 </div>
                                 <button type="button" data-fav-id="${r.id}" class="fav-toggle absolute top-2 right-2 w-8 h-8 rounded-full bg-harleyBlack/80 border border-panelBorder flex items-center justify-center text-sm ${isFav ? 'text-harleyRed' : 'text-neutral-400'}">♥</button>
-                                ${tagsHtml}
                             </div>
                             <div class="p-3.5 flex flex-col flex-grow">
                                 <h3 class="font-bold text-sm text-white mb-1.5 leading-snug line-clamp-2">${escapeHtml(r.name)}</h3>
@@ -1206,23 +1858,19 @@
             if (detailPhoto) {
                 const finalImg = (r.photo && (r.photo.startsWith('http') || r.photo.startsWith('data:image'))) ? r.photo : fallbackImg;
                 detailPhoto.src = finalImg;
-                detailPhoto.onerror = function() { this.onerror = null; this.src = fallbackImg; };
-            }
-
-            const tagsBlock = document.getElementById('inspectTagsBlock');
-            if (r.tags && r.tags.length > 0) {
-                tagsBlock.innerHTML = r.tags.map(t => `<span class="px-2 py-0.5 rounded text-[10px] font-bold text-white ${getTagColor(t)} shadow-sm">♥ ${t}'s Favorite</span>`).join('');
-                tagsBlock.classList.remove('hidden');
-            } else {
-                tagsBlock.classList.add('hidden');
-                tagsBlock.innerHTML = '';
+                detailPhoto.onerror = function() {
+                    this.onerror = null;
+                    this.src = fallbackImg;
+                };
             }
 
             checkAndRenderBakersMath(r);
             renderScaledIngredients();
             
             const dirList = document.getElementById('inspectDirectionsList');
-            if (dirList) dirList.innerHTML = formatDirectionsWithTimers(r.directions || '');
+            if (dirList) {
+                dirList.innerHTML = formatDirectionsWithTimers(r.directions || '');
+            }
 
             const notesBlock = document.getElementById('inspectNotesBlock');
             const notesText = document.getElementById('inspectNotesText');
@@ -1304,11 +1952,6 @@
                 document.getElementById('modalTitleText').textContent = 'Add Family Recipe';
                 document.getElementById('saveRecipeButton').textContent = 'Save to Arkham Cloud';
                 document.getElementById('autoImportEngineBlock').classList.remove('hidden');
-                
-                document.getElementById('tagClarissa').checked = false;
-                document.getElementById('tagJosiah').checked = false;
-                document.getElementById('tagMadi').checked = false;
-
                 toggleNewCategoryMode(false);
                 populateCategorySelectors();
                 document.getElementById('submitFeedback').textContent = '';
@@ -1326,11 +1969,6 @@
             document.getElementById('formDirections').value = activeRecipe.directions || '';
             document.getElementById('formNotes').value = activeRecipe.notes || '';
             
-            const activeTags = activeRecipe.tags || [];
-            document.getElementById('tagClarissa').checked = activeTags.includes('Clarissa');
-            document.getElementById('tagJosiah').checked = activeTags.includes('Josiah');
-            document.getElementById('tagMadi').checked = activeTags.includes('Madi');
-            
             document.getElementById('modalTitleText').textContent = 'Edit Family Recipe';
             document.getElementById('saveRecipeButton').textContent = 'Update Arkham Cloud';
             document.getElementById('autoImportEngineBlock').classList.add('hidden');
@@ -1345,6 +1983,7 @@
             toggleDrawer(false); 
         }
 
+        // Compresses uploaded photos to lightweight base64 (Bypasses Firebase Storage entirely)
         function compressImageFile(file, maxWidth = 800, quality = 0.75) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1354,9 +1993,16 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        let width = img.width; let height = img.height;
-                        if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
-                        canvas.width = width; canvas.height = height;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         resolve(canvas.toDataURL('image/jpeg', quality));
@@ -1387,17 +2033,14 @@
 
             try {
                 let photoUrl = urlInput.value.trim();
+
+                // If a local image file was uploaded, compress to Base64 (Never hangs!)
                 if (fileInput.files && fileInput.files.length > 0) {
                     feedback.innerHTML = '<span class="text-jokerGreen">Compressing photo...</span>';
                     photoUrl = await compressImageFile(fileInput.files[0]);
                 } else if (photoUrl) {
                     photoUrl = normalizeImageUrl(photoUrl);
                 }
-
-                const selectedTags = [];
-                if(document.getElementById('tagClarissa').checked) selectedTags.push('Clarissa');
-                if(document.getElementById('tagJosiah').checked) selectedTags.push('Josiah');
-                if(document.getElementById('tagMadi').checked) selectedTags.push('Madi');
 
                 const recipeId = isEditingRecipe && activeRecipe ? activeRecipe.id : `REC-${Date.now()}`;
 
@@ -1409,10 +2052,10 @@
                     ingredients: document.getElementById('formIngredients').value.trim(),
                     directions: document.getElementById('formDirections').value.trim(),
                     notes: document.getElementById('formNotes').value.trim(),
-                    tags: selectedTags,
                     updatedAt: new Date().toISOString()
                 };
 
+                // 1. UPDATE LOCAL STATE FIRST (Guarantees instant UI update)
                 if (isEditingRecipe) {
                     const index = recipes.findIndex(r => r.id === recipeId);
                     if (index !== -1) recipes[index] = newRecipe;
@@ -1426,6 +2069,7 @@
                 renderCatalog();
                 inspectRecipe(newRecipe, true);
 
+                // 2. SYNC TO CLOUD ASYNCHRONOUSLY
                 try {
                     await db.collection("recipes").doc(newRecipe.id).set(newRecipe, { merge: true });
                     feedback.innerHTML = `<span class="text-jokerGreen font-bold">${isEditingRecipe ? 'Updated' : 'Saved'}! Cloud synced.</span>`;
@@ -1452,20 +2096,26 @@
 
         async function deleteActiveRecipe() {
             if (!activeRecipe) return;
+            
             const pin = prompt(`To permanently delete "${activeRecipe.name}", enter PIN:`);
             if (pin !== "0712") {
                 if (pin !== null) alert("Incorrect PIN. Deletion cancelled.");
                 return;
             }
+
             try {
+                // Delete directly from Firebase Cloud Firestore
                 await db.collection("recipes").doc(activeRecipe.id).delete();
+
                 recipes = recipes.filter(r => r.id !== activeRecipe.id);
                 localStorage.setItem('wardCachedRecipes', JSON.stringify(recipes));
+
                 activeRecipe = null;
                 toggleDrawer(false);
                 buildCategoryButtons();
                 renderCatalog();
                 alert('Recipe deleted successfully.');
+
             } catch (error) {
                 console.error("Error deleting recipe: ", error);
                 alert("Failed to delete recipe from the cloud database.");
@@ -1477,6 +2127,7 @@
             let text = `🃏 ${activeRecipe.name} (Arkham Kitchen)\n\n`;
             text += `Category: ${activeRecipe.category}\n\n`;
             text += `Ingredients (${currentScale}x batch - ${currentUnitMode}):\n`;
+            
             const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
             text += ingLines.map(line => `• ${convertIngredientLine(line, currentUnitMode, currentScale)}`).join('\n') + '\n\n';
             text += `Directions:\n${activeRecipe.directions}\n\n`;
@@ -1489,22 +2140,41 @@
             }
         }
 
+        function escapeHtml(str) {
+            return String(str || '').replace(/[&<>'"]/g, c => ({
+                '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
+            }[c]));
+        }
+
         function exportAllRecipesBackup() {
-            if (!recipes || recipes.length === 0) return alert("No recipes loaded to backup!");
+            if (!recipes || recipes.length === 0) {
+                alert("No recipes currently loaded to backup!");
+                return;
+            }
             const backupData = JSON.stringify(recipes, null, 2);
             const blob = new Blob([backupData], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url;
-            a.download = `arkham_kitchen_backup_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            const a = document.createElement('a');
+            a.href = url;
+            const dateStr = new Date().toISOString().split('T')[0];
+            a.download = `arkham_kitchen_backup_${dateStr}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
-        let headerClickCount = 0; let headerClickTimer = null;
+        let headerClickCount = 0;
+        let headerClickTimer = null;
         document.getElementById('appBrandingTrigger').addEventListener('click', () => {
-            headerClickCount++; clearTimeout(headerClickTimer);
+            headerClickCount++;
+            clearTimeout(headerClickTimer);
+            
             if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.4.1 \nBuild: 2026-10-05\n\nForcing hard reload of data...`);
-                headerClickCount = 0; localStorage.removeItem('wardCachedRecipes'); loadCatalog(true);
+                alert(`Arkham Kitchen v2.3.7 \nBuild: 2026-10-05\n\nForcing hard reload of data...`);
+                headerClickCount = 0;
+                localStorage.removeItem('wardCachedRecipes');
+                loadCatalog(true);
             } else {
                 headerClickTimer = setTimeout(() => { headerClickCount = 0; }, 500);
             }
@@ -1514,7 +2184,12 @@
 
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
-                toggleAddModal(false); closeEditCategoryModal(); toggleDrawer(false); closeCookMode(); toggleGroceryDrawer(false); toggleTimerPanel(false, true); closeFridgeScanner();
+                toggleAddModal(false);
+                closeEditCategoryModal();
+                toggleDrawer(false);
+                closeCookMode();
+                toggleGroceryDrawer(false);
+                toggleTimerPanel(false, true);
             }
         });
 
