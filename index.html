@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.3.9 | Arkham Kitchen Master Suite | Build 2026-10-06 -->
+<!-- Ward Family Recipe Vault v2.3.10 | Arkham Kitchen Master Suite | Build 2026-10-06 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -143,7 +143,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.9</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.10</div>
                 </div>
             </div>
         </div>
@@ -692,6 +692,22 @@
         const favoritesFilterButton = document.getElementById('favoritesFilterButton');
         const resultCount = document.getElementById('resultCount');
 
+
+        // One ingredient per line. A comma only starts a new item when the next part
+        // begins with a new quantity ("1 lb crawfish, 1 lb shrimp"), so notes like
+        // "sifted" or "optional" stay with their ingredient.
+        function splitIngredientLines(text) {
+            const raw = String(text || '');
+            const lines = /\n/.test(raw) ? raw.split(/\r?\n/) : raw.split(/,(?=\s*[\d\u00BC-\u00BE\u2150-\u215E])/);
+            const out = [];
+            lines.forEach(line => {
+                line.split(/,(?=\s*[\d\u00BC-\u00BE\u2150-\u215E])/).forEach(part => {
+                    const clean = part.trim().replace(/[,;]+$/, '').trim();
+                    if (clean) out.push(clean);
+                });
+            });
+            return out;
+        }
         let groceryList = [];
         const PANTRY_DOC_REF = db.collection("app_state").doc("shared_pantry_list");
         const pantryStatusEl = document.getElementById('pantrySyncStatusIndicator');
@@ -824,7 +840,7 @@
 
         function addAllActiveIngredientsToGrocery() {
             if (!activeRecipe) return;
-            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const ingLines = splitIngredientLines(activeRecipe.ingredients);
             ingLines.forEach(line => {
                 const converted = convertIngredientLine(line, currentUnitMode, currentScale);
                 if (!groceryList.some(g => g.text.toLowerCase() === converted.toLowerCase())) {
@@ -847,7 +863,7 @@
                 alert('Pick a recipe first.');
                 return;
             }
-            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const ingLines = splitIngredientLines(activeRecipe.ingredients);
             if (ingLines.length === 0) {
                 alert('This recipe has no ingredients listed.');
                 return;
@@ -1999,7 +2015,7 @@
 
         function renderScaledIngredients(customWaterGrams = null) {
             if (!activeRecipe) return;
-            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const ingLines = splitIngredientLines(activeRecipe.ingredients);
             const listEl = document.getElementById('inspectIngredientsList');
             if (!listEl) return;
             
@@ -2228,7 +2244,7 @@
             text += `Category: ${activeRecipe.category}\n\n`;
             text += `Ingredients (${currentScale}x batch - ${currentUnitMode}):\n`;
             
-            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const ingLines = splitIngredientLines(activeRecipe.ingredients);
             text += ingLines.map(line => `• ${convertIngredientLine(line, currentUnitMode, currentScale)}`).join('\n') + '\n\n';
             text += `Directions:\n${activeRecipe.directions}\n\n`;
             if (activeRecipe.notes) text += `Notes: ${activeRecipe.notes}\n`;
@@ -2271,7 +2287,7 @@
             clearTimeout(headerClickTimer);
             
             if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.3.9 \nBuild: 2026-10-06\n\nForcing hard reload of data...`);
+                alert(`Arkham Kitchen v2.3.10 \nBuild: 2026-10-06\n\nForcing hard reload of data...`);
                 headerClickCount = 0;
                 localStorage.removeItem('wardCachedRecipes');
                 loadCatalog(true);
