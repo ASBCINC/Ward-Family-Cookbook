@@ -1,10 +1,11 @@
-// Arkham Kitchen Service Worker v2.0.0
-const STATIC_CACHE = 'arkham-static-v2';
+// Arkham Kitchen Service Worker v2.1.0
+const STATIC_CACHE = 'arkham-static-v3';
 const IMAGE_CACHE = 'arkham-images-v2';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
+  './styles.css',
   './manifest.json',
   './favicon.ico',
   './icon-192x192.png',

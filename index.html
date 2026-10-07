@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.3.8 | Arkham Kitchen Master Suite | Build 2026-10-06 -->
+<!-- Ward Family Recipe Vault v2.3.9 | Arkham Kitchen Master Suite | Build 2026-10-06 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -24,28 +24,9 @@
     <meta name="msapplication-TileColor" content="#0a0a0c">
     <meta name="msapplication-TileImage" content="./mstile-150x150.png">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./styles.css?v=2.3.9">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        jokerPurple: '#7B1FA2',
-                        jokerPurpleDark: '#38006b',
-                        jokerGreen: '#00E676',
-                        jokerGreenDark: '#00A344',
-                        harleyRed: '#E91E63',
-                        harleyRedDark: '#990033',
-                        harleyBlack: '#0a0a0c',
-                        cardDark: '#131118',
-                        panelBorder: '#292233'
-                    }
-                }
-            }
-        };
-    </script>
 
     <style>
         html { -webkit-text-size-adjust: 100%; height: 100%; }
@@ -162,7 +143,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.8</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.9</div>
                 </div>
             </div>
         </div>
@@ -1906,7 +1887,7 @@
                     tile.onclick = () => inspectRecipe(r, true);
                     tile.innerHTML = `
                         <div class="h-28 w-full bg-harleyBlack relative overflow-hidden shrink-0">
-                            <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='${fallbackImg}';">
+                            <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${fallbackImg}';">
                             <button type="button" data-fav-id="${r.id}" class="fav-toggle absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-harleyBlack/80 border border-panelBorder flex items-center justify-center text-xs ${isFav ? 'text-harleyRed' : 'text-neutral-400'}">♥</button>
                         </div>
                         <div class="p-2 flex flex-col justify-between flex-1">
@@ -1929,7 +1910,7 @@
                     card.innerHTML = `
                         <div class="flex flex-col">
                             <div class="h-40 w-full bg-harleyBlack relative overflow-hidden shrink-0">
-                                <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='${fallbackImg}';">
+                                <img src="${imgUrl}" alt="${escapeHtml(r.name)}" class="w-full h-full object-cover" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${fallbackImg}';">
                                 <div class="absolute top-2 left-2 bg-harleyBlack/80 border border-panelBorder px-2 py-0.5 rounded text-[10px] font-bold text-jokerGreen uppercase font-mono">
                                     ${escapeHtml(r.category)}
                                 </div>
@@ -2290,7 +2271,7 @@
             clearTimeout(headerClickTimer);
             
             if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.3.8 \nBuild: 2026-10-06\n\nForcing hard reload of data...`);
+                alert(`Arkham Kitchen v2.3.9 \nBuild: 2026-10-06\n\nForcing hard reload of data...`);
                 headerClickCount = 0;
                 localStorage.removeItem('wardCachedRecipes');
                 loadCatalog(true);
@@ -2299,7 +2280,11 @@
             }
         });
 
-        searchInput.addEventListener('input', renderCatalog);
+        let searchDebounceTimer = null;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(renderCatalog, 150);
+        });
 
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
