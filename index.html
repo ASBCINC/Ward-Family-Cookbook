@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Ward Family Recipe Vault v2.3.7 | Arkham Kitchen Master Suite | Build 2026-10-05 -->
+<!-- Ward Family Recipe Vault v2.3.8 | Arkham Kitchen Master Suite | Build 2026-10-06 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
     <meta name="application-version" content="2.3.7">
-    <meta name="build-date" content="2026-10-05">
+    <meta name="build-date" content="2026-10-06">
     <title>Ward Family Recipes | Arkham Kitchen</title>
 
     <!-- PWA & Favicon Metadata -->
@@ -162,7 +162,7 @@
 
                 <div class="text-right leading-tight pl-2 border-l border-panelBorder hidden sm:block">
                     <div class="text-[10px] text-jokerGreen font-mono font-bold" id="syncStatusBadge">Cloud Active</div>
-                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.7</div>
+                    <div id="versionNumber" class="text-[9px] text-textMuted select-none">v2.3.8</div>
                 </div>
             </div>
         </div>
@@ -265,8 +265,8 @@
 
                     <div class="flex items-center justify-between mb-2">
                         <span id="scaleMultiplierBadge" class="text-[10px] bg-jokerPurple/30 text-jokerGreen border border-jokerPurple px-2 py-0.5 rounded font-mono font-bold">1x Scale</span>
-                        <button type="button" onclick="addAllActiveIngredientsToGrocery()" class="text-[11px] text-jokerGreen hover:underline font-bold font-mono">
-                            + Add All to Pantry List
+                        <button type="button" onclick="openGroceryPicker()" class="text-[11px] text-jokerGreen hover:underline font-bold font-mono">
+                            + Add to Pantry List
                         </button>
                     </div>
 
@@ -465,6 +465,27 @@
                     <button type="submit" id="saveCatBtn" class="bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-2.5 rounded-xl text-xs shadow-md border border-jokerGreen/40">Save</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="groceryPickerModal" onclick="if (event.target === this) closeGroceryPicker()" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-[60] p-4">
+        <div class="bg-cardDark border border-panelBorder p-5 rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-start mb-1 gap-3">
+                <div class="min-w-0">
+                    <h3 class="text-lg font-bold text-jokerGreen">Add to Pantry List</h3>
+                    <p id="groceryPickerTitle" class="text-xs text-textMuted truncate">Recipe</p>
+                </div>
+                <button type="button" onclick="closeGroceryPicker()" class="w-9 h-9 shrink-0 rounded-full bg-harleyBlack border border-panelBorder text-white text-lg flex items-center justify-center" aria-label="Close">×</button>
+            </div>
+            <div class="flex items-center justify-between my-3">
+                <span class="text-[11px] text-textMuted">Uncheck anything you already have.</span>
+                <button type="button" id="groceryPickerToggleAllBtn" onclick="toggleGroceryPickerAll()" class="text-[11px] text-jokerGreen hover:underline font-bold font-mono shrink-0 ml-2">Select none</button>
+            </div>
+            <ul id="groceryPickerList" class="space-y-1.5 text-sm overflow-y-auto scroll-touch flex-1 pr-1"></ul>
+            <div class="grid grid-cols-2 gap-2 mt-4">
+                <button type="button" onclick="closeGroceryPicker()" class="bg-panelBorder text-neutral-300 font-bold py-2.5 rounded-xl text-xs">Cancel</button>
+                <button type="button" id="groceryPickerAddBtn" onclick="confirmGroceryPicker()" class="bg-gradient-to-r from-jokerPurple to-harleyRed text-white font-bold py-2.5 rounded-xl text-xs shadow-md border border-jokerGreen/40 disabled:opacity-40 disabled:cursor-not-allowed">Add items</button>
+            </div>
         </div>
     </div>
 
@@ -832,6 +853,104 @@
             saveSharedGroceryList();
             toggleGroceryDrawer(true);
         }
+
+        // --- Grocery picker: choose which recipe ingredients go on the pantry list ---
+        let groceryPickerItems = [];
+
+        function groceryKey(text) {
+            return (text || '').trim().toLowerCase();
+        }
+
+        function openGroceryPicker() {
+            if (!activeRecipe) {
+                alert('Pick a recipe first.');
+                return;
+            }
+            const ingLines = (activeRecipe.ingredients || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            if (ingLines.length === 0) {
+                alert('This recipe has no ingredients listed.');
+                return;
+            }
+            const onList = new Set(groceryList.map(g => groceryKey(g.text)));
+            const seen = new Set();
+            groceryPickerItems = [];
+            ingLines.forEach(line => {
+                const text = convertIngredientLine(line, currentUnitMode, currentScale);
+                const key = groceryKey(text);
+                if (seen.has(key)) return;
+                seen.add(key);
+                const already = onList.has(key);
+                groceryPickerItems.push({ text, already, selected: !already });
+            });
+            document.getElementById('groceryPickerTitle').textContent = activeRecipe.name || 'Recipe';
+            renderGroceryPicker();
+            const modal = document.getElementById('groceryPickerModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGroceryPicker() {
+            const modal = document.getElementById('groceryPickerModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function renderGroceryPicker() {
+            const listEl = document.getElementById('groceryPickerList');
+            listEl.innerHTML = groceryPickerItems.map((item, idx) => `
+                <li>
+                    <label class="flex items-start gap-2 p-2 rounded-xl bg-harleyBlack/50 border border-panelBorder/60 cursor-pointer">
+                        <input type="checkbox" ${item.selected ? 'checked' : ''} onchange="toggleGroceryPickerItem(${idx})" class="mt-0.5 rounded text-jokerGreen focus:ring-0">
+                        <span class="leading-tight flex-1 ${item.selected ? 'text-neutral-200' : 'text-textMuted'}">${escapeHtml(item.text)}</span>
+                        ${item.already ? '<span class="shrink-0 text-[10px] font-mono text-jokerGreen border border-jokerGreen/40 rounded px-1.5 py-0.5">on list</span>' : ''}
+                    </label>
+                </li>
+            `).join('');
+
+            const count = groceryPickerItems.filter(i => i.selected && !i.already).length;
+            const addBtn = document.getElementById('groceryPickerAddBtn');
+            addBtn.textContent = count ? `Add ${count} item${count === 1 ? '' : 's'}` : 'Nothing to add';
+            addBtn.disabled = count === 0;
+
+            const anySelected = groceryPickerItems.some(i => i.selected);
+            document.getElementById('groceryPickerToggleAllBtn').textContent = anySelected ? 'Select none' : 'Select all';
+        }
+
+        function toggleGroceryPickerItem(idx) {
+            groceryPickerItems[idx].selected = !groceryPickerItems[idx].selected;
+            renderGroceryPicker();
+        }
+
+        function toggleGroceryPickerAll() {
+            const anySelected = groceryPickerItems.some(i => i.selected);
+            groceryPickerItems.forEach(i => { i.selected = anySelected ? false : !i.already; });
+            renderGroceryPicker();
+        }
+
+        function confirmGroceryPicker() {
+            const onList = new Set(groceryList.map(g => groceryKey(g.text)));
+            let added = 0;
+            groceryPickerItems.forEach(item => {
+                const key = groceryKey(item.text);
+                if (item.selected && !onList.has(key)) {
+                    groceryList.push({ text: item.text, checked: false });
+                    onList.add(key);
+                    added++;
+                }
+            });
+            closeGroceryPicker();
+            if (added > 0) {
+                saveSharedGroceryList();
+                toggleGroceryDrawer(true);
+            }
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('groceryPickerModal');
+                if (modal && !modal.classList.contains('hidden')) closeGroceryPicker();
+            }
+        });
 
         function exportToGoogleKeep() {
             if (groceryList.length === 0) {
@@ -2171,7 +2290,7 @@
             clearTimeout(headerClickTimer);
             
             if (headerClickCount >= 3) {
-                alert(`Arkham Kitchen v2.3.7 \nBuild: 2026-10-05\n\nForcing hard reload of data...`);
+                alert(`Arkham Kitchen v2.3.8 \nBuild: 2026-10-06\n\nForcing hard reload of data...`);
                 headerClickCount = 0;
                 localStorage.removeItem('wardCachedRecipes');
                 loadCatalog(true);
